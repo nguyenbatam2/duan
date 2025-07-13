@@ -1,0 +1,123 @@
+
+.container {
+    display: flex;
+    gap: 2rem;
+    padding: 2rem;
+    max-width: 1200px;
+    margin: auto;
+}
+
+.left,
+.right {
+    flex: 1;
+    background-color: #f9f9f9;
+    padding: 2rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+}
+
+.left h1,
+.left h2,
+.right h2 {
+    margin-bottom: 1rem;
+    color: #333;
+}
+
+input,
+textarea {
+    width: 100%;
+    padding: 0.8rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 1.2rem;
+}
+
+textarea {
+    resize: vertical;
+}
+
+form {
+    margin-top: 2rem;
+}
+
+form input {
+    display: inline-block;
+    width: calc(70% - 10px);
+    margin-right: 10px;
+}
+
+form button {
+    display: inline-block;
+    width: 30%;
+    padding: 0.8rem;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.primary {
+    display: block;
+    width: 100%;
+    padding: 1rem;
+    background-color: var(--mainColor);
+    color: white;
+    font-weight: bold;
+    font-size: 1.1rem;
+    border: none;
+    border-radius: 6px;
+    margin-top: 1.5rem;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.primary:hover {
+    background-color:var(--subColor);
+}
+
+.order-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.order-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 1rem;
+    border-bottom: 1px dashed #ccc;
+    padding-bottom: 1rem;
+}
+
+.order-item img {
+    width: 70px;
+    height: 70px;
+    object-fit: cover;
+    margin-right: 1rem;
+    border-radius: 4px;
+}
+
+.order-item-info {
+    flex: 1;
+}
+
+.order-item-price {
+    font-weight: bold;
+    color: #333;
+}
+
+.summary-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.5rem 0;
+    font-size: 1.2rem;
+}
+
+.summary-row.total {
+    border-top: 2px solid #ddd;
+    margin-top: 1rem;
+    font-weight: bold;
+    font-size: 1.3rem;
+}

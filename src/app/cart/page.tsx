@@ -1,18 +1,25 @@
 "use client";
+import useSWR from "swr";
 import Link from 'next/link';
 import '@/app/styles/cart.css';
 import { Product } from '../types/product';
+
 import { useState, useEffect } from 'react';
 import { decreaseQuantity, getCart, increaseQuantity, getCartTotal, removeFromCart } from "../lib/addCart";
+import { getCoupons, saveCoupon } from "@/app/lib/Coupon";
+
 
 export default function Cart() {
-    const [cart, setCart] = useState<Product[]>([]);
+	const { data: coupons, isLoading: isLoadingCoupons, error: isError } = useSWR("coupons", getCoupons);
+
+	const [message, setMessage] = useState("");
+	const [cart, setCart] = useState<Product[]>([]);
+	const [savedCoupons, setSavedCoupons] = useState<number[]>([]);
+
 
     useEffect(() => {
         setCart(getCart());
     }, []);
-
-
 
     const handleIncrease = (productId: number) => {
         increaseQuantity(productId);
@@ -31,6 +38,21 @@ export default function Cart() {
 	const calculateTotal = () => {
 		return getCartTotal();
 	};
+
+	const handleSaveCoupon = async (id: number, code: string) => {
+		try {
+			const res = await saveCoupon(id);
+			setMessage(res.message);
+			setSavedCoupons(prev => [...prev, id]); //  thêm id vào danh sách đã lưu
+		} catch (err: any) {
+			setMessage(err?.response?.data?.message || "Có lỗi xảy ra");
+		}
+		navigator.clipboard.writeText(code);    // copy 
+		setTimeout(() => setMessage(""), 3000);
+	};
+	
+	if (isLoadingCoupons) return <p>Đang tải mã giảm giá...</p>;
+	if (isError) return <p>Lỗi khi tải mã giảm giá!</p>;
 
 	return (
 		<>
@@ -367,7 +389,11 @@ export default function Cart() {
 
 												<div className="summary-button">
 													<div className="cart__btn-proceed-checkout-dt">
-														<button  type="button" className="button btn btn-default cart__btn-proceed-checkout btn-primary duration-300" id="btn-proceed-checkout" title="Thanh toán ngay">Thanh toán ngay</button>
+														<Link href="/checkout" passHref>
+															<button className="button btn btn-default cart__btn-proceed-checkout btn-primary duration-300" id="btn-proceed-checkout" title="Thanh toán ngay">
+																Thanh toán ngay
+															</button>
+														</Link>
 													</div>
 													<Link className="return_buy btn btn-extent duration-300" title="Tiếp tục mua hàng" href="/product">Tiếp tục mua hàng</Link>
 												</div>
@@ -375,36 +401,42 @@ export default function Cart() {
 										</div>
 									</div>
 
-									<div className="bg-shadow">
+									{/* <div className="bg-shadow">
 										<div className="product-coupons">
 											<div className="title">Khuyến mãi dành cho bạn</div>
 											<div className="swiper_coupons swiper-container swiper-container-initialized swiper-container-horizontal swiper-container-pointer-events">
 												<div className="swiper-wrapper" style={{ transform: 'translate3d(0px, 0px, 0px)', transitionDuration: '0ms' }}>
 
-													<div className="swiper-slide" style={{ width: '300.4px', marginRight: '10px' }}>
-														<div className="box-coupon">
-															<div className="mask-ticket"></div>
-															<div className="image">
-																<img width="88" height="88" className="lazyload loaded" src="//bizweb.dktcdn.net/100/506/650/themes/944598/assets/img_coupon_1.jpg?1739018973665" data-src="//bizweb.dktcdn.net/100/506/650/themes/944598/assets/img_coupon_1.jpg?1739018973665" alt="NEST200" data-was-processed="true" />
-															</div>
-															<div className="content_wrap">
-																<Link title="Chi tiết" href="javascript:void(0)" className="info-button" data-coupon="NEST200" data-time="12/12/2025" data-content="Áp dụng cho đơn hàng từ <b>4,500,000đ</b> trở lên
-Không đi kèm với chương trình khác">
-																	<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512">
-																		<path d="M144 80c0 26.5-21.5 48-48 48s-48-21.5-48-48s21.5-48 48-48s48 21.5 48 48zM0 224c0-17.7 14.3-32 32-32H96c17.7 0 32 14.3 32 32V448h32c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H64V256H32c-17.7 0-32-14.3-32-32z"></path>
-																	</svg>
-																</Link>
-																<div className="content-top">
-																	NEST200
-																	<span className="line-clamp line-clamp-2">Giảm 200k giá trị đơn hàng</span>
+													{coupons?.map((coupon: any) => (
+														<div className="swiper-slide" key={coupon.id} style={{ width: '302.75px', marginRight: '16px' }}>
+															<div className="box-coupon">
+																<div className="mask-ticket"></div>
+																<div className="image">
+																	<img width="88" height="88" src="/img/img_coupon_1.webp" alt={coupon.code} />
 																</div>
-																<div className="content-bottom">
-																	<span>HSD: 12/12/2025</span>
-																	<div className="coupon-code js-copy" data-copy="NEST200" title="Sao chép">Copy mã</div>
+																<div className="content_wrap">
+																	<div className="content-top">
+																		{coupon.code}
+																		<span className="line-clamp line-clamp-2">
+																			{coupon.description || "Không có mô tả"}
+																		</span>
+																	</div>
+																	<div className="content-bottom">
+																		<span>HSD: {coupon.end_at}</span>
+																		<button
+																			onClick={() => handleSaveCoupon(coupon.id, coupon.code)}
+																			className="coupon-code js-copy"
+																			title={savedCoupons.includes(coupon.id) ? "Đã lưu" : "Lưu mã"}
+																			disabled={savedCoupons.includes(coupon.id)} // optional: không cho bấm lại
+																		>
+																			{savedCoupons.includes(coupon.id) ? "Đã lưu" : "Lưu mã"}
+																		</button>
+
+																	</div>
 																</div>
 															</div>
 														</div>
-													</div>
+													))}
 
 
 												</div>
@@ -422,6 +454,71 @@ Không đi kèm với chương trình khác">
 														<rect x="8" y="29.2133" width="30" height="30" transform="rotate(-45 8 29.2133)" fill="black"></rect>
 														<path d="M18.5 29H39.5" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"></path>
 														<path d="M29 18.5L39.5 29L29 39.5" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"></path>
+													</svg>
+												</div>
+											</div>
+										</div>
+									</div> */}
+									<div className="bg-shadow">
+										<div className="product-coupons">
+											<div className="title">Khuyến mãi dành cho bạn</div>
+											<div className="swiper_coupons swiper-container swiper-container-initialized swiper-container-horizontal swiper-container-pointer-events">
+												<div className="swiper-wrapper"  >
+
+													{coupons?.map((coupon: any) => (
+														<div className="swiper-slide" key={coupon.id} style={{ width: '300.4px', marginRight: '10px' }}>
+															<div className="box-coupon">
+																<div className="mask-ticket">
+
+																</div>
+																<div className="image">
+																	<img width="88" height="88" src="/img/img_coupon_1.webp" alt={coupon.code} />
+																</div>
+																<div className="content_wrap">
+																	<a title="Chi tiết" href="javascript:void(0)" className="info-button" data-coupon="NEST200" data-time="12/12/2024">
+																		<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512">
+																			<path d="M144 80c0 26.5-21.5 48-48 48s-48-21.5-48-48s21.5-48 48-48s48 21.5 48 48zM0 224c0-17.7 14.3-32 32-32H96c17.7 0 32 14.3 32 32V448h32c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H64V256H32c-17.7 0-32-14.3-32-32z">
+																			</path>
+																		</svg>
+																	</a>
+																	<div className="content-top">
+																		{coupon.code}
+																		<span className="line-clamp line-clamp-2">
+																			{coupon.description || "Không có mô tả"}
+																		</span>
+																	</div>
+																	<div className="content-bottom">
+																		<span>HSD: {coupon.end_at}</span>
+																		<button
+																			key={coupon.id}
+																			onClick={() => handleSaveCoupon(coupon.id, coupon.code)}
+																			className={`coupon-code js-copy ${savedCoupons.includes(coupon.id) ? 'saved' : ''}`}
+																			title="Click để lưu/copy lại"
+																		>
+																			{savedCoupons.includes(coupon.id) ? "Copy mã" : "Lưu mã"}
+																		</button>
+																	</div>
+																</div>
+															</div>
+														</div>
+													))}
+
+
+												</div>
+												<div className="swiper-button-prev">
+													<svg width="58" height="58" viewBox="0 0 58 58" fill="none" xmlns="http://www.w3.org/2000/svg">
+														<rect x="2.13003" y="29" width="38" height="38" transform="rotate(-45 2.13003 29)" stroke="black" fill="#fff" stroke-width="2"></rect>
+														<rect x="8" y="29.2133" width="30" height="30" transform="rotate(-45 8 29.2133)" fill="black"></rect>
+														<path d="M18.5 29H39.5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+														<path d="M29 18.5L39.5 29L29 39.5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+													</svg>
+												</div>
+												<div className="swiper-button-next swiper-button-disabled">
+													<svg width="58" height="58" viewBox="0 0 58 58" fill="none" xmlns="http://www.w3.org/2000/svg">
+														<rect x="2.13003" y="29" width="38" height="38" transform="rotate(-45 2.13003 29)" stroke="black" fill="#fff" stroke-width="2"></rect>
+														<rect x="8" y="29.2133" width="30" height="30" transform="rotate(-45 8 29.2133)" fill="black"></rect>
+														<path d="M18.5 29H39.5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+														<path d="M29 18.5L39.5 29L29 39.5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
 													</svg>
 												</div>
 											</div>

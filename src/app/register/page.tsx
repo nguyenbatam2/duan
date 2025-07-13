@@ -2,11 +2,10 @@
 "use client";
 import Link from 'next/link';
 import "../styles/login.css";
-import { getAuthorsRegister } from '../lib/author';
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-
-export default function Register() {
+import { registerUser } from "../lib/authorApi"; // Adjust the import path as necessary
+export default function RegisterPage() {
     const [name, setName] = useState("");
     const [email, setEmail] = useState("");
     const [phone, setPhone] = useState("");
@@ -16,20 +15,22 @@ export default function Register() {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (password !== passwordConfirmation) {
-            console.error("Mật khẩu không khớp");
-            return;
-        }
         try {
-            const author = await getAuthorsRegister(name, email, phone, password, passwordConfirmation);
-            console.log("Author registered:", author);
-            router.push("/login"); // Redirect to login page after successful registration
-            // Redirect or show success message
+            const response = await registerUser({
+                name,
+                email,
+                phone,
+                password,
+                password_confirmation: passwordConfirmation,
+            });
+            if (response) {
+                router.push("/login");
+            }
         } catch (error) {
-            console.error("Error registering author:", error);
+            console.error("Đăng ký thất bại:", error);
         }
     };
-
+    
     return (
         <>
             <div className="bg-gray">

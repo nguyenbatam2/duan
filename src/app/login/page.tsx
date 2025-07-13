@@ -2,30 +2,29 @@
 import Link from 'next/link';
 import "../styles/login.css";
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { loginUser } from '../lib/authorApi';
+import { useAuth } from '../context/authContext';
 
-import { useRouter } from 'next/navigation'; // App Router
-
-import { getAuthorLogin } from "@/app/lib/author";
-import Cookies from "js-cookie";
 export default function Login() {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+    const { login } = useAuth();
     const router = useRouter();
 
-    const handleSubmit = async (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => { 
         e.preventDefault();
         try {
-            const author = await getAuthorLogin(email, password);
-            console.log("Author logged in:", author);
-            Cookies.set("author", JSON.stringify(author));
-            if (author) // Redirect to home page after successful login
-                router.push("/");
-            else
-                router.push("/account");
+            const data = await loginUser({ email, password });
+            if (data) {
+                login(data);
+                router.push("/");   // chuyển về trang chủ
+                console.log(data)
+            }
         } catch (error) {
-            console.error("Error logging in author:", error);
+            console.error("Đăng nhập thất bại:", error);
         }
-    };
+    }
 
     return (
         <>
@@ -75,33 +74,15 @@ export default function Login() {
                                                         </div>
                                                         <div className="btn_boz_khac">
                                                             <div className="btn_khac">
-                                                                <span className="quenmk">Quên mật khẩu?</span>
+                                                                <span>
+                                                                    <Link href="../forgotPassword/request" className="quenmk" >Quên mật khẩu?</Link>
+                                                                </span>
                                                                 <Link href="/register" className="btn-link-style btn-register" title="Đăng ký tại đây">Đăng ký tại đây</Link>
                                                             </div>
                                                         </div>
                                                     </div>
                                                 </form>
-                                                </div>
-
-                                                    <div className="h_recover" style={{ display: 'none' }}>
-                                                        <div id="recover-password" className="form-signup page-login">
-                                                            <form method="post" action="/account/recover" id="recover_customer_password" acceptCharset="UTF-8">
-                                                                <input name="FormType" type="hidden" defaultValue="recover_customer_password" />
-                                                                <input name="utf8" type="hidden" defaultValue="true" />
-                                                                <div className="form-signup" style={{ color: 'red' }}>
-
-                                                                </div>
-                                                                <div className="form-signup clearfix">
-                                                                    <fieldset className="form-group">
-                                                                        <input type="email"className="form-control form-control-lg" defaultValue={""} name="email" id="customer_email" placeholder="Email" />
-                                                                    </fieldset> 
-                                                                </div>
-                                                                <div className="action_bottom">
-                                                                    <button type="submit" defaultValue="Lấy lại mật khẩu" className="btn btn-primary" style={{ marginTop: '0px' }}>Lấy lại mật khẩu</button>
-                                                                </div>
-                                                            </form>
-                                                            </div>
-                                                        </div>
+                                            </div>
                                                         <div className="block social-login--facebooks">
                                                             <div className="line-break">
                                                                 <span>hoặc đăng nhập qua</span>
@@ -165,7 +146,7 @@ export default function Login() {
                                         </div>
                                     </div>
                                 </div>
-                            </div>
+                    </div>
                         </section>
                     </div>
         </>

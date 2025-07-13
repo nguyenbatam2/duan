@@ -5,7 +5,6 @@ import { useParams } from "next/navigation";
 import useSWR from 'swr';
 import { useState } from "react";
 import { getProductsByCategory  } from "../../lib/category";
-import { Product } from "../../types/product";
 import { Category } from "../..//types/category";
 import "../../styles/listProduct.css";
 

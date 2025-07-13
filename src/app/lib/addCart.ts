@@ -1,17 +1,23 @@
 import { Product } from "../types/product";
 const cartKey = "cart";
-
+const hisToRyKey = "history"
 export function updateCart(cart: Product[]) {
   localStorage.setItem(cartKey, JSON.stringify(cart));
   window.dispatchEvent(new Event("cartUpdated")); // Dispatch a custom event to notify other parts of the app
 }
 
+export function updateHisToRy(history: Product[]) {
+  localStorage.setItem(hisToRyKey, JSON.stringify(history));
+}
+
 export function getCart(): Product[] {
-  // if (typeof window === "undefined" || !window.localStorage) {
-  //   return [];
-  // }
   const cart = localStorage.getItem(cartKey);
   return cart ? JSON.parse(cart) : [];
+}
+
+export function getHisToRy(): Product[] {
+  const history = localStorage.getItem(hisToRyKey)
+  return history ? JSON.parse(history) : [];
 }
 
 export function addToCart(product: Product): void {
@@ -25,6 +31,19 @@ export function addToCart(product: Product): void {
   }
 
   updateCart(cart);
+}
+
+export function addHisToRy(product: Product): void {
+  const history = getHisToRy();
+  const existingProduct = history.find((item) => item.id === product.id);
+
+  if (existingProduct) {
+    existingProduct.quantity += 1;
+  } else {
+    history.push({ ...product, quantity: 1 });
+  }
+
+  updateHisToRy(history);
 }
 
 export function getCartLength(): number {

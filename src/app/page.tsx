@@ -1,35 +1,91 @@
 'use client';
-import useSWR from "swr";
-import axios from "axios";
-import Link from "next/link";
+
+// 🧠 React + Hook
 import { useState } from "react";
+import useSWR from "swr";
+
+// 🌐 Next.js
+import Link from "next/link";
+import axios from "axios";
+
+// 🧩 Nội bộ - Component
 import AddToCart from "@/app/addToCart/page";
+import CartModal from "@/app/cartModal/page";
+import AddToWishlist from "@/app/addToWishlist/page";
+import WishlistModal from "@/app/wishlistModal/page";
+
+// 🔧 Function & Type
+import { addHisToRy } from "./lib/addCart";
+import { getCoupons, saveCoupon } from "@/app/lib/Coupon";
 import { Product } from "@/app/types/product";
-import CartModal from "../app/cartModal/page"; // Import the CartModal component
+import { usePopup } from "@/app/context/PopupContext";
+
+
+// 🔁 Fetcher
 const fetcher = (url: string) => axios.get(url).then(res => res.data.data);
 
+// 🎯 Component chính
 export default function Page() {
-  const { data: products, error, isLoading } = useSWR("http://127.0.0.1:8000/api/v1/products", fetcher);
-  const [activeTab, setActiveTab] = useState<string>('tab1-1');
+  const { data: products, isLoading, error } = useSWR(
+    "http://127.0.0.1:8000/api/v1/public/products",
+    fetcher
+  );
+  const {
+    data: coupons,
+    isLoading: isLoadingCoupons,
+    error: isError,
+  } = useSWR("coupons", getCoupons);
+
+  const [message, setMessage] = useState("");
+  const [activeTab, setActiveTab] = useState<string>("tab1-1");
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [showModal, setShowModal] = useState(false);
+  const [actionText, setActionText] = useState<"add" | "remove">("add");
+  const [savedCoupons, setSavedCoupons] = useState<number[]>([]);
+  const { setIsOpen, setSelectedCoupon } = usePopup();
+
+
+
+  const handleToggleWishlist = (action: "add" | "remove") => {
+    setActionText(action);
+    setShowModal(true);
+    setTimeout(() => setShowModal(false), 2500);
+  };
+
+  const handleSaveCoupon = async (id: number, code: string) => {
+    try {
+      const res = await saveCoupon(id);
+      setMessage(res.message);
+      setSavedCoupons(prev => [...prev, id]); //  thêm id vào danh sách đã lưu
+    } catch (err: any) {
+      setMessage(err?.response?.data?.message || "Có lỗi xảy ra");
+    }
+    navigator.clipboard.writeText(code);    // copy 
+    setTimeout(() => setMessage(""), 3000);
+  };
+
 
   if (isLoading) return <p>Đang tải sản phẩm...</p>;
   if (error) return <p>Lỗi khi tải sản phẩm!</p>;
+  if (isLoadingCoupons) return <p>Đang tải mã giảm giá...</p>;
+  if (isError) return <p>Lỗi khi tải mã giảm giá!</p>;
 
   const groupedByCategory: Record<string, any[]> = {};
   products.forEach((product: any) => {
     const slug = product.category?.slug;
-    if (!groupedByCategory[slug]) {
-      groupedByCategory[slug] = [];
-    }
+    if (!groupedByCategory[slug]) groupedByCategory[slug] = [];
     groupedByCategory[slug].push(product);
   });
 
   const categories = Object.entries(groupedByCategory).map(([slug, items], index) => ({
     tab: `tab1-${index + 1}`,
     name: items[0].category?.name || slug,
-    slug
+    slug,
   }));
+
+  const handleAddToHisToRy = (product: Product) => {
+    addHisToRy(product);
+  };
 
   return (
     <>
@@ -223,7 +279,7 @@ export default function Page() {
           <div className="swiper_coupons swiper-container">
             <div className="swiper-wrapper">
               {/* <!-- swiper-slide 1 --> */}
-              <div className="swiper-slide swiper-slide-active" style={{ width: '302.75px', marginRight: '16px' }}>
+              {/* <div className="swiper-slide swiper-slide-active" style={{ width: '302.75px', marginRight: '16px' }}>
                 <div className="box-coupon">
                   <div className="mask-ticket"></div>
                   <div className="image">
@@ -246,84 +302,63 @@ export default function Page() {
                     </div>
                   </div>
                 </div>
-              </div>
+              </div> */}
               {/* <!-- swiper-slide 2 --> */}
-              <div className="swiper-slide " style={{ width: '302.75px', marginRight: '16px' }}>
-                <div className="box-coupon">
-                  <div className="mask-ticket"></div>
-                  <div className="image">
-                    <img width="88" height="88" className="" src="/img/img_coupon_1.webp" alt="NEST100" />
-                  </div>
-                  <div className="content_wrap">
-                    <a title="Chi tiết" href="javascript:void(0)" className="info-button" data-coupon="NEST100" data-time="24/12/2024">
-                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512">
-                        <path d="M144 80c0 26.5-21.5 48-48 48s-48-21.5-48-48s21.5-48 48-48s48 21.5 48 48zM0 224c0-17.7 14.3-32 32-32H96c17.7 0 32 14.3 32 32V448h32c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H64V256H32c-17.7 0-32-14.3-32-32z">
-                        </path>
-                      </svg>
-                    </a>
-                    <div className="content-top"> NEST100
-                      <span className="line-clamp line-clamp-2">Giảm 100k giá trị đơn hàng</span>
+              {coupons?.map((coupon: any) => (
+                <div className="swiper-slide" key={coupon.id} style={{ width: '302.75px', marginRight: '16px' }}>
+                  <div className="box-coupon">
+                    <div className="mask-ticket">
+
                     </div>
-                    <div className="content-bottom">
-                      <span>HSD: 24/12/2024</span>
-                      <div className="coupon-code js-copy" data-copy="NEST100" title="Sao chép">Copy
-                        mã</div>
+                    <div className="image">
+                      <img width="88" height="88" src="/img/img_coupon_1.webp" alt={coupon.code} />
                     </div>
-                  </div>
-                </div>
-              </div>
-              {/* <!-- swiper-slide 3 --> */}
-              <div className="swiper-slide " style={{ width: '302.75px', marginRight: '16px' }}>
-                <div className="box-coupon">
-                  <div className="mask-ticket"></div>
-                  <div className="image">
-                    <img width="88" height="88" className="" src="/img/img_coupon_1.webp" alt="NEST50" />
-                  </div>
-                  <div className="content_wrap">
-                    <a title="Chi tiết" href="javascript:void(0)" className="info-button" data-coupon="NEST50" data-time="25/12/2024">
-                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512">
-                        <path d="M144 80c0 26.5-21.5 48-48 48s-48-21.5-48-48s21.5-48 48-48s48 21.5 48 48zM0 224c0-17.7 14.3-32 32-32H96c17.7 0 32 14.3 32 32V448h32c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H64V256H32c-17.7 0-32-14.3-32-32z">
-                        </path>
-                      </svg>
-                    </a>
-                    <div className="content-top"> NEST50
-                      <span className="line-clamp line-clamp-2">Giảm 50k giá trị đơn hàng</span>
-                    </div>
-                    <div className="content-bottom">
-                      <span>HSD: 25/12/2024</span>
-                      <div className="coupon-code js-copy" data-copy="NEST50" title="Sao chép">Copy mã
+                    <div className="content_wrap">
+                      <a
+                        title="Chi tiết"
+                        className="info-button"
+                        onClick={() => {
+                          setSelectedCoupon({
+                            id: coupon.id,
+                            code: coupon.code,
+                            end_at: coupon.end_at,
+                            description: coupon.description,
+                          });
+                          setIsOpen(true);
+                        }}
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512">
+                          <path d="M144 80c0 26.5-21.5 48-48 48s-48-21.5-48-48s21.5-48 48-48s48 21.5 48 48zM0 224c0-17.7 14.3-32 32-32H96c17.7 0 32 14.3 32 32V448h32c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H64V256H32c-17.7 0-32-14.3-32-32z">
+                          </path>
+                        </svg>
+                      </a>
+                      
+
+                      <div className="content-top">
+                        {coupon.code}
+                        <span className="line-clamp line-clamp-2">
+                          {coupon.description || "Không có mô tả"}
+                        </span>
+                      </div>
+                      <div className="content-bottom">
+                        <span>HSD: {coupon.end_at}</span>
+                        <button
+                          key={coupon.id}
+                          onClick={() => handleSaveCoupon(coupon.id, coupon.code)}
+                          className={`coupon-code js-copy ${savedCoupons.includes(coupon.id) ? 'saved' : ''}`}
+                          title="Click để lưu/copy lại"
+                        >
+                          {savedCoupons.includes(coupon.id) ? "Copy mã" : "Lưu mã"}
+                        </button>
                       </div>
                     </div>
                   </div>
                 </div>
-              </div>
-              {/* <!-- swiper-slide 4 --> */}
-              <div className="swiper-slide " style={{ width: '302.75px', marginRight: '16px' }}>
-                <div className="box-coupon">
-                  <div className="mask-ticket"></div>
-                  <div className="image">
-                    <img width="88" height="88" className="" src="/img/img_coupon_1.webp" alt="NESTFREESHIP" />
-                  </div>
-                  <div className="content_wrap">
-                    <a title="Chi tiết" href="javascript:void(0)" className="info-button" data-coupon="NESTFREESHIP" data-time="25/12/2024">
-                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512">
-                        <path d="M144 80c0 26.5-21.5 48-48 48s-48-21.5-48-48s21.5-48 48-48s48 21.5 48 48zM0 224c0-17.7 14.3-32 32-32H96c17.7 0 32 14.3 32 32V448h32c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H64V256H32c-17.7 0-32-14.3-32-32z">
-                        </path>
-                      </svg>
-                    </a>
-                    <div className="content-top"> NESTFREESHIP
-                      <span className="line-clamp line-clamp-2">Miễn phí giao hàng</span>
-                    </div>
-                    <div className="content-bottom">
-                      <span>HSD: 25/12/2024</span>
-                      <div className="coupon-code js-copy" data-copy="NESTFREESHIP" title="Sao chép">
-                        Copy mã</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
+              ))}
+
             </div>
           </div>
+
         </div>
       </section>
 
@@ -408,7 +443,7 @@ export default function Page() {
                 <div key={cat.tab} className={`${cat.tab} tab-content ${activeTab === cat.tab ? 'current' : ''}`}>
                   <div className="row load-after" data-section="section_product_tab_1">
                     {groupedByCategory[cat.slug].slice(0, 8).map((product: any) => (
-                      <div key={product.id} className="col-lg-3 col-md-3 col-sm-6 col-xs-12">
+                      <div key={product.id} className="col-lg-3 col-md-3 col-sm-6 col-xs-12" onClick={() => handleAddToHisToRy(product)} >
                         <div className="item_product_main">
                           <form method="post" className="variants product-action item-product-main duration-300" encType="multipart/form-data">
                             <span className="flash-sale">-
@@ -453,9 +488,7 @@ export default function Page() {
                                 <div style={{ marginBottom: "0px" }}>
                                   <AddToCart product={product} onAddToCart={(product) => setSelectedProduct(product)} />
                                 </div>
-                                <a href="javascript:void(0)" className="setWishlist btn-views btn-circle" data-wish={product.slug} title="Thêm vào yêu thích">
-                                  <img width="25" height="25" src="/img/heart.webp" alt="Thêm vào yêu thích" />
-                                </a>
+                                <AddToWishlist product={product} onToggle={handleToggleWishlist} />
                               </div>
                             </div>
                           </form>
@@ -602,6 +635,8 @@ export default function Page() {
           onClose={() => setSelectedProduct(null)}
         />
       )}
+      {showModal && <WishlistModal action={actionText} />}
+
     </>
 
   );

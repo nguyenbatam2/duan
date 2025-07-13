@@ -1,4 +1,15 @@
+// product.d.ts
+export interface OrderItem {
+  product_id: number;
+  quantity: number;
+  price: number;
+  variant_id?: number; // <- optional
+}
+
+
 export interface Product {
+  discount_price(discount_price: string): unknown;
+  discount_price: string;
   id: number;
   name: string;
   slug: string;
@@ -11,4 +22,6 @@ export interface Product {
   average_rating: number | null;
   views_count: number;
   quantity: number;
+  variant_id?: number; 
+  variants?: { id: number }[]; 
 }

@@ -15,7 +15,7 @@ export default function AddToCart({ product, onAddToCart }: AddToCartProps) {
   };
 
   return (
-    <button type="button" className="btn-cart btn-views add_to_cart btn btn-primary" onClick={handleAddToCart}>
+    <button type="button" className="btn-cart btn-views add_to_cart btn btn-primary" onClick={handleAddToCart} >
       <span className="txt-main">Thêm vào giỏ</span>
     </button>
   );

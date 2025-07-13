@@ -1,22 +1,110 @@
 'use client';
-import Link from 'next/link';
+import useSWR from "swr";
+import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
-import useSWR from 'swr';
-import { getProductById } from '@/app/lib/product';
-import "@/app/styles/product-detail.css";
+import Link from 'next/link';
+
+import { getProductById, getProductReviews, reportProductReview } from '@/app/lib/product';
+import { getHisToRy } from '@/app/lib/addCart';
+import { getCoupons, saveCoupon } from "@/app/lib/Coupon";
+
+
+import CartModal from '@/app/cartModal/page';
+import AddToCart from '@/app/addToCart/page';
+
+import { Product } from '@/app/types/product';
+import '@/app/styles/product-detail.css';
 
 export default function ProductDetail() {
-    const { id } = useParams(); // lấy id từ URL
+    const {
+        data: coupons,
+        isLoading: isLoadingCoupons,
+        error: isError,
+    } = useSWR("coupons", getCoupons);
+
+    const { id } = useParams();
+    const [history, setHistory] = useState<Product[]>([]);
+
+    const [message, setMessage] = useState("");
+    const [showReportAlert, setShowReportAlert] = useState(false);
+    const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+    const [savedCoupons, setSavedCoupons] = useState<number[]>([]);
+
+
+    const [activeTab, setActiveTab] = useState('#tab-1');
+
+    const fetchProductAndReviews = async (id: number) => {
+        const productData = await getProductById(id);
+        const product = productData.data;
+        const reviews = await getProductReviews(product.id);
+        return { product, reviews };
+    };
 
     const { data, error, isLoading } = useSWR(
-        id ? `product-${id}` : null,
-        () => getProductById(Number(id))
+        id ? `product-detail-${id}` : null,
+        () => fetchProductAndReviews(Number(id))
     );
 
+    const product = data?.product;
+    const reviews = data?.reviews || [];
+    const relatedProducts = product?.related_products || [];
+
+    useEffect(() => {
+        const data = getHisToRy();
+        setHistory(data.reverse().slice(0, 5));
+    }, []);
+
+
+
+
+    const averageRating = reviews.length > 0
+        ? (reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length).toFixed(1)
+        : '0.0';
+
+    const fullStars = Math.floor(Number(averageRating));
+    const hasHalfStar = Number(averageRating) % 1 >= 0.5;
+    const emptyStars = 5 - fullStars - (hasHalfStar ? 1 : 0);
+
+
+
+    if (history.length === 0) return null;
     if (isLoading) return <div>Đang tải chi tiết sản phẩm...</div>;
     if (error) return <div>Lỗi khi tải sản phẩm</div>;
+    if (isLoadingCoupons) return <p>Đang tải mã giảm giá...</p>;
+    if (isError) return <p>Lỗi khi tải mã giảm giá!</p>;
 
-    const product = data?.data;
+    const tabs = [
+        { id: '#tab-1', title: 'Mô tả sản phẩm' },
+        { id: '#tab-2', title: 'Hướng dẫn mua hàng' },
+        { id: '#tab-3', title: 'Đánh giá' },
+    ];
+    const handleReport = async (reviewId: number) => {
+        try {
+            await reportProductReview(reviewId, { reason: 'Nội dung không phù hợp' });
+            setShowReportAlert(true);
+            setTimeout(() => setShowReportAlert(false), 4000);
+        } catch (err: any) {
+            if (err.response?.status === 409) {
+                alert('Bạn đã báo cáo đánh giá này trước đó.');
+            } else {
+                console.error('Lỗi báo cáo:', err);
+            }
+        }
+    };
+
+    const handleSaveCoupon = async (id: number, code: string) => {
+        try {
+            const res = await saveCoupon(id);
+            setMessage(res.message);
+            setSavedCoupons(prev => [...prev, id]); //  thêm id vào danh sách đã lưu
+        } catch (err: any) {
+            setMessage(err?.response?.data?.message || "Có lỗi xảy ra");
+        }
+        navigator.clipboard.writeText(code);    // copy 
+        setTimeout(() => setMessage(""), 3000);
+    };
+
+
     return (
         <>
             <section className="bread-crumb">
@@ -29,8 +117,8 @@ export default function ProductDetail() {
                             </svg>&nbsp;</span>
                         </li>
                         <li>
-                            <a className="changeurl" href="/my-pham-saffron" title="Mỹ phẩm Saffron"><span>Mỹ phẩm
-                                Saffron</span></a>
+                            <Link className="changeurl" href="/my-pham-saffron" title="Mỹ phẩm Saffron"><span>Mỹ phẩm
+                                Saffron</span></Link>
                             <span className="mr_lr">&nbsp;<svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="chevron-right" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512" className="svg-inline--fa fa-chevron-right fa-w-10">
                                 <path fill="currentColor" d="M285.476 272.971L91.132 467.314c-9.373 9.373-24.569 9.373-33.941 0l-22.667-22.667c-9.357-9.357-9.375-24.522-.04-33.901L188.505 256 34.484 101.255c-9.335-9.379-9.317-24.544.04-33.901l22.667-22.667c9.373-9.373 24.569-9.373 33.941 0L285.475 239.03c9.373 9.372 9.373 24.568.001 33.941z" ></path>
                             </svg>&nbsp;</span>
@@ -55,7 +143,7 @@ export default function ProductDetail() {
                                             <div className="swiper-wrapper" id="lightgallery" aria-live="polite">
                                                 {product.images && product.images.length > 0 ? (
                                                     product.images.map((img: any, idx: number) => (
-                                                        <a
+                                                        <Link
                                                             key={img.id || idx}
                                                             className={`swiper-slide${idx === 0 ? " swiper-slide-active" : ""}`}
                                                             data-hash={idx}
@@ -66,10 +154,10 @@ export default function ProductDetail() {
                                                             style={{ width: "476px", marginRight: "10px" }}
                                                         >
                                                             <img src={`/${img.image_path}`} alt={img.alt_text || product.name} />
-                                                        </a>
+                                                        </Link>
                                                     ))
                                                 ) : (
-                                                    <a
+                                                    <Link
                                                         className="swiper-slide swiper-slide-active"
                                                         data-hash="0"
                                                         href="#"
@@ -79,17 +167,17 @@ export default function ProductDetail() {
                                                         style={{ width: "476px", marginRight: "10px" }}
                                                     >
                                                         <img src={`/${product.image || "img/sp1.webp"}`} alt={product.name} />
-                                                    </a>
+                                                    </Link>
                                                 )}
-                                                {/* <a className="swiper-slide swiper-slide-next" data-hash="1" href="#" title="Click để xem" role="group" aria-label="2 / 4" style={{ width: "476px", marginRight: "10px" }}>
+                                                {/* <Link className="swiper-slide swiper-slide-next" data-hash="1" href="#" title="Click để xem" role="group" aria-label="2 / 4" style={{ width: "476px", marginRight: "10px" }}>
                                                     <img src="/img/1.1.webp" alt="Set quà 2010 – Maneli #1 bồi bổ sức khỏe, dưỡng nhan" />
-                                                </a>
-                                                <a className="swiper-slide" data-hash="2" href="#" title="Click để xem" role="group" aria-label="3 / 4" style={{ width: "476px", marginRight: "10px" }}>
+                                                </Link>
+                                                <Link className="swiper-slide" data-hash="2" href="#" title="Click để xem" role="group" aria-label="3 / 4" style={{ width: "476px", marginRight: "10px" }}>
                                                     <img src="/img/1.2.webp" alt="Set quà 2010 – Maneli #1 bồi bổ sức khỏe, dưỡng nhan" />
-                                                </a>
-                                                <a className="swiper-slide" data-hash="3" href="#" title="Click để xem" role="group" aria-label="4 / 4" style={{ width: "476px", marginRight: "10px" }}>
+                                                </Link>
+                                                <Link className="swiper-slide" data-hash="3" href="#" title="Click để xem" role="group" aria-label="4 / 4" style={{ width: "476px", marginRight: "10px" }}>
                                                     <img src="/img/1.3.webp" alt="Set quà 2010 – Maneli #1 bồi bổ sức khỏe, dưỡng nhan" />
-                                                </a> */}
+                                                </Link> */}
                                             </div>
                                             <span className="swiper-notification" aria-live="assertive" aria-atomic="true"></span></div>
                                         {/* <!-- Thumbnail Slider --> */}
@@ -139,7 +227,7 @@ export default function ProductDetail() {
                                     <span className="mb-break">
                                         <span className="stock-brand-title">Thương hiệu:</span>
                                         <span className="a-vendor">
-                                        {product.category.name}         
+                                            {product.category.name}
                                         </span>
                                     </span>
                                     <span className="line">&nbsp;&nbsp;|&nbsp;&nbsp;</span>
@@ -167,7 +255,7 @@ export default function ProductDetail() {
                                         </div>
                                     </div>
                                     <span className="sale" style={{ display: "none" }}>
-                                        <a className="block-flashsale sale" href="sanpham.html" title="Xem ngay">
+                                        <Link className="block-flashsale sale" href="sanpham.html" title="Xem ngay">
                                             <div className="heading-flash">
                                                 {/* <!-- icon lửa --> */}
                                                 <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" viewBox="0 0 16 16">
@@ -207,32 +295,19 @@ export default function ProductDetail() {
                                                 </div>
                                             </div>
 
-                                        </a>
-                                        <div className="block-promotion">
-                                            <div className="heading-promo">
-                                                <svg height="15" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M152 0H154.2C186.1 0 215.7 16.91 231.9 44.45L256 85.46L280.1 44.45C296.3 16.91 325.9 0 357.8 0H360C408.6 0 448 39.4 448 88C448 102.4 444.5 115.1 438.4 128H480C497.7 128 512 142.3 512 160V224C512 241.7 497.7 256 480 256H32C14.33 256 0 241.7 0 224V160C0 142.3 14.33 128 32 128H73.6C67.46 115.1 64 102.4 64 88C64 39.4 103.4 0 152 0zM190.5 68.78C182.9 55.91 169.1 48 154.2 48H152C129.9 48 112 65.91 112 88C112 110.1 129.9 128 152 128H225.3L190.5 68.78zM360 48H357.8C342.9 48 329.1 55.91 321.5 68.78L286.7 128H360C382.1 128 400 110.1 400 88C400 65.91 382.1 48 360 48V48zM32 288H224V512H80C53.49 512 32 490.5 32 464V288zM288 512V288H480V464C480 490.5 458.5 512 432 512H288z"></path></svg>
-                                                Quà tặng dành cho bạn:
-                                            </div>
-                                            <div className="promo-content">
-                                                <ul>
-                                                    <li><span>Tặng thêm 1 Son Dưỡng Cira Lipbalm</span></li>
-                                                    <li><span>Chương trình khuyến mại Pre Order áp dụng từ 01/11 – 23/11/2024</span></li>
-                                                </ul>
-                                            </div>
-                                        </div>
-
+                                        </Link>
                                     </span>
 
                                     <div className="price-box clearfix">
                                         <span className="special-price">
-                                            <span className="price product-price">{product.price}</span>
+                                            <span className="price product-price">{Number(product.price).toLocaleString('vi-VN')}đ</span>
                                             <meta itemProp="price" content="{product.price}" />
                                             <meta itemProp="priceCurrency" content="VND" />
                                         </span>
                                         {/* <!-- Giá Khuyến mại --> */}
                                         <span className="old-price" itemProp="priceSpecification" itemType="http://schema.org/priceSpecification">
                                             <del className="price product-price-old">
-                                                799.000₫
+                                                {Number(product.discount_price).toLocaleString('vi-VN')}đ
                                             </del>
                                             <meta itemProp="price" content="799000" />
                                             <meta itemProp="priceCurrency" content="VND" />
@@ -243,9 +318,9 @@ export default function ProductDetail() {
                                         </span>
                                     </div>
                                     <div className="form-product">
-                                        <div className="box-variant clearfix  d-none ">
-                                            <input type="hidden" id="one_variant" name="variantId" value="110202248" />
-                                        </div>
+                                        {/* <div className="box-variant clearfix  d-none ">
+                                            <input type="hidden" id="one_variant" name="variantId" defaultValue="Giá trị ban đầu" />
+                                        </div> */}
                                         <div className="boz-form ">
                                             <div className="flex-quantity">
                                                 <div className="custom custom-btn-number show">
@@ -266,7 +341,7 @@ export default function ProductDetail() {
                                                         >
                                                             -
                                                         </button>
-                                                        <input type="text" id="qtym" name="quantity" value="1" readOnly min="1" maxLength={3} className="form-control prd_quantity" />
+                                                        <input type="text" id="qtym" name="quantity" defaultValue="1" readOnly min="1" maxLength={3} className="form-control prd_quantity" />
                                                         <button
                                                             className="btn_num num_2 button button_qty"
                                                             onClick={() => {
@@ -285,13 +360,14 @@ export default function ProductDetail() {
                                                     </div>
                                                 </div>
                                                 <div className="btn-mua button_actions clearfix">
-                                                    <button className="btn-buyNow btn btn-primary">
+                                                    <button className="btn-buyNow btn btn-primary" type="button" >
                                                         <span className="txt-main">Mua ngay</span>
                                                     </button>
+                                                    <AddToCart product={product} onAddToCart={(product) => setSelectedProduct(product)} />
 
-                                                    <button type="submit" name="themgh" className="btn btn_base normal_button btn_add_cart add_to_cart btn-cart btn-extent is-added">
+                                                    {/* <button type="submit" name="themgh" className="btn btn_base normal_button btn_add_cart add_to_cart btn-cart btn-extent is-added">
                                                         <span className="txt-main">Thêm vào giỏ</span>
-                                                    </button>
+                                                    </button> */}
                                                 </div>
                                             </div>
                                         </div>
@@ -308,17 +384,17 @@ export default function ProductDetail() {
                                             Chia sẻ
                                         </li>
                                         <li className="social-media__item social-media__item--facebook">
-                                            <a title="Chia sẻ lên Facebook" href="#" target="_blank" rel="noopener" aria-label="Chia sẻ lên Facebook">
+                                            <Link title="Chia sẻ lên Facebook" href="#" target="_blank" rel="noopener" aria-label="Chia sẻ lên Facebook">
                                                 <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlnsXlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 155.139 155.139" xmlSpace="preserve">
                                                     <g>
                                                         <path id="f_1_" style={{ fill: "#010002" }} d="M89.584,155.139V84.378h23.742l3.562-27.585H89.584V39.184 c0-7.984,2.208-13.425,13.67-13.425l14.595-0.006V1.08C115.325,0.752,106.661,0,96.577,0C75.52,0,61.104,12.853,61.104,36.452 v20.341H37.29v27.585h23.814v70.761H89.584z">
                                                         </path>
                                                     </g>
                                                 </svg>
-                                            </a>
+                                            </Link>
                                         </li>
                                         <li className="social-media__item social-media__item--pinterest">
-                                            <a title="Chia sẻ lên Pinterest" href="#&amp;" target="_blank" rel="noopener" aria-label="Pinterest">
+                                            <Link title="Chia sẻ lên Pinterest" href="#&amp;" target="_blank" rel="noopener" aria-label="Pinterest">
                                                 <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlnsXlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 511.977 511.977" xmlSpace="preserve">
                                                     <g>
                                                         <g>
@@ -327,10 +403,10 @@ export default function ProductDetail() {
                                                         </g>
                                                     </g>
                                                 </svg>
-                                            </a>
+                                            </Link>
                                         </li>
                                         <li className="social-media__item social-media__item--twitter">
-                                            <a title="Chia sẻ lên Twitter" href="#" target="_blank" rel="noopener" aria-label="Tweet on Twitter">
+                                            <Link title="Chia sẻ lên Twitter" href="#" target="_blank" rel="noopener" aria-label="Tweet on Twitter">
                                                 <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlnsXlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 512 512" xmlSpace="preserve">
                                                     <g>
                                                         <g>
@@ -339,15 +415,15 @@ export default function ProductDetail() {
                                                         </g>
                                                     </g>
                                                 </svg>
-                                            </a>
+                                            </Link>
                                         </li>
                                     </ul>
                                     <div className="line"></div>
                                     <div className="product-wish">
-                                        <a href="javascript:void(0)" className="setWishlist btn-views" data-wish="set-qua-2010-maneli-1-boi-bo-suc-khoe-duong-nhan" tabIndex={0} title="Thêm vào yêu thích">
+                                        <Link href="javascript:void(0)" className="setWishlist btn-views" data-wish="set-qua-2010-maneli-1-boi-bo-suc-khoe-duong-nhan" tabIndex={0} title="Thêm vào yêu thích">
                                             <img width="25" height="25" src="/img/heart.webp" alt="Thêm vào yêu thích" />
                                             Thêm vào yêu thích
-                                        </a>
+                                        </Link>
                                     </div>
                                 </div>
                             </div>
@@ -358,117 +434,45 @@ export default function ProductDetail() {
                             <div className="bg-shadow">
                                 <div className="title">Khuyến mãi dành cho bạn</div>
                                 <div className="swiper_coupons swiper-container swiper-container-initialized swiper-container-horizontal swiper-container-pointer-events">
-                                    <div className="swiper-wrapper" style={{ transform: "translate3d(0px, 0px, 0px)" }}>
-                                        <div className="swiper-slide swiper-slide-active" style={{ width: "295.75px", marginRight: "16px" }}>
-                                            <div className="box-coupon">
-                                                <div className="mask-ticket">
-                                                </div>
-                                                <div className="image">
-                                                    <img width="88" height="88" className="# loaded" src="/img/img_coupon_1.webp" alt="NEST200" data-was-processed="true" />
-                                                </div>
-                                                <div className="content_wrap">
-                                                    <a title="Chi tiết" href="javascript:void(0)" className="info-button" data-coupon="NEST200" data-time="12/12/2024" data-content="Áp dụng cho đơn hàng từ <b>4,500,000đ</b> trở lên Không đi kèm với chương trình khác">
-                                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512">
-                                                            <path d="M144 80c0 26.5-21.5 48-48 48s-48-21.5-48-48s21.5-48 48-48s48 21.5 48 48zM0 224c0-17.7 14.3-32 32-32H96c17.7 0 32 14.3 32 32V448h32c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H64V256H32c-17.7 0-32-14.3-32-32z">
-                                                            </path>
-                                                        </svg>
-                                                    </a>
-                                                    <div className="content-top">
-                                                        NEST200
-                                                        <span className="line-clamp line-clamp-2">Giảm 200k giá trị đơn
-                                                            hàng</span>
-                                                    </div>
-                                                    <div className="content-bottom">
-                                                        <span>HSD: 12/12/2024</span>
-                                                        <div className="coupon-code js-copy" data-copy="NEST200" title="Sao chép">Copy
-                                                            mã</div>
-                                                    </div>
-                                                </div>
-                                            </div>
+                                    <div className="swiper-wrapper">
+                                        {coupons?.map((coupon: any) => (
+                                            <div className="swiper-slide" key={coupon.id} style={{ width: '295.75px', marginRight: '16px' }}>
+                                                <div className="box-coupon">
+                                                    <div className="mask-ticket">
 
-                                        </div>
-
-
-                                        <div className="swiper-slide swiper-slide-next" style={{ width: "295.75px", marginRight: "16px" }}>
-                                            <div className="box-coupon">
-                                                <div className="mask-ticket">
-                                                </div>
-                                                <div className="image">
-                                                    <img width="88" height="88" className="# loaded" src="/img/img_coupon_1.webp" alt="NEST100" data-was-processed="true" />
-                                                </div>
-                                                <div className="content_wrap">
-                                                    <a title="Chi tiết" href="javascript:void(0)" className="info-button" data-coupon="NEST100" data-time="24/12/2024" data-content="Áp dụng cho đơn hàng từ <b>2,500,000đ</b> trở lên Không đi kèm với chương trình khác">
-                                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512">
-                                                            <path d="M144 80c0 26.5-21.5 48-48 48s-48-21.5-48-48s21.5-48 48-48s48 21.5 48 48zM0 224c0-17.7 14.3-32 32-32H96c17.7 0 32 14.3 32 32V448h32c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H64V256H32c-17.7 0-32-14.3-32-32z">
-                                                            </path>
-                                                        </svg>
-                                                    </a>
-                                                    <div className="content-top">
-                                                        NEST100
-                                                        <span className="line-clamp line-clamp-2">Giảm 100k giá trị đơn
-                                                            hàng</span>
                                                     </div>
-                                                    <div className="content-bottom">
-                                                        <span>HSD: 24/12/2024</span>
-                                                        <div className="coupon-code js-copy" data-copy="NEST100" title="Sao chép">Copy
-                                                            mã</div>
+                                                    <div className="image">
+                                                        <img width="88" height="88" src="/img/img_coupon_1.webp" alt={coupon.code} />
                                                     </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div className="swiper-slide" style={{ width: "295.75px", marginRight: "16px" }}>
-                                            <div className="box-coupon">
-                                                <div className="mask-ticket">
-                                                </div>
-                                                <div className="image">
-                                                    <img width="88" height="88" className="# loaded" src="/img/img_coupon_1.webp" alt="NEST50" data-was-processed="true" />
-                                                </div>
-                                                <div className="content_wrap">
-                                                    <a title="Chi tiết" href="javascript:void(0)" className="info-button" data-coupon="NEST50" data-time="25/12/2024" data-content="Áp dụng cho đơn hàng từ <b>1,500,000đ</b> trở lên Không đi kèm với chương trình khác">
-                                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512">
-                                                            <path d="M144 80c0 26.5-21.5 48-48 48s-48-21.5-48-48s21.5-48 48-48s48 21.5 48 48zM0 224c0-17.7 14.3-32 32-32H96c17.7 0 32 14.3 32 32V448h32c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H64V256H32c-17.7 0-32-14.3-32-32z">
-                                                            </path>
-                                                        </svg>
-                                                    </a>
-                                                    <div className="content-top">
-                                                        NEST50
-                                                        <span className="line-clamp line-clamp-2">Giảm 50k giá trị đơn
-                                                            hàng</span>
-                                                    </div>
-                                                    <div className="content-bottom">
-                                                        <span>HSD: 25/12/2024</span>
-                                                        <div className="coupon-code js-copy" data-copy="NEST50" title="Sao chép">Copy mã
+                                                    <div className="content_wrap">
+                                                        <a title="Chi tiết" href="javascript:void(0)" className="info-button" data-coupon="NEST200" data-time="12/12/2024">
+                                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512">
+                                                                <path d="M144 80c0 26.5-21.5 48-48 48s-48-21.5-48-48s21.5-48 48-48s48 21.5 48 48zM0 224c0-17.7 14.3-32 32-32H96c17.7 0 32 14.3 32 32V448h32c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H64V256H32c-17.7 0-32-14.3-32-32z">
+                                                                </path>
+                                                            </svg>
+                                                        </a>
+                                                        <div className="content-top">
+                                                            {coupon.code}
+                                                            <span className="line-clamp line-clamp-2">
+                                                                {coupon.description || "Không có mô tả"}
+                                                            </span>
+                                                        </div>
+                                                        <div className="content-bottom">
+                                                            <span>HSD: {coupon.end_at}</span>
+                                                            <button
+                                                                key={coupon.id}
+                                                                onClick={() => handleSaveCoupon(coupon.id, coupon.code)}
+                                                                className={`coupon-code js-copy ${savedCoupons.includes(coupon.id) ? 'saved' : ''}`}
+                                                                title="Click để lưu/copy lại"
+                                                            >
+                                                                {savedCoupons.includes(coupon.id) ? "Copy mã" : "Lưu mã"}
+                                                            </button>
                                                         </div>
                                                     </div>
                                                 </div>
                                             </div>
-                                        </div>
-                                        <div className="swiper-slide" style={{ width: "295.75px", marginRight: "16px" }}>
-                                            <div className="box-coupon">
-                                                <div className="mask-ticket">
-                                                </div>
-                                                <div className="image">
-                                                    <img width="88" height="88" className="# loaded" src="/img/img_coupon_1.webp" alt="NESTFREESHIP" data-was-processed="true" />
-                                                </div>
-                                                <div className="content_wrap">
-                                                    <a title="Chi tiết" href="javascript:void(0)" className="info-button" data-coupon="NESTFREESHIP" data-time="25/12/2024" data-content="Miễn phí giao hàng (tối đa 30k) cho đơn hàng từ <b>1,000,000đ</b> trở lên">
-                                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512">
-                                                            <path d="M144 80c0 26.5-21.5 48-48 48s-48-21.5-48-48s21.5-48 48-48s48 21.5 48 48zM0 224c0-17.7 14.3-32 32-32H96c17.7 0 32 14.3 32 32V448h32c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H64V256H32c-17.7 0-32-14.3-32-32z">
-                                                            </path>
-                                                        </svg>
-                                                    </a>
-                                                    <div className="content-top">
-                                                        NESTFREESHIP
-                                                        <span className="line-clamp line-clamp-2">Miễn phí giao hàng</span>
-                                                    </div>
-                                                    <div className="content-bottom">
-                                                        <span>HSD: 25/12/2024</span>
-                                                        <div className="coupon-code js-copy" data-copy="NESTFREESHIP" title="Sao chép">
-                                                            Copy mã</div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
+                                        ))}
+
                                     </div>
                                     <div className="swiper-button-prev swiper-button-disabled swiper-button-lock">
                                         <svg width="58" height="58" viewBox="0 0 58 58" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -489,38 +493,44 @@ export default function ProductDetail() {
                                 </div>
                             </div>
                         </div>
-                        <div className="popup-coupon">
-                            <div className="content">
-                                <div className="title">
-                                    Thông tin voucher
-                                </div>
-                                <div className="close-popup-coupon" title="Đóng">
-                                    <svg xmlns="http://www.w3.org/2000/svg" xmlnsXlink="http://www.w3.org/1999/xlink" version="1.1" x="0px" y="0px" viewBox="0 0 512.001 512.001" xmlSpace="preserve">
-                                        <g>
+                            <div className="popup-coupon active">
+                                <div className="content">
+                                    <div className="title">
+                                        Thông tin voucher
+                                    </div>
+                                    <div className="close-popup-coupon" title="Đóng">
+                                        <svg xmlns="http://www.w3.org/2000/svg" xmlnsXlink="http://www.w3.org/1999/xlink" version="1.1" x="0px" y="0px" viewBox="0 0 512.001 512.001" xmlSpace="preserve">
                                             <g>
-                                                <path d="M284.286,256.002L506.143,34.144c7.811-7.811,7.811-20.475,0-28.285c-7.811-7.81-20.475-7.811-28.285,0L256,227.717    L34.143,5.859c-7.811-7.811-20.475-7.811-28.285,0c-7.81,7.811-7.811,20.475,0,28.285l221.857,221.857L5.858,477.859    c-7.811,7.811-7.811,20.475,0,28.285c3.905,3.905,9.024,5.857,14.143,5.857c5.119,0,10.237-1.952,14.143-5.857L256,284.287    l221.857,221.857c3.905,3.905,9.024,5.857,14.143,5.857s10.237-1.952,14.143-5.857c7.811-7.811,7.811-20.475,0-28.285    L284.286,256.002z">
-                                                </path>
+                                                <g>
+                                                    <path d="M284.286,256.002L506.143,34.144c7.811-7.811,7.811-20.475,0-28.285c-7.811-7.81-20.475-7.811-28.285,0L256,227.717    L34.143,5.859c-7.811-7.811-20.475-7.811-28.285,0c-7.81,7.811-7.811,20.475,0,28.285l221.857,221.857L5.858,477.859    c-7.811,7.811-7.811,20.475,0,28.285c3.905,3.905,9.024,5.857,14.143,5.857c5.119,0,10.237-1.952,14.143-5.857L256,284.287    l221.857,221.857c3.905,3.905,9.024,5.857,14.143,5.857s10.237-1.952,14.143-5.857c7.811-7.811,7.811-20.475,0-28.285    L284.286,256.002z">
+                                                    </path>
+                                                </g>
                                             </g>
-                                        </g>
-                                    </svg>
-                                </div>
-                                <ul>
-                                    <li>
-                                        <span>Mã giảm giá:</span>
-                                        <span className="code"></span>
-                                    </li>
-                                    <li>
-                                        <span>Ngày hết hạn:</span>
-                                        <span className="time"></span>
-                                    </li>
-                                    <li>
-                                        <span>Điều kiện:</span>
+                                        </svg>
+                                    </div>
+                                    <ul>
+                                        <li>
+                                            <span>Mã giảm giá:</span>
+                                        <span className="code">
+                                            {coupons.code}
+                                            </span>
+                                        </li>
+                                        <li>
+                                            <span>Ngày hết hạn:</span>
+                                            <span className="time">
+                                            {coupons.end_at}
+
+                                            </span>
+                                        </li>
+                                        <li>
+                                            <span>Điều kiện:</span>
                                         <span className="dieukien">
-                                        </span>
-                                    </li>
-                                </ul>
+                                            {coupons.description || "Không có mô tả"}
+                                            </span>
+                                        </li>
+                                    </ul>
+                                </div>
                             </div>
-                        </div>
 
                         <div className="col-12 margin-bottom-20">
                             <div className="bg-shadow">
@@ -529,22 +539,14 @@ export default function ProductDetail() {
                                         <div className="product-tab e-tabs not-dqtab">
                                             <ul className="tabs tabs-title clearfix">
 
-                                                <li className="tab-link active" data-tab="#tab-1">
-                                                    <h3>Mô tả sản phẩm</h3>
-                                                </li>
-
-
-                                                <li className="tab-link" data-tab="#tab-2">
-                                                    <h3>Hướng dẫn mua hàng</h3>
-                                                </li>
-
-
-                                                <li className="tab-link" data-tab="#tab-3">
-                                                    <h3>Đánh giá</h3>
-                                                </li>
+                                                {tabs.map(tab => (
+                                                    <li key={tab.id} className={`tab-link ${activeTab === tab.id ? 'active' : ''}`} data-tab={tab.id} onClick={() => setActiveTab(tab.id)} >
+                                                        <h3>{tab.title}</h3>
+                                                    </li>
+                                                ))}
                                             </ul>
                                             <div className="tab-float">
-                                                <div id="tab-1" className="tab-content  content_extab active">
+                                                <div id="tab-1" className={`tab-content  content_extab ${activeTab === '#tab-1' ? 'active' : ''}`}>
                                                     <div className="rte product_getcontent product-review-content">
                                                         <div className="ba-text-fpt has-height">
                                                             <p></p><p>Chọn quà tặng đã khó, chọn một món quà cho mẹ còn khó hơn. Với mẹ, một món quà chẳng cần đắt đỏ, xa xỉ, mà phải thật sự thành tâm và ý nghĩa. Đó cũng là lý do những set quà tặng sức khỏe như Maneli #1 từ Saffron VIETNAM luôn được lòng rất nhiều anh chị khách hàng, bởi lúc nào cũng “đong đầy” sức khỏe, thứ mà ai cũng cần, ai cũng quý.</p><h2>I. THÀNH PHẦN SET</h2>
@@ -558,7 +560,7 @@ export default function ProductDetail() {
                                                             </p></div>
                                                     </div>
                                                 </div>
-                                                <div id="tab-2" className="tab-content content_extab">
+                                                <div id="tab-2" className={`tab-content  content_extab ${activeTab === '#tab-2' ? 'active' : ''}`}>
                                                     <div className="rte">
 
                                                         <p><strong>Bước 1</strong>: Truy cập website và lựa chọn sản
@@ -601,7 +603,7 @@ export default function ProductDetail() {
                                                         <p>Trân trọng cảm ơn.</p>
                                                     </div>
                                                 </div>
-                                                <div id="tab-3" className="tab-content  content_extab">
+                                                <div id="tab-3" className={`tab-content  content_extab ${activeTab === '#tab-3' ? 'active' : ''}`}>
                                                     <div className="rte">
                                                         {/* <!-- Review Section --> */}
                                                         <div className="comment-alt ">
@@ -609,61 +611,80 @@ export default function ProductDetail() {
                                                             {/* <!-- Overall Rating --> */}
                                                             <div className="d-flex align-items-center mb-3">
                                                                 <div className="text-warning me-2">
-                                                                    <i className="fas fa-star"></i><i className="fas fa-star"></i><i className="fas fa-star"></i>
-                                                                    <i className="fas fa-star"></i><i className="fas fa-star"></i>
+                                                                    {Array.from({ length: fullStars }).map((_, i) => (
+                                                                        <i key={`full-${i}`} className="fas fa-star"></i>
+                                                                    ))}
+
+                                                                    {hasHalfStar && <i className="fas fa-star-half-alt"></i>}
+
+                                                                    {Array.from({ length: emptyStars }).map((_, i) => (
+                                                                        <i key={`empty-${i}`} className="far fa-star"></i>
+                                                                    ))}
                                                                 </div>
-                                                                <span className="text-muted ms-2"> 5 / 5 (25k đánh
-                                                                    giá)</span>
-                                                            </div>
-                                                            <p className="text-muted mb-4">Hình Ảnh Từ Người Mua</p>
-                                                            {/* <!-- Review 1 --> */}
-                                                            <div className="user-review">
-                                                                <div className="d-flex align-items-center mb-4">
-                                                                    <img src="/img/facebook_2.svg" alt="Reviewer 1" className="rounded-circle" width="50" height="50" />
-                                                                    <div className="ms-3">
-                                                                        <div className="text-user">Nguyễn Văn Triều</div>
-                                                                        <div className="text-warning">
-                                                                            <i className="fas fa-star"></i><i className="fas fa-star"></i><i className="fas fa-star"></i>
-                                                                            <i className="fas fa-star"></i><i className="fas fa-star"></i>
-                                                                        </div>
-                                                                    </div>
-                                                                </div>
-                                                                <p className="mb-0"><strong>Tên Sản Phẩm:</strong> Yến Sào
-                                                                    Cao Cấp Loại 1</p>
-                                                                <p className="mb-3"><strong>Mô Tả:</strong> Chắc Lượng Trên
-                                                                    Cả Tuyệt Vời Tôi Mới Ăn Thử Vào 1 Hủ Thôi Mà Tôi Đã
-                                                                    Đi Bệnh
-                                                                    Viện Cả 1 Tuần Đánh Giá Cho Shop 5 Sao Nha</p>
-                                                                <div className="d-flex">
-                                                                    <img src="https://storage.googleapis.com/a1aa/image/5sIzgYFK64KeNCMwqS881dLJ2ta9HDU2kvPMuljSnLpZHp4JA.jpg" alt="Product 1" className="mr-3" width="100" height="100" />
-                                                                    <img src="https://storage.googleapis.com/a1aa/image/5sIzgYFK64KeNCMwqS881dLJ2ta9HDU2kvPMuljSnLpZHp4JA.jpg" alt="Product 1" className="mr-3" width="100" height="100" />
-                                                                </div>
-                                                                <label htmlFor="Admin"> Trả Lời </label>
-                                                                <input type="text" className="form-ctrol" id="Admin" value="Trả Lời" />
+
+                                                                <span className="text-muted ms-2">
+                                                                    {averageRating} / 5 ({reviews.length} đánh giá)
+                                                                </span>
                                                             </div>
 
-                                                            {/* <!-- Review 2 --> */}
-                                                            <div className="user-review">
-                                                                <div className="d-flex align-items-center mb-4">
-                                                                    <img src="/img/facebook_2.svg" alt="Reviewer 2" className="rounded-circle" width="50" height="50" />
-                                                                    <div className="ms-3">
-                                                                        <div className="text-user">Nguyễn Tuấn Anh</div>
-                                                                        <div className="text-warning">
-                                                                            <i className="fas fa-star"></i><i className="fas fa-star"></i><i className="fas fa-star"></i>
-                                                                            <i className="fas fa-star"></i><i className="fas fa-star-half-alt"></i>
+                                                            <p className="text-muted mb-4">Hình Ảnh Từ Người Mua</p>
+                                                            {/* <!-- Review 1 --> */}
+                                                            {reviews.map((review) => {
+                                                                console.log(review);
+                                                                return (<>
+                                                                    <div key={review.id} className="user-review mb-4">
+                                                                        <div className="d-flex align-items-center mb-2">
+                                                                            <img
+                                                                                src="/img/facebook_2.svg"
+                                                                                alt={review.user.avatar}
+                                                                                className="rounded-circle"
+                                                                                width="50"
+                                                                                height="50"
+                                                                            />
+                                                                            <div className="ms-3">
+                                                                                <div className="text-user">{review.user.name}</div>
+                                                                                <div className="text-warning">
+                                                                                    {Array.from({ length: review.rating }).map((_, i) => (
+                                                                                        <i key={i} className="fas fa-star"></i>
+                                                                                    ))}
+                                                                                    {Array.from({ length: 5 - review.rating }).map((_, i) => (
+                                                                                        <i key={i} className="far fa-star"></i>
+                                                                                    ))}
+                                                                                </div>
+                                                                            </div>
                                                                         </div>
-                                                                    </div>
-                                                                </div>
-                                                                <p className="mb-0"><strong>Tên Sản Phẩm:</strong> Yến Sào
-                                                                    Cao Cấp Loại 2</p>
-                                                                <p className="mb-3"><strong>Mô Tả:</strong> Tôi Không Biết
-                                                                    Gì Cả Tôi Thấy Thằng Trên Mua Nên Tôi Mua Theo Nè
-                                                                </p>
-                                                                <div className="d-flex">
-                                                                    <img src="https://storage.googleapis.com/a1aa/image/5sIzgYFK64KeNCMwqS881dLJ2ta9HDU2kvPMuljSnLpZHp4JA.jpg" alt="Product 1" className="mr-3" width="100" height="100" />
-                                                                    <img src="https://storage.googleapis.com/a1aa/image/5sIzgYFK64KeNCMwqS881dLJ2ta9HDU2kvPMuljSnLpZHp4JA.jpg" alt="Product 1" className="mr-3" width="100" height="100" />
-                                                                </div>
-                                                            </div>
+                                                                        <p className="mb-0">
+                                                                            <strong>Tên Sản Phẩm:</strong> Sản phẩm #{review.product_id}
+                                                                        </p>
+
+                                                                        <p className="mb-3">
+                                                                            <strong>Mô Tả:</strong> {review.comment}
+                                                                        </p>
+
+                                                                        {review.images?.length > 0 && (
+                                                                            <div className="d-flex gap-2 mb-2">
+                                                                                {review.images.map((img: { image_path: string }, idx: number) => (
+                                                                                    <img
+                                                                                        key={idx}
+                                                                                        src={`http://127.0.0.1:8000${img.image_path}`}
+                                                                                        alt={`Ảnh ${idx + 1}`}
+                                                                                        className="mr-3"
+                                                                                        width="100"
+                                                                                        height="100"
+                                                                                    />
+                                                                                ))}
+                                                                            </div>
+                                                                        )}
+
+
+                                                                        <button className="btn-report" onClick={() => handleReport(review.id)}>
+                                                                            <i className="fas fa-flag me-1"></i> Báo cáo
+                                                                        </button>
+
+                                                                    </div></>)
+                                                            }
+
+                                                            )}
                                                         </div>
                                                     </div>
                                                 </div>
@@ -679,20 +700,21 @@ export default function ProductDetail() {
                                                     </span>
                                                 </h2>
                                                 <div className="product-viewed-content">
-                                                    <div className="product-view">
-                                                        <a className="image_thumb" href="/to-yen-tinh-che-vip-loai-1" title="Tổ Yến Tinh Chế VIP Loại 1">
-                                                            <img width="370" height="480" className="lazyload loaded" src="/img/sp6.webp" alt="Tổ Yến Tinh Chế VIP Loại 1" data-was-processed="true" />
-                                                        </a>
-                                                        <div className="product-info">
-                                                            <h3 className="product-name"><a href="/to-yen-tinh-che-vip-loai-1" title="Tổ Yến Tinh Chế VIP Loại 1" className="line-clamp line-clamp-3-new">Tổ Yến Tinh Chế
-                                                                VIP Loại 1</a></h3>
-                                                            <div className="price-box">
-                                                                <span className="price">2.150.000₫</span>
-                                                                <span className="compare-price">2.350.000₫</span>
+                                                    {history.map((product) => (
+                                                        <div className="product-view" key={product.id}>
+                                                            <Link className="image_thumb" href={`/product/${product.id}`} title="Tổ Yến Tinh Chế VIP Loại 1">
+                                                                <img width="370" height="480" className="lazyload loaded" src={`http://localhost:8000/storage/products/${product.image}`} alt={product.name} data-was-processed="true" />
+                                                            </Link>
+                                                            <div className="product-info">
+                                                                <h3 className="product-name"><Link href={`/product/${product.id}`} title="Tổ Yến Tinh Chế VIP Loại 1" className="line-clamp line-clamp-3-new">{product.name}</Link></h3>
+                                                                <div className="price-box">
+                                                                    <span className="price">{Number(product.price).toLocaleString("vi-VN")}₫</span>
+                                                                    <span className="compare-price">{Number(product.discount_price).toLocaleString('vi-VN')}đ</span>
+                                                                </div>
+                                                                <Link className="view-more" href={`/product/${product.id}`} title="Xem chi tiết">Xem chi tiết »</Link>
                                                             </div>
-                                                            <a className="view-more" href="/to-yen-tinh-che-vip-loai-1" title="Xem chi tiết">Xem chi tiết »</a>
                                                         </div>
-                                                    </div>
+                                                    ))}
                                                     {/* <!-- sp2 --> */}
                                                 </div>
                                             </div>
@@ -708,69 +730,66 @@ export default function ProductDetail() {
                         <div className="col-12 product-related product-swipers">
                             <div className="bg-shadow">
                                 <h2>
-                                    <a href="/my-pham-saffron" title="Sản phẩm liên quan">
+                                    <Link href="/my-pham-saffron" title="Sản phẩm liên quan">
                                         Sản phẩm liên quan
-                                    </a>
+                                    </Link>
                                 </h2>
                                 <div className="swiper_product_related swiper-container swiper-container-initialized swiper-container-horizontal swiper-container-pointer-events swiper-initialized swiper-horizontal swiper-backface-hidden">
                                     <div className="swiper-wrapper" style={{ transform: 'translate3d(0px, 0px, 0px)', transitionDuration: '0ms', }} id="swiper-wrapper-45eac8a6d77c6525" aria-live="polite">
-                                        {/* <!-- sp1 --> */}
 
-                                        <div className="swiper-slide swiper-slide-active" style={{ width: '292.75px', marginRight: '20px' }} role="group" aria-label="1 / 6">
-                                            <div className="item_product_main">
-                                                <form action="#" method="post" className="variants product-action item-product-main duration-300" data-cart-form="" data-id="product-actions-34621119" encType="multipart/form-data">
-                                                    <div className="tag-promo" title="Quà tặng">
-                                                        <img src="/img/tag-qua.svg" alt="Quà tặng" className="#" />
-                                                        <div className="promotion-content">
-                                                            <div className="line-clamp-5-new" title=" Tặng bình thủy tinh 300ml Freeship từ 2 gram ">
-                                                                <ul>
-                                                                    <li><span style={{ letterSpacing: '-0.2px' }}>Tặng bình
-                                                                        thủy tinh
-                                                                        300ml</span></li>
-                                                                    <li><span style={{ letterSpacing: '-0.2px' }}>Freeship
-                                                                        từ 2
-                                                                        gram</span></li>
-                                                                </ul>
+                                        {relatedProducts.map((item: Product) => (
+                                            <div
+                                                className="swiper-slide swiper-slide-active"
+                                                style={{ width: '292.75px', marginRight: '20px' }}
+                                                role="group"
+                                                aria-label="1 / 6"
+                                                key={item.id}
+                                            >
+                                                <div className="item_product_main">
+                                                    <form className="variants product-action item-product-main duration-300" encType="multipart/form-data">
+                                                        <div className="product-thumbnail">
+                                                            <Link
+                                                                className="image_thumb scale_hover"
+                                                                href={`/product/${item.id}`}
+                                                                title={item.name}
+                                                            >
+                                                                <img
+                                                                    className="# duration-300"
+                                                                    src={item.image ? `http://localhost:8000/storage/products/${item.image}` : "/img/sp3.webp"}
+                                                                    alt={item.name}
+                                                                />
+                                                            </Link>
+                                                        </div>
+                                                        <div className="product-info">
+                                                            <div className="name-price">
+                                                                <h3 className="product-name line-clamp-2-new">
+                                                                    <Link href={`/product/${item.id}`} title={item.name}>
+                                                                        {item.name}
+                                                                    </Link>
+                                                                </h3>
+                                                                <div className="product-price-cart">
+                                                                    <span className="price">{Number(item.price).toLocaleString("vi-VN")}₫</span>
+                                                                </div>
+                                                            </div>
+                                                            <div className="product-button">
+                                                                <div style={{ marginBottom: '0px !important' }}>
+                                                                    <AddToCart product={product} onAddToCart={(product) => setSelectedProduct(product)} />
+                                                                </div>
+                                                                <Link
+                                                                    href="javascript:void(0)"
+                                                                    className="setWishlist btn-views btn-circle"
+                                                                    data-wish={item.name}
+                                                                    tabIndex={0}
+                                                                    title="Thêm vào yêu thích"
+                                                                >
+                                                                    <img width="25" height="25" src="/img/heart.webp" alt="Thêm vào yêu thích" />
+                                                                </Link>
                                                             </div>
                                                         </div>
-                                                    </div>
-                                                    <div className="product-thumbnail">
-                                                        <a className="image_thumb scale_hover" href="index.php?trang=home&amp;id=2&amp;iddm=1" title="Saffron SHYAM 1Gr  Nhụy hoa nghệ tây Organic">
-                                                            <img className="# duration-300" src="/img/sp3.webp" alt="Saffron SHYAM 1Gr  Nhụy hoa nghệ tây Organic" />
-                                                        </a>
-                                                    </div>
-                                                    <div className="product-info">
-                                                        <div className="name-price">
-                                                            <h3 className="product-name line-clamp-2-new">
-                                                                <a href="/saffron-shyam-1gr-nhuy-hoa-nghe-tay-organic" title="Saffron SHYAM 1Gr  Nhụy hoa nghệ tây Organic">Saffron Tổ Yến Tinh Chế cho bé BaBy (loại 2)</a>
-                                                            </h3>
-                                                            <div className="product-price-cart">
-                                                                <span className="price">2.900.000₫</span>
-                                                            </div>
-                                                        </div>
-                                                        <div className="product-button">
-                                                            <input type="hidden" name="variantId" value="110202522" />
-
-                                                            <form action="index.php?trang=giohang" method="post" style={{ marginBottom: '0px !important' }}>
-                                                                <input type="hidden" name="ten" value="Saffron Tổ Yến Tinh Chế cho bé BaBy (loại 2)" />
-                                                                <input type="hidden" name="hinh" value="sp3.webp" />
-                                                                <input type="hidden" name="gia" value="2900000" />
-                                                                <input type="hidden" name="id" value="2" />
-
-
-                                                                <button type="submit" name="themgh" className="btn-cart btn-views add_to_cart btn btn-primary is-added">
-                                                                    <span className="txt-main">Thêm vào giỏ</span>
-                                                                </button>
-                                                            </form>
-
-                                                            <a href="javascript:void(0)" className="setWishlist btn-views btn-circle" data-wish="saffron-shyam-1gr-nhuy-hoa-nghe-tay-organic" tabIndex={0} title="Thêm vào yêu thích">
-                                                                <img width="25" height="25" src="/img/heart.webp" alt="Thêm vào yêu thích" />
-                                                            </a>
-                                                        </div>
-                                                    </div>
-                                                </form>
+                                                    </form>
+                                                </div>
                                             </div>
-                                        </div>
+                                        ))}
                                         {/* heets */}
                                     </div>
                                     <div className="swiper-button-next" tabIndex={0} role="button" aria-label="Next slide" aria-controls="swiper-wrapper-45eac8a6d77c6525" aria-disabled="false">
@@ -797,7 +816,39 @@ export default function ProductDetail() {
 
                 </div>
             </div>
+            {selectedProduct && (
+                <CartModal
+                    product={selectedProduct}
+                    onClose={() => setSelectedProduct(null)}
+                />
+            )}
+            {showReportAlert && (
+                <div
+                    id="js-global-alert"
+                    className="alert alert-danger alert-dismissible fade show active"
+                    role="alert"
+                    style={{
+                        position: "fixed",
+                        top: "20px",
+                        right: "20px",
+                        zIndex: 9999,
+                        minWidth: "320px",
+                    }}
+                >
+                    <button type="button" className="close" aria-label="Close"
+                        onClick={() => setShowReportAlert(false)}
+                    >x</button>
+                    <h5 className="alert-heading mb-1">
+                        <i className="fas fa-flag me-2 text-danger"></i> Đã gửi báo cáo
+                    </h5>
+                    <p className="alert-content mb-0" style={{ fontSize: '14px' }}>
+                        Cảm ơn bạn đã báo cáo đánh giá này. Chúng tôi sẽ xem xét sớm nhất.
+                    </p>
+                </div>
+            )}
+
         </>
 
     )
 };
+

@@ -7,13 +7,6 @@ import { getCategories } from "../lib/category";
 import { Product } from "@/app/types/product";
 import { useState } from "react";
 
-// Tạo hàm fetch sản phẩm cho SWR
-// const productFetcher = async (url: string, page: number) => {
-//     const res = await getProductsPage(page);
-//     return res;
-// };
-
-// Tạo hàm fetch danh mục 1 lần
 const useCategories = () => {
     const { data, error, isLoading } = useSWR("categories", getCategories);
     return {
