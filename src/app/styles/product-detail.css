@@ -2598,3 +2598,7 @@ p {}
     color: #dc3545;
     border-color: #dc3545;
 }
+.image-anh {
+    max-width: 100px;
+    min-height: 100px;
+}

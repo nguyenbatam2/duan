@@ -278,32 +278,7 @@ export default function Page() {
           </div>
           <div className="swiper_coupons swiper-container">
             <div className="swiper-wrapper">
-              {/* <!-- swiper-slide 1 --> */}
-              {/* <div className="swiper-slide swiper-slide-active" style={{ width: '302.75px', marginRight: '16px' }}>
-                <div className="box-coupon">
-                  <div className="mask-ticket"></div>
-                  <div className="image">
-                    <img width="88" height="88" className="" src="/img/img_coupon_1.webp" alt="NEST200" />
-                  </div>
-                  <div className="content_wrap">
-                    <a title="Chi tiết" href="javascript:void(0)" className="info-button" data-coupon="NEST200" data-time="12/12/2024">
-                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512">
-                        <path d="M144 80c0 26.5-21.5 48-48 48s-48-21.5-48-48s21.5-48 48-48s48 21.5 48 48zM0 224c0-17.7 14.3-32 32-32H96c17.7 0 32 14.3 32 32V448h32c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H64V256H32c-17.7 0-32-14.3-32-32z">
-                        </path>
-                      </svg>
-                    </a>
-                    <div className="content-top"> NEST200
-                      <span className="line-clamp line-clamp-2">Giảm 200k giá trị đơn hàng</span>
-                    </div>
-                    <div className="content-bottom">
-                      <span>HSD: 12/12/2024</span>
-                      <div className="coupon-code js-copy" data-copy="NEST200" title="Sao chép">Copy
-                        mã</div>
-                    </div>
-                  </div>
-                </div>
-              </div> */}
-              {/* <!-- swiper-slide 2 --> */}
+
               {coupons?.map((coupon: any) => (
                 <div className="swiper-slide" key={coupon.id} style={{ width: '302.75px', marginRight: '16px' }}>
                   <div className="box-coupon">

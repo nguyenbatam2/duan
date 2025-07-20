@@ -1,62 +1,102 @@
 'use client';
 
 import '@/app/styles/order.css';
-import { useEffect, useState } from 'react';
-import Cookies from 'js-cookie';
-import { Author } from "@/app/types/author";
+import { useState } from 'react';
 import Navbar from '@/app/navbar/page';
+import { changePassword } from '@/app/lib/authorApi';
 
 export default function RegisterPassword() {
-    const [user, setUser] = useState<Author | null>(null);
+    const [oldPassword, setOldPassword] = useState('');
+    const [newPassword, setNewPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
+    const [error, setError] = useState('');
+    const [success, setSuccess] = useState('');
 
-    useEffect(() => {
-        const cookieData = Cookies.get("author");
-        if (cookieData) {
-            try {
-                const parsed = JSON.parse(cookieData);
-                setUser(parsed.user); // Lưu user vào state
-            } catch (error) {
-                console.error("Không thể parse cookie:", error);
-            }
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setError('');
+        setSuccess('');
+
+        if (newPassword.length < 8) {
+            setError('Mật khẩu mới phải có ít nhất 8 ký tự.');
+            return;
         }
-    }, []);
+        if (newPassword !== confirmPassword) {
+            setError('Xác nhận mật khẩu không khớp.');
+            return;
+        }
 
-    if (!user) return <div>Đang tải thông tin tài khoản...</div>;
+        try {
+            await changePassword(
+                oldPassword,
+                newPassword,
+                confirmPassword
+            );
+            setSuccess('Đổi mật khẩu thành công!');
+            setOldPassword('');
+            setNewPassword('');
+            setConfirmPassword('');
+        } catch (err: any) {
+            setError(err?.response?.data?.message || err?.message || 'Đổi mật khẩu thất bại.');
+        }
+    };
+
     return (
         <>
-          <section className="signup page_customer_account">
-            <div className="container">
-                <div className="row">
-                    <Navbar />
-                    <div className="col-xs-12 col-sm-12 col-lg-9 col-right-ac">
+            <section className="signup page_customer_account">
+                <div className="container">
+                    <div className="row">
+                        <Navbar />
+                        <div className="col-xs-12 col-sm-12 col-lg-9 col-right-ac">
                             <div className="bg-shadow">
                                 <h1 className="title-head margin-top-0">Đổi mật khẩu</h1>
                                 <div className="row">
                                     <div className="col-md-6 col-12">
                                         <div className="page-login">
-                                            <form method="post" action="/account/changepassword" id="change_customer_password" acceptCharset="UTF-8">
-                                                <input name="FormType" type="hidden" value="change_customer_password" />
-                                                <input name="utf8" type="hidden" value="true" />
-
+                                            <form id="change_customer_password" onSubmit={handleSubmit}>
                                                 <p>Để đảm bảo tính bảo mật bạn vui lòng đặt lại mật khẩu với ít nhất 8 kí tự</p>
-
                                                 <div className="form-signup clearfix">
                                                     <fieldset className="form-group">
                                                         <label htmlFor="OldPass">Mật khẩu cũ <span className="error">*</span></label>
-                                                        <input type="password" name="OldPassword" id="OldPass" required className="form-control form-control-lg" />
+                                                        <input
+                                                            type="password"
+                                                            name="OldPassword"
+                                                            id="OldPass"
+                                                            required
+                                                            className="form-control form-control-lg"
+                                                            value={oldPassword}
+                                                            onChange={e => setOldPassword(e.target.value)}
+                                                        />
                                                     </fieldset>
                                                     <fieldset className="form-group">
                                                         <label htmlFor="changePass">Mật khẩu mới <span className="error">*</span></label>
-                                                        <input type="password" name="Password" id="changePass" required className="form-control form-control-lg" />
+                                                        <input
+                                                            type="password"
+                                                            name="Password"
+                                                            id="changePass"
+                                                            required
+                                                            className="form-control form-control-lg"
+                                                            value={newPassword}
+                                                            onChange={e => setNewPassword(e.target.value)}
+                                                        />
                                                     </fieldset>
                                                     <fieldset className="form-group">
                                                         <label htmlFor="confirmPass">Xác nhận lại mật khẩu <span className="error">*</span></label>
-                                                        <input type="password" name="ConfirmPassword" id="confirmPass" required className="form-control form-control-lg" />
+                                                        <input
+                                                            type="password"
+                                                            name="ConfirmPassword"
+                                                            id="confirmPass"
+                                                            required
+                                                            className="form-control form-control-lg"
+                                                            value={confirmPassword}
+                                                            onChange={e => setConfirmPassword(e.target.value)}
+                                                        />
                                                     </fieldset>
+                                                    {error && <div className="text-danger">{error}</div>}
+                                                    {success && <div className="text-success">{success}</div>}
                                                     <button
                                                         className="button btn-edit-addr btn btn-primary btn-more"
                                                         type="submit"
-                                                        onClick={() => window.location.reload()}
                                                     >
                                                         <i className="hoverButton"></i>Đặt lại mật khẩu
                                                     </button>
@@ -67,9 +107,9 @@ export default function RegisterPassword() {
                                 </div>
                             </div>
                         </div>
+                    </div>
                 </div>
-            </div>
-        </section>
+            </section>
         </>
-    )
+    );
 }

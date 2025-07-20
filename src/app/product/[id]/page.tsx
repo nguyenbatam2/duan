@@ -37,6 +37,7 @@ export default function ProductDetail() {
         const productData = await getProductById(id);
         const product = productData.data;
         const reviews = await getProductReviews(product.id);
+        console.log(reviews)
         return { product, reviews };
     };
 
@@ -493,7 +494,7 @@ export default function ProductDetail() {
                                 </div>
                             </div>
                         </div>
-                            <div className="popup-coupon active">
+                            {/* <div className="popup-coupon active">
                                 <div className="content">
                                     <div className="title">
                                         Thông tin voucher
@@ -530,7 +531,7 @@ export default function ProductDetail() {
                                         </li>
                                     </ul>
                                 </div>
-                            </div>
+                            </div> */}
 
                         <div className="col-12 margin-bottom-20">
                             <div className="bg-shadow">
@@ -666,11 +667,11 @@ export default function ProductDetail() {
                                                                                 {review.images.map((img: { image_path: string }, idx: number) => (
                                                                                     <img
                                                                                         key={idx}
-                                                                                        src={`http://127.0.0.1:8000${img.image_path}`}
+                                                                                        src={img.image_path}
                                                                                         alt={`Ảnh ${idx + 1}`}
-                                                                                        className="mr-3"
-                                                                                        width="100"
-                                                                                        height="100"
+                                                                                        className="mr-3 image-anh"
+                                                                                        width="100px"
+                                                                                        height="100px"
                                                                                     />
                                                                                 ))}
                                                                             </div>

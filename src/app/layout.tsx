@@ -50,6 +50,7 @@ export default function RootLayout({
 }) {
   const pathname = usePathname();
   const isHomePage = pathname === "/";
+  const isAdminPage = pathname.startsWith('/admin');
   return (
     <html lang="en">
       <head>
@@ -62,10 +63,10 @@ export default function RootLayout({
       <body className={`${montserrat.variable} antialiased`}>
         <AuthProviderContext>
           <PopupProvider>
-            <Header />
+            {!isAdminPage && <Header />}
             {isHomePage && <Slider />}
             <div className="bodywrap">{children}</div>
-            <Footer />
+            {!isAdminPage && <Footer />}
             <CouponPopup />
           </PopupProvider>
         </AuthProviderContext>

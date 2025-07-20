@@ -1,10 +1,9 @@
 'use client';
 import Navbar from '@/app/navbar/page';
 import '@/app/styles/order.css';
-import '@/app/styles/modal.css';
+import styles from '@/app/styles/modal.module.css';
 import { getOrders, cancelOrder, getOrdersById, } from '@/app/lib/orderApi';
 import { createProductReview } from '@/app/lib/product'; // Hoặc đúng đường dẫn của bạn
-
 import useSWR from 'swr';
 import { useState } from 'react';
 
@@ -18,8 +17,7 @@ const STATUS_MAP = {
     "Đã hủy": "cancelled",
     "Trả hàng / Hoàn tiền": "refunded",
 };
-
-const STATUS_DISPLAY = {
+const STATUS_DISPLAY: Record<string, { text: string, color: string }> = {
     pending: { text: 'Chờ xác nhận', color: '#ffa500' },
     confirmed: { text: 'Đã xác nhận', color: '#17a2b8' },
     processing: { text: 'Đang chuẩn bị', color: '#1e90ff' },
@@ -28,6 +26,7 @@ const STATUS_DISPLAY = {
     cancelled: { text: 'Đã hủy', color: '#dc143c' },
     refunded: { text: 'Đã hoàn tiền', color: '#ff6347' },
 };
+
 
 
 // Các trạng thái không thể hủy đơn hàng
@@ -148,22 +147,11 @@ export default function Order() {
                                                                     Hủy đơn
                                                                 </button>
                                                             )}
-                                                            {Reviews_STATUSES.includes(order.status) && (
-                                                                <>
-                                                                    <button
-                                                                        className="btn-reviews"
-                                                                        onClick={() => {
-                                                                            setShowReviewForm(order.id)
-                                                                        }}
-                                                                    >
-                                                                        Bình luận
-                                                                    </button>
-                                                                </>
-                                                            )}
+
                                                         </div>
                                                     </div>
                                                             
-                                                    <div className="order-items">
+                                                    {/* <div className="order-items">
                                                         {order.items.map(item => (
                                                             <div className="order-item" key={item.id}>
                                                                 <div className="item-left">
@@ -185,14 +173,22 @@ export default function Order() {
                                                                 <div className="item-price">
                                                                     {(item.price * item.quantity).toLocaleString('vi-VN')} đ
                                                                 </div>
-                                                            </div>
-                                                        ))}
-                                                    </div>
-                                                    {showReviewForm === order.id && (
+                                                                {Reviews_STATUSES.includes(order.status) && (
+                                                                    <>
+                                                                        <button
+                                                                            className="btn-reviews"
+                                                                            onClick={() => {
+                                                                                setShowReviewForm(item.product_id)
+                                                                            }}
+                                                                        >
+                                                                            Bình luận
+                                                                        </button>
+                                                                    </>
+                                                                )}
+                                                                {showReviewForm === item.product_id && (
                                                         <div className="mt-3 p-3 border rounded bg-light shadow-sm">
-                                                            <h4 className="mb-3">Gửi đánh giá cho sản phẩm #{order.product_id}</h4>
+                                                                        <h4 className="mb-3">Gửi đánh giá cho sản phẩm #{item.product_id}</h4>
 
-                                                            {/* Chọn sao */}
                                                             <div className="mb-3">
                                                                 {[1, 2, 3, 4, 5].map((star) => (
                                                                     <i
@@ -205,7 +201,6 @@ export default function Order() {
                                                                 <span className="ms-2"> {reviewData.rating}  / 5</span>
                                                             </div>
 
-                                                            {/* Comment */}
                                                             <div className="mb-3">
                                                                 <textarea
                                                                     className="form-control"
@@ -218,7 +213,6 @@ export default function Order() {
                                                                 />
                                                             </div>
 
-                                                            {/* Ảnh minh họa */}
                                                             <div className="mb-3">
                                                                 <label className="form-label">Ảnh minh họa (tối đa 3 ảnh)</label>
                                                                 <input
@@ -247,11 +241,10 @@ export default function Order() {
                                                                 </div>
                                                             </div>
 
-                                                            {/* Nút hành động */}
                                                             <div className="d-flex gap-2">
                                                                 <button
                                                                     className="btn btn-success btn-sm"
-                                                                    onClick={() => handleSubmitReview(order.items[0].product_id)
+                                                                                onClick={() => handleSubmitReview(item.product_id)
                                                                     }
                                                                 >
                                                                     Gửi đánh giá
@@ -265,6 +258,9 @@ export default function Order() {
                                                             </div>
                                                         </div>
                                                     )}
+                                                            </div>
+                                                        ))}
+                                                    </div> */}
                                                     <div className="order-footer">
                                                         <div>Tổng {order.items.reduce((sum, item) => sum + item.quantity, 0)} sản phẩm</div>
                                                         <div className="total-price">Tổng tiền: {calculateOrderTotal(order.items).toLocaleString('vi-VN')}đ</div>
@@ -295,6 +291,7 @@ export default function Order() {
                                         </button>
                                     </div>
                                 </div>
+
                             </div>
                         </div>
                     </div>
@@ -302,41 +299,111 @@ export default function Order() {
             </section>
 
             {showModal && selectedOrder && (
-                <div className="custom-modal-overlay" onClick={() => setShowModal(false)}>
-                    <div className="custom-modal" onClick={e => e.stopPropagation()}>
-                        <div className="custom-modal-header">
-                            <h2>Chi tiết đơn hàng #{selectedOrder.id}</h2>
-                            <button className="close-btn" onClick={() => setShowModal(false)}>×</button>
+                <div className={styles.customModalOverlay} onClick={() => setShowModal(false)}>
+                    <div className={styles.customModal} onClick={(e) => e.stopPropagation()}>
+                        <div className={styles.modalHeader}>
+                            <div></div>
+                            <h2>Chi tiết đơn hàng #{selectedOrder.order_number}</h2>
+                            <button className={styles.closeBtn} onClick={() => setShowModal(false)}>×</button>
                         </div>
 
-                        <div className="custom-modal-body">
-                            <section>
-                                <h3>Thông tin khách hàng</h3>
-                                <p><strong>Tên:</strong> {selectedOrder.name}</p>
-                                <p><strong>SĐT:</strong> {selectedOrder.phone}</p>
-                                <p><strong>Địa chỉ:</strong> {selectedOrder.address}</p>
-                            </section>
+                        <div className={styles.modalBody}>
+                            <div className={styles.contentWrapper}>
+                                {/* LEFT SECTION */}
+                                <div className={styles.leftSection}>
+                                    <div className={styles.orderInfo}>
 
-                            <section>
-                                <h3>Sản phẩm đã đặt</h3>
-                                <div className="order-items">
+                                        <h3 className={styles.sectionTitle}>Đơn hàng: </h3>
+                                        {new Date(selectedOrder.created_at).toLocaleDateString('vi-VN')} | Thanh toán: {selectedOrder.payment_method} | Trạng thái:
+                                        {selectedOrder.status && (
+                                            <>
+                                                <div className={styles.orderStatus} style={{ backgroundColor: getOrderStatus(selectedOrder.status).color + '30', color: getOrderStatus(selectedOrder.status).color }}>
+                                                    {getOrderStatus(selectedOrder.status).text}
+                                                </div>
+                                            </>
+                                        )}
+                                    </div>
+
+                                    {/* Customer Info */}
+                                    <div className={styles.infoSection}>
+                                        <h3 className={styles.sectionTitle}>Khách hàng</h3>
+                                        <div className={styles.infoCard}>
+                                            <div className={styles.infoRow}>
+                                                <span className={styles.infoLabel}>Tên: {selectedOrder.name}</span>
+                                            </div>
+                                            <div className={styles.infoRow}>
+                                                <span className={styles.infoLabel}>Số điện thoại: {selectedOrder.phone}</span>
+                                            </div>
+                                            <div className={styles.infoRow}>
+                                                <span className={styles.infoLabel}>Email: {selectedOrder.email}</span>
+                                            </div>
+                                            <div className={styles.infoRow}>
+                                                <span className={styles.infoLabel}>Địa chỉ: {selectedOrder.address}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Product List */}
+                                    <div className={styles.productsSection}>
+                                        <div className={styles.orderItems}>
                                     {selectedOrder.items.map(item => (
-                                        <div className="order-item" key={item.id}>
-                                            <img src={item.product_image} alt={item.product_name} />
+                                        <div className={styles.orderItem} key={item.id} style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
+                                            <img
+                                                src={`/${item.product_image}`}
+                                                alt={item.product_name}
+
+                                                style={{ width: 50, height: 50, objectFit: 'cover' }}
+                                            />
                                             <div>
                                                 <strong>{item.product_name}</strong>
-                                                <p>{item.price.toLocaleString()}đ x {item.quantity}</p>
+                                                <p>{Number(item.price).toLocaleString('vi-VN')}đ x {item.quantity}</p>
                                             </div>
-                                            <div className="price">{(item.price * item.quantity).toLocaleString()}đ</div>
+                                            <div style={{ marginLeft: 'auto', fontWeight: 'bold' }}>
+                                                {(Number(item.price) * item.quantity).toLocaleString('vi-VN')}đ
+                                            </div>
                                         </div>
                                     ))}
                                 </div>
-                            </section>
-                        </div>
+                                    </div>
+                                </div>
 
-                        <div className="custom-modal-footer">
-                            <span>Tổng tiền:</span>
-                            <strong>{calculateOrderTotal(selectedOrder.items).toLocaleString()}đ</strong>
+                                {/* RIGHT SECTION */}
+                                <div className={styles.rightSection}>
+                                    <h3 className={styles.paymentTitle}>Thanh toán</h3>
+
+                                    <div className={styles.paymentRow}>
+                                        <span className={styles.paymentLabel}>Tạm tính</span>
+                                        <span className={styles.paymentValue}>{Number(selectedOrder.subtotal).toLocaleString('vi-VN')}đ</span>
+                                    </div>
+
+                                    <div className={styles.paymentRow}>
+                                        <span className={styles.paymentLabel}>Thuế</span>
+                                        <span className={styles.paymentValue}>0đ</span>
+                                    </div>
+
+                                    <div className={styles.paymentRow}>
+                                        <span className={styles.paymentLabel}>Phí vận chuyển</span>
+                                        <span className={styles.paymentValue}>0đ</span>
+                                    </div>
+
+                                    <div className={styles.paymentRow}>
+                                        <span className={styles.paymentLabel}>Giảm giá</span>
+                                        <span className={styles.paymentValue}>
+                                            -{Number(selectedOrder.discount).toLocaleString('vi-VN')}đ
+                                        </span>
+                                    </div>
+
+                                    <div className={styles.paymentRow}>
+                                        <span className={styles.paymentLabel} style={{ fontSize: 16 }}>Tổng tiền</span>
+                                        <div style={{ textAlign: 'right' }}>
+                                            <div className={styles.totalAmount} style={{ color: 'red' }}>
+                                                {Number(selectedOrder.total).toLocaleString('vi-VN')}đ
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <button className={`${styles.btn} ${styles.btnBlock}`} onClick={() => setShowModal(false)}>Đóng</button>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>

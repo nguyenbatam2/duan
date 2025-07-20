@@ -69,3 +69,37 @@ export const resetPassword = async (
   });
   return response.data;
 };
+
+
+
+export const changePassword = async (
+  old_password: string,
+  new_password: string,
+  new_password_confirmation: string
+) => {
+  const cookieData = Cookies.get("author");
+  if (!cookieData) throw new Error("Không có token");
+
+  const parsed = JSON.parse(cookieData);
+  const token = parsed.token;
+
+  if (!token) throw new Error("Token không hợp lệ");
+
+  const response = await axios.post(
+    `http://127.0.0.1:8000/api/v1/user/change-password`,
+    {
+      old_password,
+      new_password,
+      new_password_confirmation,
+    },
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        Accept: "application/json",
+      },
+    }
+  );
+
+  return response.data;
+};
+
