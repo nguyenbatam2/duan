@@ -19,4 +19,5 @@ export interface Author {
   token?: string; 
   avatar: string;
   customer_rank_id: string;
+  address: string;
 }

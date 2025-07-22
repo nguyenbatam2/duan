@@ -124,3 +124,27 @@ export const updateUserAddress = async (address: string) => {
   );
   return response.data;
 };
+
+export const updateUserAvatar = async (avatarFile: File) => {
+  const cookieData = Cookies.get("author");
+  if (!cookieData) throw new Error("Không có token");
+  const parsed = JSON.parse(cookieData);
+  const token = parsed.token;
+  if (!token) throw new Error("Token không hợp lệ");
+
+  const formData = new FormData();
+  formData.append('avatar', avatarFile);
+
+  const response = await axios.post(
+    "http://127.0.0.1:8000/api/v1/auth/update-avatar",
+    formData,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        Accept: "application/json",
+        'Content-Type': 'multipart/form-data',
+      },
+    }
+  );
+  return response.data;
+};
