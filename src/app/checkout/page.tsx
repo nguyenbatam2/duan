@@ -6,10 +6,23 @@ import { getCart } from '../lib/addCart';
 import { applyCoupon, placeOrder, OrderItem } from '../lib/orderApi';
 import { Product } from '../types/product';
 import { useRouter } from 'next/navigation';
+import { getUserAddresses, UserAddress } from '../lib/authorApi';
+import Cookies from 'js-cookie';
 
 function formatCurrency(value: number | null): string {
     if (typeof value !== 'number' || isNaN(value)) return '...';
     return `${value.toLocaleString('en-US')} VND`;
+}
+
+// Thêm type cho kết quả applyCoupon
+interface CouponResult {
+  product_discount?: string;
+  total?: string;
+}
+
+// Thêm type cho error đặt hàng
+interface PlaceOrderError {
+  response?: { data?: unknown };
 }
 
 export default function CheckoutPage() {
@@ -38,13 +51,39 @@ export default function CheckoutPage() {
         address: '',
         email: '',
     });
+    const [addresses, setAddresses] = useState<UserAddress[]>([]);
+    const [selectedAddressId, setSelectedAddressId] = useState<number | null>(null);
 
+    // Lấy danh sách địa chỉ khi load trang
     useEffect(() => {
-        const savedInfo = localStorage.getItem('userInfo');
-        if (savedInfo) {
-            setUserInfo(JSON.parse(savedInfo));
-        }
+      getUserAddresses().then(setAddresses);
+      // Lấy email từ cookie user
+      const cookieData = Cookies.get('author');
+      if (cookieData) {
+        try {
+          const parsed = JSON.parse(cookieData);
+          if (parsed.user?.email) {
+            setUserInfo(ui => ({ ...ui, email: parsed.user.email }));
+          }
+        } catch {}
+      }
     }, []);
+
+    // Khi chọn địa chỉ, tự động điền vào form
+    useEffect(() => {
+      if (selectedAddressId) {
+        const addr = addresses.find(a => a.id === selectedAddressId);
+        if (addr) {
+          setUserInfo(ui => ({
+            ...ui,
+            name: addr.name,
+            phone: addr.phone,
+            address: addr.address,
+          }));
+        }
+      }
+      // eslint-disable-next-line
+    }, [selectedAddressId]);
 
     const handleApplyCoupon = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -53,7 +92,7 @@ export default function CheckoutPage() {
                 const base = {
                     product_id: item.id,
                     quantity: item.quantity,
-                    price: item.price,
+                    price: Number(item.price),
                 };
                 if (item.product_type === 'variable' && item.variant_id) {
                     return { ...base, variant_id: item.variant_id };
@@ -68,7 +107,7 @@ export default function CheckoutPage() {
                 shippingFee,
                 tax,
                 'cod'
-            );
+            ) as CouponResult;
 
             const productDiscount = parseFloat(result.product_discount || '0');
             const total = parseFloat(result.total || '0');
@@ -76,7 +115,7 @@ export default function CheckoutPage() {
             setDiscount(productDiscount);
             setFinalTotal(total);
             alert('Áp dụng mã giảm giá thành công!');
-        } catch (err) {
+        } catch (err: unknown) {
             console.error('Apply coupon error:', err);
             alert('Không áp dụng được mã giảm giá!');
         }
@@ -88,7 +127,7 @@ export default function CheckoutPage() {
             const base = {
                 product_id: item.id,
                 quantity: item.quantity,
-                price: item.price,
+                price: Number(item.price),
             };
             if (item.product_type === 'variable' && item.variant_id) {
                 return { ...base, variant_id: item.variant_id };
@@ -125,9 +164,10 @@ export default function CheckoutPage() {
             // ✅ Chuyển hướng về trang chủ
             router.push('/');
 
-        } catch (err: any) {
-            if (err.response) {
-                console.error('🚨 Lỗi đặt hàng từ server:', err.response.data);
+        } catch (err: unknown) {
+            if (typeof err === 'object' && err && 'response' in err) {
+                const errorObj = err as PlaceOrderError;
+                console.error('🚨 Lỗi đặt hàng từ server:', errorObj.response?.data);
                 console.error('📦 Dữ liệu gửi:', {
                     items,
                     name: userInfo.name,
@@ -154,6 +194,22 @@ export default function CheckoutPage() {
     return (
         <div className="container" role="main">
             <section className="left">
+                <h3>Chọn địa chỉ giao hàng</h3>
+                {addresses.length === 0 && <div>Bạn chưa có địa chỉ nào.</div>}
+                {addresses.map(addr => (
+                  <div key={addr.id} style={{marginBottom: 8}}>
+                    <label>
+                      <input
+                        type="radio"
+                        name="address"
+                        checked={selectedAddressId === addr.id}
+                        onChange={() => setSelectedAddressId(addr.id)}
+                      />
+                      {addr.name} - {addr.phone} - {addr.address}
+                      {addr.is_default ? <span style={{color: 'green', marginLeft: 8}}>(Mặc định)</span> : null}
+                    </label>
+                  </div>
+                ))}
                 <h2>Thông tin giao hàng</h2>
                 <input
                     type="text"
@@ -178,7 +234,7 @@ export default function CheckoutPage() {
                     placeholder="Email"
                     required
                     value={userInfo.email}
-                    onChange={(e) => setUserInfo({ ...userInfo, email: e.target.value })}
+                    disabled
                 />
 
                 <h2 style={{ marginTop: '2rem' }}>Ghi chú</h2>

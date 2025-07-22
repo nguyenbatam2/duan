@@ -148,3 +148,72 @@ export const updateUserAvatar = async (avatarFile: File) => {
   );
   return response.data;
 };
+
+// Địa chỉ user CRUD
+export interface UserAddress {
+  id: number;
+  user_id: number;
+  name: string;
+  phone: string;
+  address: string;
+  is_default: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export async function getUserAddresses(): Promise<UserAddress[]> {
+  const cookieData = Cookies.get("author");
+  if (!cookieData) throw new Error("Không có token");
+  const parsed = JSON.parse(cookieData);
+  const token = parsed.token;
+  const res = await axios.get("http://127.0.0.1:8000/api/v1/user/addresses", {
+    headers: {
+      Authorization: `Bearer ${token}`,
+      Accept: "application/json",
+    },
+  });
+  return (res.data as { data: UserAddress[] }).data;
+}
+
+export async function addUserAddress(data: { name: string; phone: string; address: string; is_default?: number }): Promise<UserAddress> {
+  const cookieData = Cookies.get("author");
+  if (!cookieData) throw new Error("Không có token");
+  const parsed = JSON.parse(cookieData);
+  const token = parsed.token;
+  const res = await axios.post("http://127.0.0.1:8000/api/v1/user/addresses", data, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+      Accept: "application/json",
+      "Content-Type": "application/json",
+    },
+  });
+  return (res.data as { data: UserAddress }).data;
+}
+
+export async function updateUserAddressById(id: number, data: { name: string; phone: string; address: string; is_default?: number }): Promise<UserAddress> {
+  const cookieData = Cookies.get("author");
+  if (!cookieData) throw new Error("Không có token");
+  const parsed = JSON.parse(cookieData);
+  const token = parsed.token;
+  const res = await axios.put(`http://127.0.0.1:8000/api/v1/user/addresses/${id}`, data, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+      Accept: "application/json",
+      "Content-Type": "application/json",
+    },
+  });
+  return (res.data as { data: UserAddress }).data;
+}
+
+export async function deleteUserAddress(id: number): Promise<void> {
+  const cookieData = Cookies.get("author");
+  if (!cookieData) throw new Error("Không có token");
+  const parsed = JSON.parse(cookieData);
+  const token = parsed.token;
+  await axios.delete(`http://127.0.0.1:8000/api/v1/user/addresses/${id}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+      Accept: "application/json",
+    },
+  });
+}
