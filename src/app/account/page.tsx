@@ -5,10 +5,11 @@ import '../styles/order.css';
 import { useEffect, useState } from 'react';
 import Cookies from 'js-cookie';
 import { Author } from '../types/author';
+import { updateUserAddress } from '../lib/authorApi';
 
 export default function Account() {
     const [user, setUser] = useState<Author | null>(null);
-
+    console.log("Account component rendered", user);
     useEffect(() => {
         const cookieData = Cookies.get("author");
         if (cookieData) {
@@ -53,7 +54,7 @@ export default function Account() {
                                                 </div>
                                                 <div className="form-info">
                                                     <label htmlFor="address">Địa chỉ*</label>
-                                                    <input id="address" readOnly type="text" value={user.adreess || "Chưa cập nhật"} />
+                                                    <input id="address" readOnly type="text" value={user.address} />
                                                 </div>
                                                 <button type="submit" className="primary btn-cart btn-views add_to_cart btn btn-primary" style={{maxWidth: "100%", width: "100%"}}>Cập nhật</button>
                                             </form>

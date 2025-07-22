@@ -432,13 +432,6 @@ export default function Header() {
                                                                 href={`/category/${category.id}?category_id=${category.id}&page=1`}
                                                                 title={category.name}
                                                             >
-                                                                {/* <img
-                                                                    className="lazyload loaded"
-                                                                    src="http://bizweb.dktcdn.net/100/506/650/themes/944598/assets/index-cate-icon-2.png?1739018973665"
-                                                                    width={100}
-                                                                    height={100}
-                                                                    alt="Yến img tươi"
-                                                                /> */}
                                                                 {category.name}
                                                             </Link>
                                                             <i className="open_mnu down_icon"></i>

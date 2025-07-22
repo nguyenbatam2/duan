@@ -40,7 +40,6 @@ export async function postProductsPage(data: {
 
 // Thêm sản phẩm (dùng FormData, hỗ trợ upload ảnh, mảng images, variants)
 export async function postProductFormData(formData: FormData): Promise<Product> {
-  console.log("formData", formData);
   const token = Cookies.get("token");
   if (!token) throw new Error("Token không tồn tại");
 

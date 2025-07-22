@@ -9,7 +9,7 @@ export default function Navbar() {
         { id: '2', title: 'Đơn hàng của bạn', href: '/account/order' },
         { id: '3', title: 'Danh sách yêu thích', href: '/wishlist' },
         { id: '4', title: 'Đổi mật khẩu', href: '/account/password' },
-        { id: '5', title: 'Địa chỉ', href: '/account/' },
+        { id: '5', title: 'Địa chỉ', href: '/account/addresse' },
         { id: '6', title: 'Đăng xuất', href: '/logout' },
     ];
     return (

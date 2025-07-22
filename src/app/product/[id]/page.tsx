@@ -630,62 +630,57 @@ export default function ProductDetail() {
 
                                                             <p className="text-muted mb-4">Hình Ảnh Từ Người Mua</p>
                                                             {/* <!-- Review 1 --> */}
-                                                            {reviews.map((review) => {
-                                                                console.log(review);
-                                                                return (<>
-                                                                    <div key={review.id} className="user-review mb-4">
-                                                                        <div className="d-flex align-items-center mb-2">
-                                                                            <img
-                                                                                src="/img/facebook_2.svg"
-                                                                                alt={review.user.avatar}
-                                                                                className="rounded-circle"
-                                                                                width="50"
-                                                                                height="50"
-                                                                            />
-                                                                            <div className="ms-3">
-                                                                                <div className="text-user">{review.user.name}</div>
-                                                                                <div className="text-warning">
-                                                                                    {Array.from({ length: review.rating }).map((_, i) => (
-                                                                                        <i key={i} className="fas fa-star"></i>
-                                                                                    ))}
-                                                                                    {Array.from({ length: 5 - review.rating }).map((_, i) => (
-                                                                                        <i key={i} className="far fa-star"></i>
-                                                                                    ))}
-                                                                                </div>
-                                                                            </div>
-                                                                        </div>
-                                                                        <p className="mb-0">
-                                                                            <strong>Tên Sản Phẩm:</strong> Sản phẩm #{review.product_id}
-                                                                        </p>
-
-                                                                        <p className="mb-3">
-                                                                            <strong>Mô Tả:</strong> {review.comment}
-                                                                        </p>
-
-                                                                        {review.images?.length > 0 && (
-                                                                            <div className="d-flex gap-2 mb-2">
-                                                                                {review.images.map((img: { image_path: string }, idx: number) => (
-                                                                                    <img
-                                                                                        key={idx}
-                                                                                        src={img.image_path}
-                                                                                        alt={`Ảnh ${idx + 1}`}
-                                                                                        className="mr-3 image-anh"
-                                                                                        width="100px"
-                                                                                        height="100px"
-                                                                                    />
+                                                            {reviews.map((review) => (
+                                                                <div key={review.id} className="user-review mb-4">
+                                                                    <div className="d-flex align-items-center mb-2">
+                                                                        <img
+                                                                            src={`http://127.0.0.1:8000/${review.user?.avatar || 'img/default-avatar.png'}`}
+                                                                            className="rounded-circle"
+                                                                            width="50"
+                                                                            height="50"
+                                                                        />
+                                                                        <div className="ms-3">
+                                                                            <div className="text-user">{review.user?.name || "Ẩn danh"}</div>
+                                                                            <div className="text-warning">
+                                                                                {Array.from({ length: review.rating }).map((_, i) => (
+                                                                                    <i key={i} className="fas fa-star"></i>
+                                                                                ))}
+                                                                                {Array.from({ length: 5 - review.rating }).map((_, i) => (
+                                                                                    <i key={i} className="far fa-star"></i>
                                                                                 ))}
                                                                             </div>
-                                                                        )}
+                                                                        </div>
+                                                                    </div>
 
+                                                                    <p className="mb-0">
+                                                                        <strong>Tên Sản Phẩm:</strong> Sản phẩm #{review.product_id}
+                                                                    </p>
 
-                                                                        <button className="btn-report" onClick={() => handleReport(review.id)}>
-                                                                            <i className="fas fa-flag me-1"></i> Báo cáo
-                                                                        </button>
+                                                                    <p className="mb-3">
+                                                                        <strong>Mô Tả:</strong> {review.comment}
+                                                                    </p>
 
-                                                                    </div></>)
-                                                            }
+                                                                    {review.images?.length > 0 && (
+                                                                        <div className="d-flex gap-2 mb-2">
+                                                                            {review.images.map((img, idx) => (
+                                                                                <img
+                                                                                    key={idx}
+                                                                                    src={img.image_path}
+                                                                                    alt={`Ảnh ${idx + 1}`}
+                                                                                    className="mr-3 image-anh"
+                                                                                    width="100px"
+                                                                                    height="100px"
+                                                                                />
+                                                                            ))}
+                                                                        </div>
+                                                                    )}
 
-                                                            )}
+                                                                    <button className="btn-report" onClick={() => handleReport(review.id)}>
+                                                                        <i className="fas fa-flag me-1"></i> Báo cáo
+                                                                    </button>
+                                                                </div>
+                                                            ))}
+
                                                         </div>
                                                     </div>
                                                 </div>

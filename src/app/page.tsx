@@ -3,6 +3,8 @@
 // 🧠 React + Hook
 import { useState } from "react";
 import useSWR from "swr";
+import { Swiper, SwiperSlide } from "swiper/react";
+import { Navigation, Pagination } from "swiper/modules";
 
 // 🌐 Next.js
 import Link from "next/link";
@@ -30,6 +32,7 @@ export default function Page() {
     "http://127.0.0.1:8000/api/v1/public/products",
     fetcher
   );
+  console.log(products);
   const {
     data: coupons,
     isLoading: isLoadingCoupons,
@@ -276,63 +279,75 @@ export default function Page() {
               <div className="separator-center"></div>
             </div>
           </div>
-          <div className="swiper_coupons swiper-container">
-            <div className="swiper-wrapper">
+          <Swiper
+            modules={[Navigation]}
+            initialSlide={0}
+            breakpoints={{
+              320: {
+                slidesPerView: 1,
+              },
+              480: {
+                slidesPerView: 2,
+              },
+              768: {
+                slidesPerView: 3,
+              },
+              1024: {
+                slidesPerView: 4,
+              },
+            }}
+            className="swiper_coupons"
+          >
+            {coupons?.map((coupon: any) => (
+              <SwiperSlide
+                key={coupon.id}
+              >
+                <div className="box-coupon">
+                  <div className="mask-ticket"></div>
+                  <div className="image">
+                    <img width="88" height="88" src="/img/img_coupon_1.webp" alt={coupon.code} />
+                  </div>
+                  <div className="content_wrap">
+                    <a
+                      title="Chi tiết"
+                      className="info-button"
+                      onClick={() => {
+                        setSelectedCoupon({
+                          id: coupon.id,
+                          code: coupon.code,
+                          end_at: coupon.end_at,
+                          description: coupon.description,
+                        });
+                        setIsOpen(true);
+                      }}
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512">
+                        <path d="M144 80c0 26.5-21.5 48-48 48s-48-21.5-48-48s21.5-48 48-48s48 21.5 48 48zM0 224c0-17.7 14.3-32 32-32H96c17.7 0 32 14.3 32 32V448h32c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H64V256H32c-17.7 0-32-14.3-32-32z" />
+                      </svg>
+                    </a>
 
-              {coupons?.map((coupon: any) => (
-                <div className="swiper-slide" key={coupon.id} style={{ width: '302.75px', marginRight: '16px' }}>
-                  <div className="box-coupon">
-                    <div className="mask-ticket">
-
+                    <div className="content-top">
+                      {coupon.code}
+                      <span className="line-clamp line-clamp-2">
+                        {coupon.description || "Không có mô tả"}
+                      </span>
                     </div>
-                    <div className="image">
-                      <img width="88" height="88" src="/img/img_coupon_1.webp" alt={coupon.code} />
-                    </div>
-                    <div className="content_wrap">
-                      <a
-                        title="Chi tiết"
-                        className="info-button"
-                        onClick={() => {
-                          setSelectedCoupon({
-                            id: coupon.id,
-                            code: coupon.code,
-                            end_at: coupon.end_at,
-                            description: coupon.description,
-                          });
-                          setIsOpen(true);
-                        }}
+                    <div className="content-bottom">
+                      <span>HSD: {coupon.end_at}</span>
+                      <button
+                        onClick={() => handleSaveCoupon(coupon.id, coupon.code)}
+                        className={`coupon-code js-copy ${savedCoupons.includes(coupon.id) ? 'saved' : ''}`}
+                        title="Click để lưu/copy lại"
                       >
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512">
-                          <path d="M144 80c0 26.5-21.5 48-48 48s-48-21.5-48-48s21.5-48 48-48s48 21.5 48 48zM0 224c0-17.7 14.3-32 32-32H96c17.7 0 32 14.3 32 32V448h32c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H64V256H32c-17.7 0-32-14.3-32-32z">
-                          </path>
-                        </svg>
-                      </a>
-                      
-
-                      <div className="content-top">
-                        {coupon.code}
-                        <span className="line-clamp line-clamp-2">
-                          {coupon.description || "Không có mô tả"}
-                        </span>
-                      </div>
-                      <div className="content-bottom">
-                        <span>HSD: {coupon.end_at}</span>
-                        <button
-                          key={coupon.id}
-                          onClick={() => handleSaveCoupon(coupon.id, coupon.code)}
-                          className={`coupon-code js-copy ${savedCoupons.includes(coupon.id) ? 'saved' : ''}`}
-                          title="Click để lưu/copy lại"
-                        >
-                          {savedCoupons.includes(coupon.id) ? "Copy mã" : "Lưu mã"}
-                        </button>
-                      </div>
+                        {savedCoupons.includes(coupon.id) ? "Copy mã" : "Lưu mã"}
+                      </button>
                     </div>
                   </div>
                 </div>
-              ))}
+              </SwiperSlide>
+            ))}
+          </Swiper>
 
-            </div>
-          </div>
 
         </div>
       </section>
@@ -431,11 +446,9 @@ export default function Page() {
                                 <img
                                   className="lazyload duration-300 loaded"
                                   src={
-                                    product.image
-                                      ? product.image.startsWith('http')
-                                        ? product.image
-                                        : `http://localhost:8000/storage/products/${product.image}`
-                                      : '/img/default.webp'
+                                    product.image.startsWith('http')
+                                      ? product.image
+                                      : `http://localhost:8000/storage/products/${product.image}`
                                   }
                                   alt={product.name}
                                 />

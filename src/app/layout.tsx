@@ -2,6 +2,10 @@
 import { usePathname } from "next/navigation";
 import 'bootstrap/dist/css/bootstrap.min.css';
 import "./globals.css";
+import "swiper/css";
+import "swiper/css/navigation";
+import "swiper/css/pagination";
+import "swiper/css/effect-fade";
 import Header from "@/app/Component/header";
 import Slider from '@/app/Component/slider';
 import Footer from "@/app/Component/footer";

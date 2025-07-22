@@ -71,9 +71,8 @@ export const resetPassword = async (
 };
 
 
-
 export const changePassword = async (
-  old_password: string,
+  current_password: string,
   new_password: string,
   new_password_confirmation: string
 ) => {
@@ -88,7 +87,7 @@ export const changePassword = async (
   const response = await axios.post(
     `http://127.0.0.1:8000/api/v1/user/change-password`,
     {
-      old_password,
+      current_password, 
       new_password,
       new_password_confirmation,
     },
@@ -103,3 +102,25 @@ export const changePassword = async (
   return response.data;
 };
 
+export const updateUserAddress = async (address: string) => {
+  const cookieData = Cookies.get("author");
+  if (!cookieData) throw new Error("Không có token");
+
+  const parsed = JSON.parse(cookieData);
+  const token = parsed.token;
+
+  if (!token) throw new Error("Token không hợp lệ");
+
+  const response = await axios.patch(
+    "http://127.0.0.1:8000/api/v1/user/address",
+    { address },
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+    }
+  );
+  return response.data;
+};
