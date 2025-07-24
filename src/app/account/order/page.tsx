@@ -151,7 +151,7 @@ export default function Order() {
                                                         </div>
                                                     </div>
                                                             
-                                                    {/* <div className="order-items">
+                                                    <div className="order-items">
                                                         {order.items.map(item => (
                                                             <div className="order-item" key={item.id}>
                                                                 <div className="item-left">
@@ -260,7 +260,10 @@ export default function Order() {
                                                     )}
                                                             </div>
                                                         ))}
-                                                    </div> */}
+                                                    </div>
+
+
+                                                    
                                                     <div className="order-footer">
                                                         <div>Tổng {order.items.reduce((sum, item) => sum + item.quantity, 0)} sản phẩm</div>
                                                         <div className="total-price">Tổng tiền: {calculateOrderTotal(order.items).toLocaleString('vi-VN')}đ</div>

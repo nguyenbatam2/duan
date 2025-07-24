@@ -127,7 +127,7 @@ export default function Cart() {
 																					>
 																						-
 																					</button>
-																					<input type="text" name="updates[]" className="ajaxcart__qty-num number-sidebar" maxLength={3} min="1" data-id={item.id} data-line={index + 1} aria-label="quantity" pattern="[0-9]*" value={item.quantity ?? 1} readOnly />
+																					<input type="text" name="updates[]" className="ajaxcart__qty-num number-sidebar" maxLength={3} min="1" data-id={item.id} data-line={index + 1} aria-label="quantity"  value={item.quantity ?? 1} readOnly />
 																					<button type="button" className="ajaxcart__qty-adjust ajaxcart__qty--plus items-count" 
 																						data-id={item.id} 
 																						data-line={index + 1} 
@@ -507,18 +507,18 @@ export default function Cart() {
 												</div>
 												<div className="swiper-button-prev">
 													<svg width="58" height="58" viewBox="0 0 58 58" fill="none" xmlns="http://www.w3.org/2000/svg">
-														<rect x="2.13003" y="29" width="38" height="38" transform="rotate(-45 2.13003 29)" stroke="black" fill="#fff" stroke-width="2"></rect>
+														<rect x="2.13003" y="29" width="38" height="38" transform="rotate(-45 2.13003 29)" stroke="black" fill="#fff" strokeWidth="2"></rect>
 														<rect x="8" y="29.2133" width="30" height="30" transform="rotate(-45 8 29.2133)" fill="black"></rect>
-														<path d="M18.5 29H39.5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
-														<path d="M29 18.5L39.5 29L29 39.5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+														<path d="M18.5 29H39.5" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"></path>
+														<path d="M29 18.5L39.5 29L29 39.5" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"></path>
 													</svg>
 												</div>
 												<div className="swiper-button-next swiper-button-disabled">
 													<svg width="58" height="58" viewBox="0 0 58 58" fill="none" xmlns="http://www.w3.org/2000/svg">
-														<rect x="2.13003" y="29" width="38" height="38" transform="rotate(-45 2.13003 29)" stroke="black" fill="#fff" stroke-width="2"></rect>
+														<rect x="2.13003" y="29" width="38" height="38" transform="rotate(-45 2.13003 29)" stroke="black" fill="#fff" strokeWidth="2"></rect>
 														<rect x="8" y="29.2133" width="30" height="30" transform="rotate(-45 8 29.2133)" fill="black"></rect>
-														<path d="M18.5 29H39.5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
-														<path d="M29 18.5L39.5 29L29 39.5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+														<path d="M18.5 29H39.5" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"></path>
+														<path d="M29 18.5L39.5 29L29 39.5" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"></path>
 													</svg>
 												</div>
 											</div>

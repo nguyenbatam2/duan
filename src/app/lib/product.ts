@@ -4,9 +4,8 @@ import Cookies from "js-cookie";
 import { Product } from "@/app/types/product";
 export async function getProducts(): Promise<Product[]> {
   const res = await axios.get("http://127.0.0.1:8000/api/v1/public/products");
-  return res.data as Product[];
+  return res.data.data as Product[];
 }
-
 // export async function Banner(): Promise<Product[]> {
 //   const res = await axios.get('http://192.168.100.108:8000/api/banners');
 //   console.log(res);

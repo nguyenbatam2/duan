@@ -4,7 +4,7 @@
 import { useState } from "react";
 import useSWR from "swr";
 import { Swiper, SwiperSlide } from "swiper/react";
-import { Navigation, Pagination } from "swiper/modules";
+import { Navigation } from "swiper/modules";
 
 // 🌐 Next.js
 import Link from "next/link";
@@ -26,13 +26,11 @@ import { usePopup } from "@/app/context/PopupContext";
 // 🔁 Fetcher
 const fetcher = (url: string) => axios.get(url).then(res => res.data.data);
 
-// 🎯 Component chính
 export default function Page() {
   const { data: products, isLoading, error } = useSWR(
     "http://127.0.0.1:8000/api/v1/public/products",
     fetcher
   );
-  console.log(products);
   const {
     data: coupons,
     isLoading: isLoadingCoupons,
@@ -402,7 +400,7 @@ export default function Page() {
         </div>
       </section>
 
-      <section className="section-index section_product_tab section_product_tab_1">
+      <section className={`section-index section_product_tab section_product_tab_1`}>
         <div className="container">
           <div className="wrap_tab_index not-dqtab e-tabs ajax-tab-1" data-section-2="ajax-tab-1">
             <div className="section-title">
@@ -444,14 +442,10 @@ export default function Page() {
                             <div className="product-thumbnail">
                               <Link className="image_thumb scale_hover" href={`/product/${product.id}`} title={product.name}>
                                 <img
-                                  className="lazyload duration-300 loaded"
-                                  src={
-                                    product.image.startsWith('http')
-                                      ? product.image
-                                      : `http://localhost:8000/storage/products/${product.image}`
-                                  }
+                                  src={`${product.image}`}
                                   alt={product.name}
                                 />
+
                               </Link>
                             </div>
 

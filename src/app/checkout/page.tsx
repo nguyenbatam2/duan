@@ -1,4 +1,5 @@
 'use client';
+import styled from 'styled-components';
 
 import { useEffect, useState } from 'react';
 import '../styles/checkout.css';
@@ -13,7 +14,29 @@ function formatCurrency(value: number | null): string {
     if (typeof value !== 'number' || isNaN(value)) return '...';
     return `${value.toLocaleString('en-US')} VND`;
 }
+const Container = styled.div`
+display: flex;
+gap: 2rem;
+padding: 2rem;
+max-width: 1200px;
+margin: auto;
+`;
 
+const Left = styled.section`
+flex: 1;
+background-color: #f9f9f9;
+padding: 2rem;
+border-radius: 8px;
+box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+`;
+const Right = styled.section`
+flex: 1;
+background-color: #fff;
+padding: 2rem;
+border-radius: 8px;
+box-shadow: 0 2px 6px rgba(0, 0,
+    0, 0.05);
+    `;
 // Thêm type cho kết quả applyCoupon
 interface CouponResult {
   product_discount?: string;
@@ -192,8 +215,9 @@ export default function CheckoutPage() {
     };
     
     return (
-        <div className="container" role="main">
-            <section className="left">
+        <Container>
+            <Left>
+
                 <h3>Chọn địa chỉ giao hàng</h3>
                 {addresses.length === 0 && <div>Bạn chưa có địa chỉ nào.</div>}
                 {addresses.map(addr => (
@@ -249,9 +273,9 @@ export default function CheckoutPage() {
                 <button className="primary btn-cart btn-views add_to_cart btn btn-primary" onClick={handlePlaceOrder}>
                     ĐẶT HÀNG 
                 </button>
-            </section>
+            </Left>
 
-            <section className="right">
+            <Right>
                 <h2>Đơn hàng của bạn</h2>
                 <ul className="order-list">
                     {cartItems.map((item) => (
@@ -282,8 +306,8 @@ export default function CheckoutPage() {
                     />
                     <button type="submit" className="btn-cart btn-views add_to_cart btn btn-primary">Áp dụng</button>
                 </form>
-            </section>
+            </Right>
             
-        </div>
+        </Container>
     );
 }

@@ -27,6 +27,7 @@ const useProducts = (categoryId: number, page: number) => {
     };
 };
 
+
 export default function CategoryProductPage() {
     const params = useParams();
     const categoryId = Number(params.id);

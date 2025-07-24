@@ -105,7 +105,6 @@ export default function ProductDetail() {
         setTimeout(() => setMessage(""), 3000);
     };
 
-
     return (
         <>
             <section className="bread-crumb">
@@ -154,7 +153,10 @@ export default function ProductDetail() {
                                                             aria-label={`${idx + 1} / ${product.images.length}`}
                                                             style={{ width: "476px", marginRight: "10px" }}
                                                         >
-                                                            <img src={`/${img.image_path}`} alt={img.alt_text || product.name} />
+                                                            <img
+                                                                src={img.image} // dùng trực tiếp link từ API
+                                                                alt={img.alt_text || product.name}
+                                                            />
                                                         </Link>
                                                     ))
                                                 ) : (
@@ -167,19 +169,14 @@ export default function ProductDetail() {
                                                         aria-label="1 / 1"
                                                         style={{ width: "476px", marginRight: "10px" }}
                                                     >
-                                                        <img src={`/${product.image || "img/sp1.webp"}`} alt={product.name} />
+                                                        <img
+                                                            src={product.image || "/img/sp1.webp"}
+                                                            alt={product.name}
+                                                        />
                                                     </Link>
                                                 )}
-                                                {/* <Link className="swiper-slide swiper-slide-next" data-hash="1" href="#" title="Click để xem" role="group" aria-label="2 / 4" style={{ width: "476px", marginRight: "10px" }}>
-                                                    <img src="/img/1.1.webp" alt="Set quà 2010 – Maneli #1 bồi bổ sức khỏe, dưỡng nhan" />
-                                                </Link>
-                                                <Link className="swiper-slide" data-hash="2" href="#" title="Click để xem" role="group" aria-label="3 / 4" style={{ width: "476px", marginRight: "10px" }}>
-                                                    <img src="/img/1.2.webp" alt="Set quà 2010 – Maneli #1 bồi bổ sức khỏe, dưỡng nhan" />
-                                                </Link>
-                                                <Link className="swiper-slide" data-hash="3" href="#" title="Click để xem" role="group" aria-label="4 / 4" style={{ width: "476px", marginRight: "10px" }}>
-                                                    <img src="/img/1.3.webp" alt="Set quà 2010 – Maneli #1 bồi bổ sức khỏe, dưỡng nhan" />
-                                                </Link> */}
                                             </div>
+
                                             <span className="swiper-notification" aria-live="assertive" aria-atomic="true"></span></div>
                                         {/* <!-- Thumbnail Slider --> */}
                                         <div className="swiper-container gallery-thumbs swiper-initialized swiper-vertical swiper-free-mode swiper-watch-progress swiper-backface-hidden swiper-thumbs">
@@ -751,7 +748,7 @@ export default function ProductDetail() {
                                                             >
                                                                 <img
                                                                     className="# duration-300"
-                                                                    src={item.image ? `http://localhost:8000/storage/products/${item.image}` : "/img/sp3.webp"}
+                                                                    src={item.image}
                                                                     alt={item.name}
                                                                 />
                                                             </Link>

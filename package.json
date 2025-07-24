@@ -19,6 +19,7 @@
     "popper.js": "^1.16.1",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "styled-components": "^6.1.19",
     "swiper": "^11.2.10",
     "swr": "^2.3.3"
   },
