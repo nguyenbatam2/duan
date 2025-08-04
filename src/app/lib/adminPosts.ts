@@ -4,10 +4,9 @@ import { Post } from "@/app/types/post";
 
 // Helper function to get auth token
 const getAuthToken = () => {
-  const cookieData = Cookies.get("author");
-  if (!cookieData) throw new Error("Không có token");
-  const parsed = JSON.parse(cookieData);
-  return parsed.token;
+  const token = Cookies.get("token");
+  if (!token) throw new Error("Token không tồn tại");
+  return token;
 };
 
 // 2.1. Lấy danh sách tất cả bài viết (bao gồm draft)

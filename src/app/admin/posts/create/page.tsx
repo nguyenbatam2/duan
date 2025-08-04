@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { createPost } from "../../../../../lib/adminPosts";
+import { createPost } from "@/app/lib/adminPosts";
 
 export default function CreatePostPage() {
   const router = useRouter();
@@ -67,129 +67,238 @@ export default function CreatePostPage() {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="max-w-4xl mx-auto">
-        <div className="flex items-center justify-between mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Tạo bài viết mới</h1>
-          <Link
-            href="/admin/posts"
-            className="text-blue-600 hover:text-blue-800 font-medium"
-          >
-            ← Quay lại danh sách
-          </Link>
+    <div className="product-modern-bg">
+      <div className="product-modern-container">
+        {/* Header */}
+        <div className="product-modern-header">
+          <h2 className="product-modern-title gradient-text">Tạo bài viết mới</h2>
+          <div style={{ display: 'flex', gap: 12 }}>
+            <Link href="/admin/posts" className="product-modern-btn product-modern-btn-light">← Quay lại</Link>
+          </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-md p-6">
-          {error && (
-            <div className="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
-              {error}
-            </div>
-          )}
-
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="lg:col-span-2">
-              <div className="mb-6">
-                <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-2">
-                  Tiêu đề bài viết *
-                </label>
-                <input
-                  type="text"
-                  id="title"
-                  name="title"
-                  value={formData.title}
-                  onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Nhập tiêu đề bài viết..."
-                  required
-                />
+        {/* Form */}
+        <div className="product-modern-table-wrap">
+          <form onSubmit={handleSubmit} className="product-modern-form">
+            {error && (
+              <div className="product-modern-alert product-modern-alert-danger">
+                {error}
               </div>
+            )}
 
-              <div className="mb-6">
-                <label htmlFor="content" className="block text-sm font-medium text-gray-700 mb-2">
-                  Nội dung bài viết *
-                </label>
-                <textarea
-                  id="content"
-                  name="content"
-                  value={formData.content}
-                  onChange={handleInputChange}
-                  rows={15}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Nhập nội dung bài viết..."
-                  required
-                />
-              </div>
-            </div>
+            <div className="product-modern-modal-body">
+              <label>Tiêu đề bài viết *</label>
+              <input
+                type="text"
+                name="title"
+                value={formData.title}
+                onChange={handleInputChange}
+                className="product-modern-input"
+                placeholder="Nhập tiêu đề bài viết..."
+                required
+              />
 
-            <div className="lg:col-span-1">
-              <div className="mb-6">
-                <label htmlFor="status" className="block text-sm font-medium text-gray-700 mb-2">
-                  Trạng thái
-                </label>
-                <select
-                  id="status"
-                  name="status"
-                  value={formData.status}
-                  onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                >
-                  <option value="draft">Bản nháp</option>
-                  <option value="public">Công khai</option>
-                </select>
-              </div>
+              <label>Nội dung bài viết *</label>
+              <textarea
+                name="content"
+                value={formData.content}
+                onChange={handleInputChange}
+                rows={15}
+                className="product-modern-input"
+                placeholder="Nhập nội dung bài viết..."
+                required
+              />
 
-              <div className="mb-6">
-                <label htmlFor="image" className="block text-sm font-medium text-gray-700 mb-2">
-                  Hình ảnh (tùy chọn)
-                </label>
-                <input
-                  type="file"
-                  id="image"
-                  name="image"
-                  accept="image/*"
-                  onChange={handleImageChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-                {imagePreview && (
-                  <div className="mt-3">
-                    <img
-                      src={imagePreview}
-                      alt="Preview"
-                      className="w-full h-48 object-cover rounded-md"
-                    />
-                  </div>
-                )}
-              </div>
+              <label>Trạng thái</label>
+              <select
+                name="status"
+                value={formData.status}
+                onChange={handleInputChange}
+                className="product-modern-input"
+              >
+                <option value="draft">Bản nháp</option>
+                <option value="public">Công khai</option>
+              </select>
 
-              <div className="bg-gray-50 p-4 rounded-md">
-                <h3 className="text-sm font-medium text-gray-700 mb-2">Hướng dẫn</h3>
-                <ul className="text-xs text-gray-600 space-y-1">
-                  <li>• Tiêu đề nên ngắn gọn, súc tích</li>
-                  <li>• Nội dung có thể sử dụng HTML</li>
-                  <li>• Hình ảnh nên có tỷ lệ 16:9</li>
-                  <li>• Bản nháp sẽ không hiển thị công khai</li>
+              <label>Hình ảnh (tùy chọn)</label>
+              <input
+                type="file"
+                name="image"
+                accept="image/*"
+                onChange={handleImageChange}
+                className="product-modern-input"
+              />
+              {imagePreview && (
+                <div className="mt-3">
+                  <img
+                    src={imagePreview}
+                    alt="Preview"
+                    className="product-modern-img"
+                    style={{ width: '100%', height: '200px', objectFit: 'cover', borderRadius: '8px' }}
+                  />
+                </div>
+              )}
+
+              <div className="product-modern-alert product-modern-alert-info">
+                <h6 style={{ margin: '0 0 8px 0', fontWeight: 600 }}>Hướng dẫn:</h6>
+                <ul style={{ margin: 0, paddingLeft: '16px', fontSize: '0.9em' }}>
+                  <li>Tiêu đề nên ngắn gọn, súc tích</li>
+                  <li>Nội dung có thể sử dụng HTML</li>
+                  <li>Hình ảnh nên có tỷ lệ 16:9</li>
+                  <li>Bản nháp sẽ không hiển thị công khai</li>
                 </ul>
               </div>
             </div>
-          </div>
 
-          <div className="flex justify-end space-x-4 pt-6 border-t border-gray-200">
-            <Link
-              href="/admin/posts"
-              className="px-4 py-2 text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 transition-colors"
-            >
-              Hủy
-            </Link>
-            <button
-              type="submit"
-              disabled={loading}
-              className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-            >
-              {loading ? "Đang tạo..." : "Tạo bài viết"}
-            </button>
-          </div>
-        </form>
+            <div className="product-modern-modal-footer">
+              <Link
+                href="/admin/posts"
+                className="product-modern-btn product-modern-btn-light"
+              >
+                Hủy
+              </Link>
+              <button
+                type="submit"
+                disabled={loading}
+                className="product-modern-btn product-modern-btn-primary"
+              >
+                {loading ? "Đang tạo..." : "Tạo bài viết"}
+              </button>
+            </div>
+          </form>
+        </div>
       </div>
+      <style>{`
+        .product-modern-bg {
+          min-height: 100vh;
+          background: linear-gradient(135deg, #f8fafc 0%, #e0e7ff 100%);
+          padding: 0 0 0 0px;
+        }
+        .product-modern-container {
+          max-width: 1200px;
+          margin: 0 auto;
+          padding: 32px 12px 32px 12px;
+        }
+        .product-modern-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 24px;
+        }
+        .product-modern-title {
+          font-size: 1.18rem;
+          font-weight: 700;
+          color: #2563eb;
+          letter-spacing: 0.5px;
+        }
+        .product-modern-btn {
+          background: linear-gradient(90deg, #6366f1 0%, #2563eb 100%);
+          color: #fff;
+          border: none;
+          border-radius: 8px;
+          padding: 7px 18px;
+          font-size: 0.97rem;
+          font-weight: 500;
+          margin-left: 8px;
+          margin-bottom: 2px;
+          box-shadow: 0 2px 8px #6366f122;
+          cursor: pointer;
+          transition: background 0.18s, box-shadow 0.18s;
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+        }
+        .product-modern-btn:hover:not(:disabled) {
+          background: linear-gradient(90deg, #2563eb 0%, #6366f1 100%);
+          box-shadow: 0 4px 16px #6366f133;
+        }
+        .product-modern-btn:disabled {
+          opacity: 0.7;
+          cursor: not-allowed;
+        }
+        .product-modern-btn-light {
+          background: #f1f5f9;
+          color: #2563eb;
+          border: 1.5px solid #e0e7ef;
+        }
+        .product-modern-btn-primary {
+          background: linear-gradient(90deg, #22c55e 0%, #16a34a 100%);
+        }
+        .product-modern-table-wrap {
+          background: #fff;
+          border-radius: 16px;
+          box-shadow: 0 2px 16px #6366f111;
+          padding: 18px 10px 10px 10px;
+          margin-bottom: 24px;
+          overflow-x: auto;
+        }
+        .product-modern-form {
+          padding: 18px 24px 18px 24px;
+        }
+        .product-modern-modal-body label {
+          font-size: 0.97em;
+          color: #2563eb;
+          font-weight: 500;
+          margin-top: 8px;
+        }
+        .product-modern-input {
+          width: 100%;
+          border-radius: 8px;
+          border: 1.5px solid #e0e7ef;
+          padding: 8px 10px;
+          font-size: 0.97em;
+          margin-bottom: 8px;
+          background: #f8fafc;
+          color: #222;
+          outline: none;
+          transition: border 0.18s;
+        }
+        .product-modern-input:focus {
+          border: 1.5px solid #6366f1;
+          background: #fff;
+        }
+        .product-modern-modal-footer {
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+          align-items: flex-end;
+          padding: 0 24px 18px 24px;
+        }
+        .product-modern-alert {
+          border-radius: 8px;
+          padding: 8px 14px;
+          font-size: 0.97em;
+          margin-bottom: 2px;
+        }
+        .product-modern-alert-danger {
+          background: #fef2f2;
+          color: #ef4444;
+        }
+        .product-modern-alert-info {
+          background: #eff6ff;
+          color: #2563eb;
+        }
+        .product-modern-img {
+          width: 44px;
+          height: 44px;
+          object-fit: cover;
+          border-radius: 8px;
+          border: 1.5px solid #e0e7ef;
+        }
+        .gradient-text {
+          background: linear-gradient(90deg, #6366f1 0%, #2563eb 100%);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+        }
+        @media (max-width: 900px) {
+          .product-modern-bg { padding-left: 54px; }
+          .product-modern-container { padding: 8px 2vw; }
+        }
+        @media (max-width: 600px) {
+          .product-modern-header { flex-direction: column; gap: 8px; align-items: flex-start; }
+          .product-modern-title { font-size: 1.05rem; }
+        }
+      `}</style>
     </div>
   );
 } 
