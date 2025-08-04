@@ -953,30 +953,8 @@ export default function Header() {
 
 
 
-                                            <li className="nav-item has-childs " data-section="header_nav">
-                                                <Link href="/kien-thuc" className="nav-link" title="Tin tức">Tin tức
-                                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="bi bi-chevron-right" viewBox="0 0 16 16">
-                                                        <path fillRule="evenodd" d="M4.646 1.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1 0 .708l-6 6a.5.5 0 0 1-.708-.708L10.293 8 4.646 2.354a.5.5 0 0 1 0-.708"></path>
-                                                    </svg>
-                                                </Link>
-                                                <i className="open_mnu down_icon"></i>
-
-                                                <ul className="dropdown-menu">
-
-
-                                                    <li className="nav-item-lv2">
-                                                        <Link className="nav-link" href="/kien-thuc" title="Kiến thức">Kiến thức</Link>
-                                                    </li>
-
-
-
-                                                    <li className="nav-item-lv2">
-                                                        <Link className="nav-link" href="/kinh-nghiem" title="Kinh nghiệm">Kinh nghiệm</Link>
-                                                    </li>
-
-
-                                                </ul>
-
+                                            <li className="nav-item ">
+                                                <Link className="nav-link" href="/tin-tuc" title="Tin tức">Tin tức</Link>
                                             </li>
 
 

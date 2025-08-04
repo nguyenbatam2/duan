@@ -8,6 +8,7 @@ const menu = [
   { label: "Quản lý Danh Mục", href: "/admin/category", icon: "📁" },
   { label: "Quản lý Đơn Hàng", href: "/admin/Oder", icon: "🧾" },
   { label: "Quản lý Khách Hàng", href: "/admin/user", icon: "👤" },
+  { label: "Quản lý Bài viết", href: "/admin/posts", icon: "📝" },
   { label: "Quản lý Sự Kiện", href: "/admin/Event", icon: "🎉" },
   { label: "Quản lý Mã Giảm Giá", href: "/admin/CouponPage", icon: "🏷️" },
   { label: "Quản lý Admin", href: "/admin/Admin", icon: "🛡️" },
