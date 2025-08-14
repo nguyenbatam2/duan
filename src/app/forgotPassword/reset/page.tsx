@@ -1,11 +1,14 @@
-"use client";
+'use client';
+
+export const dynamic = 'force-dynamic';
+
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { resetPassword } from '@/app/lib/authorApi';
 import Link from 'next/link';
 import "../../styles/login.css";
 
-export default function ResetPasswordPage() {
+function ResetPasswordContent() {
     const searchParams = useSearchParams();
     const email = searchParams.get("email") || "";
     const otp = searchParams.get("otp") || "";
@@ -91,4 +94,8 @@ export default function ResetPasswordPage() {
             </section>
         </div>
     );
+}
+
+export default function ResetPasswordPage() {
+  return <ResetPasswordContent />;
 }

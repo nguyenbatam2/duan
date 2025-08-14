@@ -8,8 +8,6 @@ export interface OrderItem {
 
 
 export interface Product {
-  discount_price(discount_price: string): unknown;
-  discount_price: string;
   id: number;
   name: string;
   slug: string;
@@ -17,6 +15,7 @@ export interface Product {
   status: number;
   product_type: string;
   price: string;
+  discount_price: string;
   stock_quantity: number;
   image: string;
   average_rating: number | null;
