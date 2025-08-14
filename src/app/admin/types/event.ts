@@ -31,10 +31,41 @@ export interface PaginatedEvents {
     total: number;
   };
 }
+
 export interface Event {
   id: number;
   name: string;
+  description?: string;
+  start_time: string;
+  end_time: string;
   status: string;
+  banner_image?: string;
+  discount_type?: string;
+  discount_value?: number;
   is_featured?: boolean;
-  // Thêm các trường khác nếu API trả về
+  sort_order?: number;
+  created_at?: string;
+  updated_at?: string;
+  eventProducts?: EventProduct[];
+}
+
+export interface EventProduct {
+  id: number;
+  event_id: number;
+  product_id: number;
+  event_price: number;
+  original_price: number;
+  discount_price: number;
+  quantity_limit: number;
+  status: string;
+  sort_order: number;
+  product?: Product;
+}
+
+export interface Product {
+  id: number;
+  name: string;
+  price: string;
+  image?: string;
+  description?: string;
 }

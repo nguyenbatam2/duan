@@ -3,7 +3,7 @@ import axios from "axios";
 import { Category } from "../types/cartegory";
 export async function getCategories(): Promise<Category> {
     const res = await axios.get(
-      "http://127.0.0.1:8000/api/v1/public/categories?per_page=15 "
+      "http://127.0.0.1:8000/api/v1/public/public-categories?per_page=15 "
     );
     return res.data as Category   ; // trả về { data: {...}
 }

@@ -23,6 +23,8 @@ import { addHisToRy } from "./lib/addCart";
 import { getCoupons, saveCoupon } from "@/app/lib/Coupon";
 import { Product } from "@/app/types/product";
 import { usePopup } from "@/app/context/PopupContext";
+import { getActiveEvents } from "@/app/lib/event";
+import { Event } from "@/app/admin/types/event";
 
 
 // 🔁 Fetcher
@@ -47,44 +49,22 @@ export default function Page() {
   const [savedCoupons, setSavedCoupons] = useState<number[]>([]);
   const { setIsOpen, setSelectedCoupon } = usePopup();
 
-  const events = [
-    {
-      id: 1,
-      name: "Sự kiện Siêu Sale 8.8",
-      banner: "https://via.placeholder.com/800x300?text=Sale+8.8",
-      start_time: "2025-08-15T00:00:00",
-      end_time: "2025-08-20T23:59:59",
-      status: "active",
-      is_featured: 1,
-      description: "Giảm giá khủng cho tất cả mặt hàng.",
-    },
-    {
-      id: 2,
-      name: "Sự kiện Back To School",
-      banner: "https://via.placeholder.com/800x300?text=Back+To+School",
-      start_time: "2025-08-15T00:00:00",
-      end_time: "2025-08-20T23:59:59",
-      status: "active",
-      is_featured: 0,
-      description: "Sắm đồ đi học giá cực rẻ.",
+  // Fetch events data - chỉ lấy sự kiện đang active
+  const { data: events, isLoading: isLoadingEvents } = useSWR(
+    "active-events",
+    async () => {
+      try {
+        const activeEvents = await getActiveEvents();
+        return activeEvents;
+      } catch (error) {
+        console.error("Failed to fetch events:", error);
+        return [];
+      }
     }
-  ];
-  // Sản phẩm trong sự kiện
-  const eventProducts = {
-    1: [
-      { id: 101, name: "Áo thun nam", image: "https://via.placeholder.com/200", original_price: 200000, discount_price: 150000, event_price: 140000, status: "active" },
-      { id: 102, name: "Quần jeans nữ", image: "https://via.placeholder.com/200", original_price: 400000, discount_price: 350000, event_price: 300000, status: "active" },
-      { id: 103, name: "Quần jeans nữ", image: "https://via.placeholder.com/200", original_price: 400000, discount_price: 350000, event_price: 300000, status: "active" },
-      { id: 104, name: "Quần jeans nữ", image: "https://via.placeholder.com/200", original_price: 400000, discount_price: 350000, event_price: 300000, status: "active" },
-      { id: 105, name: "Giày sneaker", image: "https://via.placeholder.com/200", original_price: 800000, discount_price: 750000, event_price: 700000, status: "inactive" }
-    ],
-    2: [
-      { id: 201, name: "Balo laptop", image: "https://via.placeholder.com/200", original_price: 500000, discount_price: 450000, event_price: 420000, status: "active" },
-      { id: 202, name: "Bút bi cao cấp", image: "https://via.placeholder.com/200", original_price: 20000, discount_price: 15000, event_price: 12000, status: "active" },
-      { id: 203, name: "Bút bi cao cấp", image: "https://via.placeholder.com/200", original_price: 20000, discount_price: 15000, event_price: 12000, status: "active" },
-      { id: 204, name: "Bút bi cao cấp", image: "https://via.placeholder.com/200", original_price: 20000, discount_price: 15000, event_price: 12000, status: "active" }
-    ]
-  };
+  );
+
+  // Sử dụng dữ liệu thật - nếu không có sự kiện active thì không hiển thị gì
+  const displayEvents = events || [];
 
   const handleToggleWishlist = (action: "add" | "remove") => {
     setActionText(action);
@@ -194,104 +174,116 @@ export default function Page() {
           </div>
         </div>
       </div>
-      {events.map(event => (
-        <section className="section-index section_flash_sale" key={event.id}>
-          <div className="container">
-            <div className="section-title">
-
-              <span className="sub-title">
-                Yến sào Sudes Nest
-              </span>
-
-              <h2>
-                <a href="/san-pham-khuyen-mai" title="Khuyến mãi đặc biệt">
-                  {event.name}
-                </a>
-              </h2>
-              <div className="title-separator">
-                <div className="separator-center"></div>
-              </div>
-              {/* <div className="count-down">
-              <div className="timer-view" data-countdown="countdown" data-date="12-25-2025-09-15-45"><div className="block-timer"><p><b>153</b></p><span>Ngày</span></div><div className="block-timer"><p><b>12</b></p><span>Giờ</span></div><div className="block-timer"><p><b>42</b></p><span>Phút</span></div><div className="block-timer"><p><b>45</b></p><span>Giây</span></div></div>
-            </div> */}
-              <EventCountdown key={event.id} event={event} />
-            </div>
-            <div className="block-product-sale  has-deal-time">
+             {displayEvents.length > 0 && displayEvents.map(event => (
+         <section className="section-index section_flash_sale" key={event.id}>
+           <div className="container">
+             <div className="section-title">
+               <span className="sub-title">
+                 Yến sào Sudes Nest
+               </span>
+               <h2>
+                 <a href="/san-pham-khuyen-mai" title="Khuyến mãi đặc biệt">
+                   {event.name}
+                 </a>
+               </h2>
+               <div className="title-separator">
+                 <div className="separator-center"></div>
+               </div>
+               <EventCountdown key={event.id} event={event} />
+             </div>
+             <div className="block-product-sale has-deal-time">
 
               <div className="swiper_sale swiper-container swiper-container-initialized swiper-container-horizontal swiper-container-pointer-events">
                 <div className="swiper-wrapper load-after" data-section="section_flash_sale" style={{ transform: "translate3d(0px, 0px, 0px)" }}>
-                  {eventProducts[event.id].map(product => (
-                    product.status === "active" && (
+                  {(() => {
+                    console.log('Event data:', event);
+                    console.log('Event products:', event.products);
+                    
+                    // Hiển thị tất cả sản phẩm trong sự kiện (không filter theo status)
+                    const products = event.products || [];
+                    console.log('Products to display:', products);
+                    
+                    return products.length > 0 ? (
+                      products.map((product: any) => (
+                        <div className="swiper-slide swiper-slide-active" style={{ width: "287.75px", marginRight: "20px" }} key={product.id}>
+                          <div className="item_product_main">
 
-                      <div className="swiper-slide swiper-slide-active" style={{ width: "287.75px", marginRight: "20px" }} key={product.id}>
-                        <div className="item_product_main">
+                                                         <div className="variants product-action item-product-main product-flash-sale duration-300" data-cart-form="" data-id="product-actions-34620973">
+                               <span className="flash-sale">-
+                                 {event.discount_type === 'percentage' ? event.discount_value : Math.round(((product.original_price - product.event_price) / product.original_price) * 100)}%
+                               </span>
 
-                          <form action="/cart/add" method="post" className="variants product-action item-product-main product-flash-sale duration-300" data-cart-form="" data-id="product-actions-34620973" encType="multipart/form-data">
-                            <span className="flash-sale">-
-                              37%
-                            </span>
-
-
-                            <div className="product-thumbnail">
-                              <a className="image_thumb scale_hover" href="/set-qua-2010-maneli-1-boi-bo-suc-khoe-duong-nhan" title="Set quà 2010 – Maneli #1 bồi bổ sức khỏe, dưỡng nhan">
-                                <img className="lazyload duration-300 loaded" src="//bizweb.dktcdn.net/thumb/large/100/506/650/products/set-qua-20-10-maneli-1.jpg?v=1708655273420" data-src="//bizweb.dktcdn.net/thumb/large/100/506/650/products/set-qua-20-10-maneli-1.jpg?v=1708655273420" alt="Set quà 2010 – Maneli #1 bồi bổ sức khỏe, dưỡng nhan" data-was-processed="true" />
-                              </a>
-                            </div>
-                            <div className="product-info">
-                              <div className="name-price">
-                                <h3 className="product-name line-clamp-2-new">
-                                  <a href="/set-qua-2010-maneli-1-boi-bo-suc-khoe-duong-nhan" title="Set quà 2010 – Maneli #1 bồi bổ sức khỏe, dưỡng nhan">
-                                    {product.name}
+                                                              <div className="product-thumbnail">
+                                  <a className="image_thumb scale_hover" href={`/product/${product.product_id}`} title="Sản phẩm">
+                                    <img className="lazyload duration-300 loaded" src="https://via.placeholder.com/300x300" data-src="https://via.placeholder.com/300x300" alt="Sản phẩm" data-was-processed="true" />
                                   </a>
-                                </h3>
-                                <div className="product-price-cart">
-                                  <span className="compare-price">{product.original_price}</span>
-
-                                  <span className="price">{product.event_price}₫</span>
-                                  <div className="productcount">
-
-
-
-                                    <div className="countitem visible">
-                                      <div className="fire">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" viewBox="0 0 16 16">
-                                          <defs>
-                                            <linearGradient id="prefix__a" x1="50%" x2="50%" y1="36.31%" y2="88.973%">
-                                              <stop offset="0%" stopColor="#FDD835"></stop>
-                                              <stop offset="100%" stopColor="#FFB500"></stop>
-                                            </linearGradient>
-                                          </defs>
-                                          <g fill="none" fillRule="evenodd">
-                                            <path d="M0 0H16V16H0z"></path>
-                                            <path fill="url(#prefix__a)" stroke="#FF424E" strokeWidth="1.1" d="M9.636 6.506S10.34 2.667 7.454 1c-.087 1.334-.786 2.571-1.923 3.401-1.234 1-3.555 3.249-3.53 5.646-.017 2.091 1.253 4.01 3.277 4.953.072-.935.549-1.804 1.324-2.41.656-.466 1.082-1.155 1.182-1.912 1.729.846 2.847 2.469 2.944 4.27v.012c1.909-.807 3.165-2.533 3.251-4.467.205-2.254-1.134-5.316-2.321-6.317-.448.923-1.144 1.725-2.022 2.33z" transform="rotate(4 8 8)"></path>
-                                          </g>
-                                        </svg>
-                                      </div>
-                                      <span className="a-center">Đã bán <b>139</b></span>
-                                      <div className="countdown" style={{ width: "56%" }}></div>
-                                    </div>
-
-
-
+                                </div>
+                                <div className="product-info">
+                                  <div className="name-price">
+                                    <h3 className="product-name line-clamp-2-new">
+                                      <a href={`/product/${product.product_id}`} title="Sản phẩm">
+                                        Sản phẩm #{product.product_id}
+                                      </a>
+                                    </h3>
+                                    <div className="product-price-cart">
+                                      <span className="compare-price">{product.original_price?.toLocaleString()}₫</span>
+                                      <span className="price">{product.event_price?.toLocaleString()}₫</span>
+                                     <div className="productcount">
+                                       <div className="countitem visible">
+                                         <div className="fire">
+                                           <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" viewBox="0 0 16 16">
+                                             <defs>
+                                               <linearGradient id="prefix__a" x1="50%" x2="50%" y1="36.31%" y2="88.973%">
+                                                 <stop offset="0%" stopColor="#FDD835"></stop>
+                                                 <stop offset="100%" stopColor="#FFB500"></stop>
+                                               </linearGradient>
+                                             </defs>
+                                             <g fill="none" fillRule="evenodd">
+                                               <path d="M0 0H16V16H0z"></path>
+                                               <path fill="url(#prefix__a)" stroke="#FF424E" strokeWidth="1.1" d="M9.636 6.506S10.34 2.667 7.454 1c-.087 1.334-.786 2.571-1.923 3.401-1.234 1-3.555 3.249-3.53 5.646-.017 2.091 1.253 4.01 3.277 4.953.072-.935.549-1.804 1.324-2.41.656-.466 1.082-1.155 1.182-1.912 1.729.846 2.847 2.469 2.944 4.27v.012c1.909-.807 3.165-2.533 3.251-4.467.205-2.254-1.134-5.316-2.321-6.317-.448.923-1.144 1.725-2.022 2.33z" transform="rotate(4 8 8)"></path>
+                                             </g>
+                                           </svg>
+                                         </div>
+                                         <span className="a-center">Còn lại <b>{product.quantity_limit || '∞'}</b></span>
+                                         <div className="countdown" style={{ width: "56%" }}></div>
+                                       </div>
+                                     </div>
+                                   </div>
+                                 </div>
+                                                                  <div className="product-button">
+                                                                         <AddToCart 
+                                       product={{
+                                         id: product.product_id,
+                                         name: `Sản phẩm #${product.product_id}`,
+                                         price: product.event_price.toString(),
+                                         discount_price: "0.00",
+                                         image: "https://via.placeholder.com/300x300",
+                                         slug: `product-${product.product_id}`,
+                                         description: "",
+                                         status: 1,
+                                         product_type: "simple",
+                                         stock_quantity: product.quantity_limit || 0,
+                                         average_rating: null,
+                                         views_count: 0,
+                                         quantity: 1
+                                       } as Product} 
+                                       onAddToCart={(product) => setSelectedProduct(product)} 
+                                     />
+                                    <a href="javascript:void(0)" className="setWishlist btn-views btn-circle"  title="Thêm vào yêu thích">
+                                      <img width="25" height="25" src="//bizweb.dktcdn.net/100/506/650/themes/944598/assets/heart.png?1739018973665" alt="Thêm vào yêu thích" />
+                                    </a>
                                   </div>
                                 </div>
                               </div>
-                              <div className="product-button">
-                                <button className="btn-cart btn-views add_to_cart btn btn-primary " title="Thêm vào giỏ hàng">
-                                  <span>Thêm vào giỏ</span>
-                                  <svg enableBackground="new 0 0 32 32" height="512" viewBox="0 0 32 32" width="512" xmlns="http://www.w3.org/2000/svg"><g><g><path d="m23.8 30h-15.6c-3.3 0-6-2.7-6-6v-.2l.6-16c.1-3.3 2.8-5.8 6-5.8h14.4c3.2 0 5.9 2.5 6 5.8l.6 16c.1 1.6-.5 3.1-1.6 4.3s-2.6 1.9-4.2 1.9c0 0-.1 0-.2 0zm-15-26c-2.2 0-3.9 1.7-4 3.8l-.6 16.2c0 2.2 1.8 4 4 4h15.8c1.1 0 2.1-.5 2.8-1.3s1.1-1.8 1.1-2.9l-.6-16c-.1-2.2-1.8-3.8-4-3.8z"></path></g><g><path d="m16 14c-3.9 0-7-3.1-7-7 0-.6.4-1 1-1s1 .4 1 1c0 2.8 2.2 5 5 5s5-2.2 5-5c0-.6.4-1 1-1s1 .4 1 1c0 3.9-3.1 7-7 7z"></path></g></g></svg>
-                                </button>
-                                <a href="javascript:void(0)" className="setWishlist btn-views btn-circle"  title="Thêm vào yêu thích">
-                                  <img width="25" height="25" src="//bizweb.dktcdn.net/100/506/650/themes/944598/assets/heart.png?1739018973665" alt="Thêm vào yêu thích" />
-                                </a>
-                              </div>
-                            </div>
-                          </form>
+                          </div>
                         </div>
-                      </div>
-
-                    )
-                  ))}
+                      ))
+                  ) : (
+                    <div className="swiper-slide" style={{ width: "100%", textAlign: "center", padding: "40px" }}>
+                      <p>Chưa có sản phẩm nào trong sự kiện này</p>
+                    </div>
+                  );
+                })()}
                 </div>
                 <div className="swiper-button-prev swiper-button-disabled">
                   <svg width="58" height="58" viewBox="0 0 58 58" fill="none" xmlns="http://www.w3.org/2000/svg">
