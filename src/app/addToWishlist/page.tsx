@@ -39,12 +39,7 @@ const AddToWishlist = ({ product, onToggle }: AddToWishlistProps) => {
             />
         </a>
     );
-<<<<<<< HEAD
-}
 
-
-=======
 };
 
 export default AddToWishlist;
->>>>>>> 8114f4cab21992087cdd79a04a056c920e3a25ca
