@@ -4,11 +4,13 @@ import Image from "next/image";
 import React, { useEffect, useState } from "react";
 import { Product } from "../types/product";
 import { getCartLength } from "../lib/addCart";
+
 interface CartModalProps {
     product: Product;
     onClose: () => void;
-  }
-export default function CartModal({ product, onClose }: CartModalProps) {
+}
+
+const CartModal = ({ product, onClose }: CartModalProps) => {
     const [cartLength, setCartLength] = useState<number>(0);
 
     useEffect(() => {
@@ -42,6 +44,8 @@ export default function CartModal({ product, onClose }: CartModalProps) {
             window.removeEventListener("cartUpdated", handleStorageChange);
         };
     }, []);
+    
+    // Kiểm tra nếu không có product thì không render
     if (!product) return null;
 
     return (
@@ -106,5 +110,6 @@ export default function CartModal({ product, onClose }: CartModalProps) {
             </div>
         </div>
     );
+};
 
-}
+export default CartModal;

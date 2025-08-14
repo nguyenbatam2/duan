@@ -9,8 +9,13 @@ interface AddToWishlistProps {
     onToggle: (action: "add" | "remove") => void;
 }
 
-export default function AddToWishlist({ product, onToggle }: AddToWishlistProps) {
+const AddToWishlist = ({ product, onToggle }: AddToWishlistProps) => {
     const [isFavorite, setIsFavorite] = useState(false);
+
+    // Kiểm tra nếu không có product thì không render
+    if (!product) {
+        return null;
+    }
 
     const handleToggleWishlist = () => {
         const next = !isFavorite;
@@ -34,6 +39,12 @@ export default function AddToWishlist({ product, onToggle }: AddToWishlistProps)
             />
         </a>
     );
+<<<<<<< HEAD
 }
 
 
+=======
+};
+
+export default AddToWishlist;
+>>>>>>> 8114f4cab21992087cdd79a04a056c920e3a25ca

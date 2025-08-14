@@ -1,6 +1,7 @@
 import Cookies from 'js-cookie';
 import axios from 'axios';
 import { Review } from '../types/reviews';
+import { ADMIN_API } from '../../lib/config';
 
 // GET - lấy danh sách reviews
 export async function getReviews(): Promise<Review> {
@@ -8,7 +9,7 @@ export async function getReviews(): Promise<Review> {
   if (!token) throw new Error("Token không tồn tại");
 
   const res = await axios.get(
-    "http://127.0.0.1:8000/api/v1/admin/reviews",
+    ADMIN_API.REVIEWS,
     {
       headers: {
         Authorization: `Bearer ${token}`,
@@ -33,7 +34,7 @@ export async function updateReviewStatus(
   if (!token) throw new Error("Token không tồn tại");
 
   const res = await axios.put(
-    `http://127.0.0.1:8000/api/v1/admin/reviews/${reviewId}/status`,
+    `${ADMIN_API.REVIEWS}/${reviewId}/status`,
     data,
     {
       headers: {

@@ -8,8 +8,6 @@ export interface OrderItem {
 
 
 export interface Product {
-  discount_price(discount_price: string): unknown;
-  discount_price: string;
   id: number;
   name: string;
   slug: string;
@@ -17,6 +15,7 @@ export interface Product {
   status: number;
   product_type: string;
   price: string;
+  discount_price: string;
   stock_quantity: number;
   image: string;
   average_rating: number | null;
@@ -24,4 +23,23 @@ export interface Product {
   quantity: number;
   variant_id?: number; 
   variants?: { id: number }[]; 
+  
+  // Event pricing fields (theo document.md)
+  base_price?: number;
+  base_discount?: number;
+  event_price?: number;
+  original_price?: number;
+  display_price?: number;
+  has_active_event?: boolean;
+  event_discount_percentage?: number;
+  event_info?: {
+    id: number;
+    name: string;
+    description: string;
+    start_time: string;
+    end_time: string;
+    discount_type: string;
+    discount_value: number;
+    banner_image: string;
+  };
 }

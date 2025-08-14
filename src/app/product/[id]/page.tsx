@@ -8,6 +8,7 @@ import { getProductById, getProductReviews, reportProductReview } from '@/app/li
 import { getHisToRy } from '@/app/lib/addCart';
 import { getCoupons, saveCoupon } from "@/app/lib/Coupon";
 import { decreaseQuantity, getCart, increaseQuantity } from "@/app/lib/addCart";
+import { API_BASE_URL } from "@/app/lib/config";
 
 
 import CartModal from '@/app/cartModal/page';
@@ -306,23 +307,56 @@ export default function ProductDetail() {
                                     </span>
 
                                     <div className="price-box clearfix">
-                                        <span className="special-price">
-                                            <span className="price product-price">{Number(product.price).toLocaleString('vi-VN')}đ</span>
-                                            <meta itemProp="price" content="{product.price}" />
-                                            <meta itemProp="priceCurrency" content="VND" />
-                                        </span>
-                                        {/* <!-- Giá Khuyến mại --> */}
-                                        <span className="old-price" itemProp="priceSpecification" itemType="http://schema.org/priceSpecification">
-                                            <del className="price product-price-old">
-                                                {Number(product.discount_price).toLocaleString('vi-VN')}đ
-                                            </del>
-                                            <meta itemProp="price" content="799000" />
-                                            <meta itemProp="priceCurrency" content="VND" />
-                                        </span>
-                                        {/* <!-- Giás gốc --> */}
-                                        <span className="sale-off">-
-                                            37%
-                                        </span>
+                                        {product.has_active_event ? (
+                                            <>
+                                                {/* Sản phẩm đang trong sự kiện */}
+                                                <span className="special-price">
+                                                    <span className="price product-price">{Number(product.display_price).toLocaleString('vi-VN')}đ</span>
+                                                    <meta itemProp="price" content={product.display_price.toString()} />
+                                                    <meta itemProp="priceCurrency" content="VND" />
+                                                </span>
+                                                <span className="old-price" itemProp="priceSpecification" itemType="http://schema.org/priceSpecification">
+                                                    <del className="price product-price-old">
+                                                        {Number(product.original_price).toLocaleString('vi-VN')}đ
+                                                    </del>
+                                                    <meta itemProp="price" content={product.original_price.toString()} />
+                                                    <meta itemProp="priceCurrency" content="VND" />
+                                                </span>
+                                                <span className="sale-off">-
+                                                    {product.event_discount_percentage}%
+                                                </span>
+                                                {product.event_info && (
+                                                    <div className="event-info mt-2">
+                                                        <span className="badge bg-danger text-white">
+                                                            🔥 {product.event_info.name}
+                                                        </span>
+                                                    </div>
+                                                )}
+                                            </>
+                                        ) : (
+                                            <>
+                                                {/* Sản phẩm thông thường */}
+                                                <span className="special-price">
+                                                    <span className="price product-price">{Number(product.display_price || product.price).toLocaleString('vi-VN')}đ</span>
+                                                    <meta itemProp="price" content={product.display_price || product.price} />
+                                                    <meta itemProp="priceCurrency" content="VND" />
+                                                </span>
+                                                {product.base_discount > 0 && (
+                                                    <>
+                                                        <span className="old-price" itemProp="priceSpecification" itemType="http://schema.org/priceSpecification">
+                                                            <del className="price product-price-old">
+                                                                {Number(product.base_price).toLocaleString('vi-VN')}đ
+                                                            </del>
+                                                            <meta itemProp="price" content={product.base_price.toString()} />
+                                                            <meta itemProp="priceCurrency" content="VND" />
+                                                        </span>
+                                                        <span className="sale-off">-
+                                                            {Math.round(((product.base_price - (product.display_price || product.price)) / product.base_price) * 100)}%
+                                                        </span>
+                                                    </>
+                                                )}
+                                            </>
+                                        )}
                                     </div>
                                     <div className="form-product">
                                         {/* <div className="box-variant clearfix  d-none ">
@@ -362,7 +396,14 @@ export default function ProductDetail() {
  >
                                                         <span className="txt-main"  >Mua ngay</span>
                                                     </button>
-                                                    <AddToCart product={product} onAddToCart={(product) => setSelectedProduct(product)} />
+                                                    <AddToCart 
+                                                        product={product.has_active_event ? {
+                                                            ...product,
+                                                            price: product.display_price.toString(),
+                                                            discount_price: "0.00"
+                                                        } : product} 
+                                                        onAddToCart={(product) => setSelectedProduct(product)} 
+                                                    />
                                                 </div>
                                             </div>
                                         </div>
@@ -629,7 +670,7 @@ export default function ProductDetail() {
                                                                 <div key={review.id} className="user-review mb-4">
                                                                     <div className="d-flex align-items-center mb-2">
                                                                         <img
-                                                                            src={`http://127.0.0.1:8000/${review.user?.avatar || 'img/default-avatar.png'}`}
+                                                                            src={`${API_BASE_URL.replace('/api/v1', '')}/${review.user?.avatar || 'img/default-avatar.png'}`}
                                                                             className="rounded-circle"
                                                                             width="50"
                                                                             height="50"
@@ -694,7 +735,7 @@ export default function ProductDetail() {
                                                     {history.map((product) => (
                                                         <div className="product-view" key={product.id}>
                                                             <Link className="image_thumb" href={`/product/${product.id}`} title="Tổ Yến Tinh Chế VIP Loại 1">
-                                                                <img width="370" height="480" className="lazyload loaded" src={`http://localhost:8000/storage/products/${product.image}`} alt={product.name} data-was-processed="true" />
+                                                                <img width="370" height="480" className="lazyload loaded" src={`${API_BASE_URL.replace('/api/v1', '')}/storage/products/${product.image}`} alt={product.name} data-was-processed="true" />
                                                             </Link>
                                                             <div className="product-info">
                                                                 <h3 className="product-name"><Link href={`/product/${product.id}`} title="Tổ Yến Tinh Chế VIP Loại 1" className="line-clamp line-clamp-3-new">{product.name}</Link></h3>

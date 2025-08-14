@@ -1,10 +1,16 @@
 import axios from "axios";
 import Cookies from "js-cookie";
+import { PUBLIC_API, USER_API } from "./config";
 
 import { Product } from "@/app/types/product";
-export async function getProducts(): Promise<Product[]> {
-  const res = await axios.get("http://127.0.0.1:8000/api/v1/public/products");
-  return res.data.data as Product[];
+export async function getProducts() {
+  try {
+    const res = await axios.get(PUBLIC_API.PRODUCTS);
+    return res.data;
+  } catch (error) {
+    console.error('Error fetching products:', error);
+    throw error;
+  }
 }
 // export async function Banner(): Promise<Product[]> {
 //   const res = await axios.get('http://192.168.100.108:8000/api/banners');
@@ -12,21 +18,33 @@ export async function getProducts(): Promise<Product[]> {
 //   return res.data as Product[];
 // }
 
-export async function getProductsPage(page: number): Promise<Product> {
-  const res = await axios.get(
-    `http://127.0.0.1:8000/api/v1/public/products/?per_page=16&page=${page}`
-  );
-  return res.data as Product;
+export async function getProductsPage(page: number = 1) {
+  try {
+    const res = await axios.get(
+      `${PUBLIC_API.PRODUCTS}?page=${page}`
+    );
+    return res.data;
+  } catch (error) {
+    console.error('Error fetching products:', error);
+    throw error;
+  }
 }
 
 export async function getProductById(id: number) {
-  const res = await axios.get(
-    `http://127.0.0.1:8000/api/v1/public/products/${id}`
-  );
-  if (!res.data) {
-    throw new Error("Product not found");
+  try {
+    const res = await axios.get(
+      `${PUBLIC_API.PRODUCTS}/${id}`
+    );
+    
+    if (!res.data) {
+      throw new Error("Product not found");
+    }
+    
+    return res.data;
+  } catch (error) {
+    console.error('Error fetching product:', error);
+    throw error;
   }
-  return res.data;
 }
 
 export async function getProductReviews(productId: number) {
@@ -36,7 +54,7 @@ export async function getProductReviews(productId: number) {
   const token = parsed.token;
 
   const res = await axios.get(
-    `http://127.0.0.1:8000/api/v1/user/products/${productId}/reviews`,
+    `${USER_API.PRODUCTS}/${productId}/reviews`,
     {
       headers: {
         Authorization: `Bearer ${token}`,
@@ -61,7 +79,7 @@ export async function createProductReviews(
   const token = parsed.token;
 
   const res = await axios.post(
-    `http://127.0.0.1:8000/api/v1/user/products/${productId}/reviews`,
+    `${USER_API.PRODUCTS}/${productId}/reviews`,
     reviewData,
     {
       headers: {
@@ -83,7 +101,7 @@ export async function reportProductReview(
   const token = parsed.token;
 
   const res = await axios.post(
-    `http://127.0.0.1:8000/api/v1/user/reviews/${reviewId}/report`, 
+    `${USER_API.REVIEWS}/${reviewId}/report`, 
     reviewData,
     {
       headers: {
@@ -121,7 +139,7 @@ export async function createProductReview(
   console.log(token);
 
   const res = await axios.post(
-    `http://127.0.0.1:8000/api/v1/user/products/${productId}/reviews`,
+    `${USER_API.PRODUCTS}/${productId}/reviews`,
     formData,
     {
       headers: {
@@ -139,7 +157,7 @@ export async function createProductReview(
 
 export async function searchProducts(query: string): Promise<Product[]> {
   const res = await axios.get(
-    `http://127.0.0.1:8000/api/v1/public/products-search?query=${encodeURIComponent(
+    `${PUBLIC_API.PRODUCTS}-search?query=${encodeURIComponent(
       query
     )}`
   );

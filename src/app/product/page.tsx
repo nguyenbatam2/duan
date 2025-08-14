@@ -444,12 +444,27 @@ export default function ListProductPage() {
                                                 <div className="col-6 col-md-3" key={product.id}>
                                                     <div className="item_product_main">
 
+<<<<<<< HEAD
                                                             <form method="post" className="variants product-action item-product-main duration-300" data-cart-form="" data-id="product-actions-34775949" encType="multipart/form-data">
                                                             <span className="flash-sale">-
                                                                     {product.discount_price !== "0.00"
                                                                         ? ((parseInt(product.price) - parseInt(product.discount_price)) / parseInt(product.price) * 100).toFixed(0)
                                                                         : "0"}%
                                                             </span>
+=======
+                                                        <form action="/cart/add" method="post" className="variants product-action item-product-main duration-300" data-cart-form="" data-id="product-actions-34775949" encType="multipart/form-data">
+                                                            {product.has_active_event ? (
+                                                                <span className="flash-sale">-
+                                                                    {product.event_discount_percentage}%
+                                                                </span>
+                                                            ) : (
+                                                                product.base_discount > 0 && (
+                                                                    <span className="flash-sale">-
+                                                                        {Math.round(((product.base_price - (product.display_price || product.price)) / product.base_price) * 100)}%
+                                                                    </span>
+                                                                )
+                                                            )}
+>>>>>>> 8114f4cab21992087cdd79a04a056c920e3a25ca
 
                                                             <div className="product-thumbnail">
                                                                 <Link className="image_thumb scale_hover" href={`/product/${product.id}`} title={product.name}>
@@ -464,6 +479,7 @@ export default function ListProductPage() {
                                                                         <Link href={`/product/${product.id}`} title={product.name}>{product.name}</Link>
                                                                     </h3>
                                                                     <div className="product-price-cart">
+<<<<<<< HEAD
                                                                             {product.discount_price !== "0.00" && (
                                                                                 <span className="compare-price">{parseInt(product.price).toLocaleString()}₫</span>
                                                                             )}
@@ -472,13 +488,57 @@ export default function ListProductPage() {
                                                                                     product.discount_price === "0.00" ? product.price : product.discount_price
                                                                                 ).toLocaleString()}₫
                                                                             </span>
+=======
+                                                                        {product.has_active_event ? (
+                                                                            <>
+                                                                                <span className="compare-price">{Number(product.original_price).toLocaleString('vi-VN')}₫</span>
+                                                                                <span className="price">{Number(product.display_price).toLocaleString('vi-VN')}₫</span>
+                                                                                {product.event_info && (
+                                                                                    <div className="event-badge">
+                                                                                        <span className="badge bg-danger text-white">
+                                                                                            🔥 {product.event_info.name}
+                                                                                        </span>
+                                                                                    </div>
+                                                                                )}
+                                                                            </>
+                                                                        ) : (
+                                                                            <>
+                                                                                {product.base_discount > 0 && (
+                                                                                    <span className="compare-price">{Number(product.base_price).toLocaleString('vi-VN')}₫</span>
+                                                                                )}
+                                                                                <span className="price">{Number(product.display_price || product.price).toLocaleString('vi-VN')}₫</span>
+                                                                            </>
+                                                                        )}
+>>>>>>> 8114f4cab21992087cdd79a04a056c920e3a25ca
                                                                     </div>
                                                                 </div>
                                                                 <div className="product-button">
                                                                     {/* <input type="hidden" name="variantId" value={product.variantId} /> */}
+<<<<<<< HEAD
                                                                         <AddToCart product={product} onAddToCart={(product) => setSelectedProduct(product)} />
 
                                                                         <AddToWishlist product={product} onToggle={handleToggleWishlist} />
+=======
+                                                                    <button 
+                                                                        className="btn-cart btn-views add_to_cart btn btn-primary" 
+                                                                        title="Thêm vào giỏ hàng"
+                                                                        onClick={() => {
+                                                                            // Sử dụng giá sự kiện nếu có
+                                                                            const productToAdd = product.has_active_event ? {
+                                                                                ...product,
+                                                                                price: product.display_price.toString(),
+                                                                                discount_price: "0.00"
+                                                                            } : product;
+                                                                            // Thêm vào giỏ hàng logic ở đây
+                                                                        }}
+                                                                    >
+                                                                        <span>Thêm vào giỏ</span>
+                                                                        <svg enableBackground="new 0 0 32 32" height="512" viewBox="0 0 32 32" width="512" xmlns="http://www.w3.org/2000/svg"><g><g><path d="m23.8 30h-15.6c-3.3 0-6-2.7-6-6v-.2l.6-16c.1-3.3 2.8-5.8 6-5.8h14.4c3.2 0 5.9 2.5 6 5.8l.6 16c.1 1.6-.5 3.1-1.6 4.3s-2.6 1.9-4.2 1.9c0 0-.1 0-.2 0zm-15-26c-2.2 0-3.9 1.7-4 3.8l-.6 16.2c0 2.2 1.8 4 4 4h15.8c1.1 0 2.1-.5 2.8-1.3s1.1-1.8 1.1-2.9l-.6-16c-.1-2.2-1.8-3.8-4-3.8z"></path></g><g><path d="m16 14c-3.9 0-7-3.1-7-7 0-.6.4-1 1-1s1 .4 1 1c0 2.8 2.2 5 5 5s5-2.2 5-5c0-.6.4-1 1-1s1 .4 1 1c0 3.9-3.1 7-7 7z"></path></g></g></svg>
+                                                                    </button>
+                                                                    <Link href="javascript:void(0)" className="setWishlist btn-views btn-circle" data-wish={`product-${product.id}`} tabIndex={0} title="Thêm vào yêu thích">
+                                                                        <img width="25" height="25" src="//bizweb.dktcdn.net/100/506/650/themes/944598/assets/heart.png?1739018973665" alt="Thêm vào yêu thích" />
+                                                                    </Link>
+>>>>>>> 8114f4cab21992087cdd79a04a056c920e3a25ca
                                                                 </div>
                                                             </div>
                                                         </form>

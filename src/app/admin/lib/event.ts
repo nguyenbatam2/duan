@@ -60,3 +60,66 @@ export const addProductToEvent = async (
   return response.data;
 };
 
+// Lấy danh sách sản phẩm trong sự kiện
+export async function getEventProducts(eventId: number, page: number = 1) {
+  const res = await adminAxios.get(`/admin/events/${eventId}/products`, {
+    params: { page, per_page: 20 }
+  });
+  return res.data;
+}
+
+// Xóa sản phẩm khỏi sự kiện
+export async function removeProductFromEvent(eventId: number, eventProductId: number) {
+  const res = await adminAxios.delete(`/admin/events/${eventId}/products/${eventProductId}`);
+  return res.data;
+}
+
+// Cập nhật sản phẩm trong sự kiện
+export async function updateEventProduct(
+  eventId: number, 
+  eventProductId: number, 
+  data: {
+    event_price?: number;
+    original_price?: number;
+    discount_price?: number;
+    quantity_limit?: number;
+    status?: string;
+    sort_order?: number;
+  }
+) {
+  const res = await adminAxios.put(`/admin/events/${eventId}/products/${eventProductId}`, data);
+  return res.data;
+}
+
+// Lấy chi tiết sự kiện
+export async function getEventDetail(eventId: number) {
+  const res = await adminAxios.get(`/admin/events/${eventId}`);
+  return res.data;
+}
+
+// Cập nhật sự kiện
+export async function updateEvent(
+  eventId: number,
+  data: {
+    name?: string;
+    description?: string;
+    start_time?: string;
+    end_time?: string;
+    status?: string;
+    banner_image?: string;
+    discount_type?: string;
+    discount_value?: number;
+    is_featured?: boolean;
+    sort_order?: number;
+  }
+) {
+  const res = await adminAxios.put(`/admin/events/${eventId}`, data);
+  return res.data;
+}
+
+// Xóa sự kiện
+export async function deleteEvent(eventId: number) {
+  const res = await adminAxios.delete(`/admin/events/${eventId}`);
+  return res.data;
+}
+

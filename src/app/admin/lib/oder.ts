@@ -1,6 +1,7 @@
 import adminAxios from "./axios";
+import { ADMIN_API } from "../../lib/config";
 
-const API_BASE = "http://127.0.0.1:8000/api/v1/admin/orders";
+const API_BASE = ADMIN_API.ORDERS;
 
 interface Order {
   id: number;

@@ -1,9 +1,11 @@
 
 'use client';
+
+export const dynamic = 'force-dynamic';
 import "../styles/checkout.css";
 import Link from "next/link";
 import axios from "axios";
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import toast from "react-hot-toast";
 import { getCart } from "../lib/addCart";
 import { applyCoupon, placeOrder, } from '../lib/orderApi';
@@ -16,8 +18,7 @@ import { UserAddress } from '@/app/types/author'
 import Cookies from 'js-cookie';
 import { useSearchParams } from "next/navigation";
 
-
-export default function CheckoutPage() {
+function CheckoutContent() {
     const searchParams = useSearchParams();
 
   const [cart, setCart] = useState<Product[]>([]);
@@ -459,5 +460,13 @@ export default function CheckoutPage() {
         </div>
       </div>
     </>
+  );
+}
+
+export default function CheckoutPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <CheckoutContent />
+    </Suspense>
   );
 }

@@ -1,15 +1,16 @@
 import axios from "axios";
 import Cookies from "js-cookie";
 import { Product } from "../types/product";
+import { USER_API } from "./config";
 
-const API_URL = "http://127.0.0.1:8000/api/v1/user";
+const API_URL = USER_API.WISHLIST;
 
 export async function getWishlist() {
   const cookieData = Cookies.get("author");
   if (!cookieData) throw new Error("Không có token");
   const parsed = JSON.parse(cookieData);
   const token = parsed.token;
-  const res = await axios.get(`${API_URL}/wishlist`, {
+  const res = await axios.get(API_URL, {
     headers: {
       Authorization: `Bearer ${token}`,
       Accept: "application/json",
@@ -26,7 +27,7 @@ export async function addToWishlist(product: Product) {
     const token = parsed.token;
 
   const res = await axios.post(
-    `${API_URL}/wishlist`,
+    API_URL,
     { product_id: product.id },
     {
       headers: {

@@ -5,10 +5,14 @@ import {addToCart} from "../lib/addCart";
 interface AddToCartProps {
   product: Product;
   onAddToCart: (product: Product) => void;
-  
 }
 
-export default function AddToCart({ product, onAddToCart }: AddToCartProps) {
+const AddToCart = ({ product, onAddToCart }: AddToCartProps) => {
+  // Kiểm tra nếu không có product thì không render
+  if (!product) {
+    return null;
+  }
+
   const handleAddToCart = () => {
     addToCart(product);
     onAddToCart(product);
@@ -20,4 +24,6 @@ export default function AddToCart({ product, onAddToCart }: AddToCartProps) {
     </button>
   );
 };
+
+export default AddToCart;
 

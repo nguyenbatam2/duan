@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { fetchAdminEvents, createAdminEvent, toMySQLDatetime, changeEventStatus, addProductToEvent } from "../lib/event";
+import { fetchAdminEvents, createAdminEvent, toMySQLDatetime, changeEventStatus, addProductToEvent, getEventProducts, removeProductFromEvent, updateEventProduct, updateEvent, deleteEvent } from "../lib/event";
 import { getProductsPage } from "../lib/product";
-import { Event, PaginatedEvents } from "../types/event";
+import { Event, PaginatedEvents, Product, EventProduct } from "../types/event";
 import "../style/login.css";
 import Cookies from "js-cookie";
 
@@ -14,6 +14,7 @@ export default function EventPage() {
   const [pagination, setPagination] = useState<PaginatedEvents | null>(null);
   const [loading, setLoading] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
+  const [editingEvent, setEditingEvent] = useState<Event | null>(null);
   const [newEvent, setNewEvent] = useState({
     name: "",
     description: "",
@@ -30,13 +31,23 @@ export default function EventPage() {
 
   // State cho thêm sản phẩm vào sự kiện
   const [showAddProductEventId, setShowAddProductEventId] = useState<number | null>(null);
-  const [products, setProducts] = useState<any[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
   const [selectedProductId, setSelectedProductId] = useState<string>("");
   const [eventPrice, setEventPrice] = useState("");
   const [quantityLimit, setQuantityLimit] = useState("");
-  const [originalPrice, setOriginalPrice] = useState("");
   const [discountPrice, setDiscountPrice] = useState("");
   const [addingProduct, setAddingProduct] = useState(false);
+
+  // State cho quản lý sản phẩm trong sự kiện
+  const [eventProducts, setEventProducts] = useState<EventProduct[]>([]);
+  const [showEventProducts, setShowEventProducts] = useState<number | null>(null);
+  const [editingProduct, setEditingProduct] = useState<EventProduct | null>(null);
+  const [editForm, setEditForm] = useState({
+    event_price: "",
+    discount_price: "",
+    quantity_limit: "",
+    status: "active"
+  });
 
   useEffect(() => {
     const getEvents = async () => {
@@ -45,8 +56,8 @@ export default function EventPage() {
         const data = await fetchAdminEvents(page);
         setEvents(data.data);
         setPagination(data);
-      } catch (err) {
-        console.error("Failed to fetch events", err);
+      } catch (error) {
+        console.error("Failed to fetch events", error);
       } finally {
         setLoading(false);
       }
@@ -63,6 +74,16 @@ export default function EventPage() {
       })();
     }
   }, [showAddProductEventId]);
+
+  // Load sản phẩm trong sự kiện
+  const loadEventProducts = async (eventId: number) => {
+    try {
+      const data = await getEventProducts(eventId);
+      setEventProducts(data.data || []);
+    } catch (error) {
+      console.error("Failed to load event products", error);
+    }
+  };
 
   const handleAddProductToEvent = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -100,15 +121,105 @@ export default function EventPage() {
       const data = await fetchAdminEvents(page);
       setEvents(data.data);
       setPagination(data);
-    } catch (err: any) {
+    } catch (error: unknown) {
       alert("Thêm sản phẩm thất bại!");
-      if (err.response) {
-        console.error('API error addProductToEvent:', err.response.data, err.response.status, err.response.headers);
+      if (error && typeof error === 'object' && 'response' in error) {
+        const apiError = error as { response?: { data?: unknown; status?: number; headers?: unknown } };
+        console.error('API error addProductToEvent:', apiError.response?.data, apiError.response?.status, apiError.response?.headers);
       } else {
-        console.error('API error addProductToEvent:', err);
+        console.error('API error addProductToEvent:', error);
       }
     } finally {
       setAddingProduct(false);
+    }
+  };
+
+  // Xóa sản phẩm khỏi sự kiện
+  const handleRemoveProduct = async (eventId: number, eventProductId: number) => {
+    if (!confirm("Bạn có chắc muốn xóa sản phẩm này khỏi sự kiện?")) return;
+    
+    try {
+      await removeProductFromEvent(eventId, eventProductId);
+      alert("Xóa sản phẩm thành công!");
+      // Reload danh sách sản phẩm
+      await loadEventProducts(eventId);
+    } catch (error) {
+      alert("Xóa sản phẩm thất bại!");
+      console.error(error);
+    }
+  };
+
+  // Cập nhật sản phẩm trong sự kiện
+  const handleUpdateProduct = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingProduct) return;
+
+    try {
+      await updateEventProduct(editingProduct.event_id, editingProduct.id, {
+        event_price: Number(editForm.event_price),
+        discount_price: Number(editForm.discount_price),
+        quantity_limit: Number(editForm.quantity_limit),
+        status: editForm.status
+      });
+      alert("Cập nhật sản phẩm thành công!");
+      setEditingProduct(null);
+      setEditForm({
+        event_price: "",
+        discount_price: "",
+        quantity_limit: "",
+        status: "active"
+      });
+      // Reload danh sách sản phẩm
+      await loadEventProducts(editingProduct.event_id);
+    } catch (error) {
+      alert("Cập nhật sản phẩm thất bại!");
+      console.error(error);
+    }
+  };
+
+  // Mở form chỉnh sửa sản phẩm
+  const openEditForm = (product: EventProduct) => {
+    setEditingProduct(product);
+    setEditForm({
+      event_price: product.event_price.toString(),
+      discount_price: product.discount_price.toString(),
+      quantity_limit: product.quantity_limit.toString(),
+      status: product.status
+    });
+  };
+
+  // Mở form chỉnh sửa sự kiện
+  const openEditEventForm = (event: Event) => {
+    setEditingEvent(event);
+    setNewEvent({
+      name: event.name,
+      description: event.description || "",
+      start_time: event.start_time ? new Date(event.start_time).toISOString().slice(0, 16) : "",
+      end_time: event.end_time ? new Date(event.end_time).toISOString().slice(0, 16) : "",
+      status: event.status,
+      banner_image: event.banner_image || "",
+      discount_type: event.discount_type || "percentage",
+      discount_value: event.discount_value || 0,
+      is_featured: event.is_featured || false,
+      sort_order: event.sort_order || 0,
+    });
+    setShowAddForm(true);
+  };
+
+  // Xóa sự kiện
+  const handleDeleteEvent = async (eventId: number) => {
+    if (!confirm("Bạn có chắc muốn xóa sự kiện này?")) return;
+    
+    try {
+      await deleteEvent(eventId);
+      alert("Xóa sự kiện thành công!");
+      // Reload danh sách sự kiện
+      const data = await fetchAdminEvents(page);
+      setEvents(data.data);
+      setPagination(data);
+    } catch (error) {
+      alert("Xóa sự kiện thất bại!");
+      console.error(error);
     }
   };
 
@@ -120,10 +231,28 @@ export default function EventPage() {
       const data = await fetchAdminEvents(page);
       setEvents(data.data);
       setPagination(data);
-    } catch (err) {
+    } catch (error) {
       alert("Cập nhật trạng thái thất bại!");
-      console.error(err);
+      console.error(error);
     }
+  };
+
+  // Reset form
+  const resetForm = () => {
+    setNewEvent({
+      name: "",
+      description: "",
+      start_time: "",
+      end_time: "",
+      status: "draft",
+      banner_image: "",
+      discount_type: "percentage",
+      discount_value: 0,
+      is_featured: false,
+      sort_order: 0,
+    });
+    setEditingEvent(null);
+    setShowAddForm(false);
   };
 
   return (
@@ -132,7 +261,13 @@ export default function EventPage() {
 
       <button
         className="event-admin-btn"
-        onClick={() => setShowAddForm((v) => !v)}
+        onClick={() => {
+          if (showAddForm) {
+            resetForm();
+          } else {
+            setShowAddForm(true);
+          }
+        }}
       >
         {showAddForm ? "Đóng" : "Thêm sự kiện"}
       </button>
@@ -144,35 +279,39 @@ export default function EventPage() {
             e.preventDefault();
             setAdding(true);
             try {
-              await createAdminEvent({
-                ...newEvent,
-                start_time: toMySQLDatetime(newEvent.start_time),
-                end_time: toMySQLDatetime(newEvent.end_time),
-              });
-              setShowAddForm(false);
-              setNewEvent({
-                name: "",
-                description: "",
-                start_time: "",
-                end_time: "",
-                status: "draft",
-                banner_image: "",
-                discount_type: "percentage",
-                discount_value: 0,
-                is_featured: false,
-                sort_order: 0,
-              });
+              if (editingEvent) {
+                // Cập nhật sự kiện
+                await updateEvent(editingEvent.id, {
+                  ...newEvent,
+                  start_time: toMySQLDatetime(newEvent.start_time),
+                  end_time: toMySQLDatetime(newEvent.end_time),
+                });
+                alert("Cập nhật sự kiện thành công!");
+              } else {
+                // Tạo sự kiện mới
+                await createAdminEvent({
+                  ...newEvent,
+                  start_time: toMySQLDatetime(newEvent.start_time),
+                  end_time: toMySQLDatetime(newEvent.end_time),
+                });
+                alert("Tạo sự kiện thành công!");
+              }
+              resetForm();
               // Reload lại danh sách sự kiện
               const data = await fetchAdminEvents(page);
               setEvents(data.data);
               setPagination(data);
-            } catch (err) {
-              alert("Thêm sự kiện thất bại!");
+            } catch {
+              alert(editingEvent ? "Cập nhật sự kiện thất bại!" : "Thêm sự kiện thất bại!");
             } finally {
               setAdding(false);
             }
           }}
         >
+          <h3 style={{ marginBottom: 16, color: '#2563eb' }}>
+            {editingEvent ? 'Chỉnh sửa sự kiện' : 'Thêm sự kiện mới'}
+          </h3>
+          
           <div>
             <label>Tên sự kiện</label>
             <input
@@ -219,6 +358,8 @@ export default function EventPage() {
             >
               <option value="draft">Nháp</option>
               <option value="active">Kích hoạt</option>
+              <option value="paused">Tạm dừng</option>
+              <option value="ended">Kết thúc</option>
             </select>
           </div>
           <div>
@@ -270,13 +411,22 @@ export default function EventPage() {
               min={0}
             />
           </div>
-          <button
-            type="submit"
-            className="px-4 py-2 bg-blue-600 text-white rounded"
-            disabled={adding}
-          >
-            {adding ? "Đang thêm..." : "Lưu sự kiện"}
-          </button>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button
+              type="submit"
+              className="px-4 py-2 bg-blue-600 text-white rounded"
+              disabled={adding}
+            >
+              {adding ? "Đang xử lý..." : (editingEvent ? "Cập nhật" : "Lưu sự kiện")}
+            </button>
+            <button
+              type="button"
+              className="px-4 py-2 bg-gray-500 text-white rounded"
+              onClick={resetForm}
+            >
+              Hủy
+            </button>
+          </div>
         </form>
       )}
 
@@ -293,7 +443,7 @@ export default function EventPage() {
             <th>Loại giảm giá</th>
             <th>Giá trị giảm giá</th>
             <th>Thứ tự</th>
-            <th></th>
+            <th>Thao tác</th>
           </tr>
         </thead>
         <tbody>
@@ -310,17 +460,57 @@ export default function EventPage() {
                   >
                     <option value="draft">Nháp</option>
                     <option value="active">Kích hoạt</option>
+                    <option value="paused">Tạm dừng</option>
+                    <option value="ended">Kết thúc</option>
                   </select>
                 </td>
                 <td>{event.is_featured ? "✅" : "❌"}</td>
-                <td><img src={event.banner_image} alt=""  /></td>
+                <td>{event.banner_image && <img src={event.banner_image} alt="" style={{ width: 50, height: 50, objectFit: 'cover' }} />}</td>
                 <td>{event.discount_type}</td>
                 <td>{event.discount_value}</td>
                 <td>{event.sort_order}</td>
                 <td>
-                  <button className="event-admin-btn" onClick={() => setShowAddProductEventId(event.id)} type="button">
-                    Thêm sản phẩm
-                  </button>
+                  <div style={{ display: 'flex', gap: 8, flexDirection: 'column' }}>
+                    <div style={{ display: 'flex', gap: 4 }}>
+                      <button 
+                        className="event-admin-btn event-admin-btn-edit" 
+                        onClick={() => openEditEventForm(event)} 
+                        type="button"
+                      >
+                        Sửa
+                      </button>
+                      <button 
+                        className="event-admin-btn event-admin-btn-delete" 
+                        onClick={() => handleDeleteEvent(event.id)} 
+                        type="button"
+                      >
+                        Xóa
+                      </button>
+                    </div>
+                    <button 
+                      className="event-admin-btn" 
+                      onClick={() => setShowAddProductEventId(event.id)} 
+                      type="button"
+                    >
+                      Thêm sản phẩm
+                    </button>
+                    <button 
+                      className="event-admin-btn event-admin-btn-secondary" 
+                      onClick={() => {
+                        if (showEventProducts === event.id) {
+                          setShowEventProducts(null);
+                        } else {
+                          setShowEventProducts(event.id);
+                          loadEventProducts(event.id);
+                        }
+                      }} 
+                      type="button"
+                    >
+                      {showEventProducts === event.id ? 'Ẩn sản phẩm' : 'Xem sản phẩm'}
+                    </button>
+                  </div>
+
+                  {/* Form thêm sản phẩm */}
                   {showAddProductEventId === event.id && (
                     <form onSubmit={handleAddProductToEvent} style={{ marginTop: 12, background: '#f8fafc', borderRadius: 8, padding: 12 }}>
                       <div className="form-row">
@@ -354,12 +544,160 @@ export default function EventPage() {
                       </div>
                     </form>
                   )}
+
+                  {/* Danh sách sản phẩm trong sự kiện */}
+                  {showEventProducts === event.id && (
+                    <div style={{ marginTop: 12, background: '#f8fafc', borderRadius: 8, padding: 12 }}>
+                      <h4 style={{ marginBottom: 12, color: '#2563eb' }}>Sản phẩm trong sự kiện:</h4>
+                      {eventProducts.length > 0 ? (
+                        <div style={{ maxHeight: 300, overflowY: 'auto' }}>
+                          {eventProducts.map(product => (
+                            <div key={product.id} style={{ 
+                              border: '1px solid #e5e7eb', 
+                              borderRadius: 6, 
+                              padding: 8, 
+                              marginBottom: 8,
+                              background: 'white'
+                            }}>
+                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <div>
+                                  <strong>{product.product?.name}</strong>
+                                  <div style={{ fontSize: '0.9em', color: '#666' }}>
+                                    Giá gốc: {product.original_price?.toLocaleString()}đ | 
+                                    Giá sự kiện: {product.event_price?.toLocaleString()}đ | 
+                                    Giá giảm: {product.discount_price?.toLocaleString()}đ
+                                  </div>
+                                  <div style={{ fontSize: '0.9em', color: '#666' }}>
+                                    SL giới hạn: {product.quantity_limit} | 
+                                    Trạng thái: {product.status}
+                                  </div>
+                                </div>
+                                <div style={{ display: 'flex', gap: 4 }}>
+                                  <button 
+                                    type="button"
+                                    onClick={() => openEditForm(product)}
+                                    style={{ 
+                                      background: '#2563eb', 
+                                      color: 'white', 
+                                      border: 'none', 
+                                      borderRadius: 4, 
+                                      padding: '4px 8px',
+                                      fontSize: '0.8em'
+                                    }}
+                                  >
+                                    Sửa
+                                  </button>
+                                  <button 
+                                    type="button"
+                                    onClick={() => handleRemoveProduct(event.id, product.id)}
+                                    style={{ 
+                                      background: '#dc2626', 
+                                      color: 'white', 
+                                      border: 'none', 
+                                      borderRadius: 4, 
+                                      padding: '4px 8px',
+                                      fontSize: '0.8em'
+                                    }}
+                                  >
+                                    Xóa
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <p style={{ color: '#666', fontStyle: 'italic' }}>Chưa có sản phẩm nào trong sự kiện này</p>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Form chỉnh sửa sản phẩm */}
+                  {editingProduct && (
+                    <div style={{ 
+                      position: 'fixed', 
+                      top: 0, 
+                      left: 0, 
+                      right: 0, 
+                      bottom: 0, 
+                      background: 'rgba(0,0,0,0.5)', 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      justifyContent: 'center',
+                      zIndex: 1000
+                    }}>
+                      <div style={{ 
+                        background: 'white', 
+                        padding: 24, 
+                        borderRadius: 8, 
+                        width: 400,
+                        maxWidth: '90vw'
+                      }}>
+                        <h3 style={{ marginBottom: 16 }}>Chỉnh sửa sản phẩm: {editingProduct.product?.name}</h3>
+                        <form onSubmit={handleUpdateProduct}>
+                          <div className="form-row">
+                            <label>Giá sự kiện</label>
+                            <input 
+                              type="number" 
+                              value={editForm.event_price} 
+                              onChange={e => setEditForm({...editForm, event_price: e.target.value})} 
+                              required 
+                              min={0} 
+                            />
+                          </div>
+                          <div className="form-row">
+                            <label>Giá giảm</label>
+                            <input 
+                              type="number" 
+                              value={editForm.discount_price} 
+                              onChange={e => setEditForm({...editForm, discount_price: e.target.value})} 
+                              required 
+                              min={0} 
+                            />
+                          </div>
+                          <div className="form-row">
+                            <label>Số lượng giới hạn</label>
+                            <input 
+                              type="number" 
+                              value={editForm.quantity_limit} 
+                              onChange={e => setEditForm({...editForm, quantity_limit: e.target.value})} 
+                              required 
+                              min={0} 
+                            />
+                          </div>
+                          <div className="form-row">
+                            <label>Trạng thái</label>
+                            <select 
+                              value={editForm.status} 
+                              onChange={e => setEditForm({...editForm, status: e.target.value})}
+                            >
+                              <option value="active">Hoạt động</option>
+                              <option value="inactive">Không hoạt động</option>
+                              <option value="sold_out">Hết hàng</option>
+                            </select>
+                          </div>
+                          <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
+                            <button type="submit" className="event-admin-btn">
+                              Cập nhật
+                            </button>
+                            <button 
+                              type="button" 
+                              className="event-admin-btn event-admin-btn-light"
+                              onClick={() => setEditingProduct(null)}
+                            >
+                              Hủy
+                            </button>
+                          </div>
+                        </form>
+                      </div>
+                    </div>
+                  )}
                 </td>
               </tr>
             ))
           ) : (
             <tr>
-              <td colSpan={8}>Không có dữ liệu</td>
+              <td colSpan={9}>Không có dữ liệu</td>
             </tr>
           )}
         </tbody>
@@ -416,6 +754,36 @@ export default function EventPage() {
           background: #2563eb;
           color: #fff;
           box-shadow: 0 4px 16px #2563eb33;
+        }
+        .event-admin-btn-secondary {
+          background: linear-gradient(90deg, #f59e0b 0%, #d97706 100%);
+        }
+        .event-admin-btn-secondary:hover {
+          background: #d97706;
+        }
+        .event-admin-btn-edit {
+          background: linear-gradient(90deg, #10b981 0%, #059669 100%);
+          padding: 6px 16px;
+          font-size: 0.9rem;
+          margin-bottom: 0;
+        }
+        .event-admin-btn-edit:hover {
+          background: #059669;
+        }
+        .event-admin-btn-delete {
+          background: linear-gradient(90deg, #ef4444 0%, #dc2626 100%);
+          padding: 6px 16px;
+          font-size: 0.9rem;
+          margin-bottom: 0;
+        }
+        .event-admin-btn-delete:hover {
+          background: #dc2626;
+        }
+        .event-admin-btn-light {
+          background: #6b7280;
+        }
+        .event-admin-btn-light:hover {
+          background: #4b5563;
         }
         .event-admin-form {
           background: #fff;

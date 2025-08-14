@@ -1,11 +1,14 @@
-"use client";
+'use client';
+
+export const dynamic = 'force-dynamic';
+
 import { useState } from 'react';
 import Link from 'next/link';
 import { verifyOtp } from '@/app/lib/authorApi';
 import { useRouter, useSearchParams } from 'next/navigation';
 import "../../styles/login.css";
 
-export default function VerifyOtpPage() {
+function VerifyOtpContent() {
     const [otp, setOtp] = useState("");
     const [message, setMessage] = useState("");
     const router = useRouter();
@@ -91,4 +94,8 @@ export default function VerifyOtpPage() {
             </section>
         </div>
     );
+}
+
+export default function VerifyOtpPage() {
+  return <VerifyOtpContent />;
 }

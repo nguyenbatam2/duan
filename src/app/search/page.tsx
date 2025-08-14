@@ -1,6 +1,8 @@
 'use client';
+
+export const dynamic = 'force-dynamic';
 import { useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import Link from "next/link";
 import { searchProducts } from "../lib/product";
 import { Product } from "../types/product";
@@ -8,7 +10,7 @@ import AddToCart from "@/app/addToCart/page";
 import CartModal from "../cartModal/page"; 
 import '../styles/listProduct.css'
 
-export default function SearchPage() {
+function SearchContent() {
     const searchParams = useSearchParams();
     const query = searchParams.get('query') || '';
     const [result, setResult] = useState<Product[]>([]);
@@ -106,4 +108,12 @@ export default function SearchPage() {
             )}
         </>
     )
+}
+
+export default function SearchPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <SearchContent />
+    </Suspense>
+  );
 }

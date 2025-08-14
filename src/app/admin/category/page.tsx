@@ -11,6 +11,7 @@ import '../style/adminCategory.css'
 import Cookies from "js-cookie";
 import { fetchProductsByCategoryWithPage } from "../lib/product";
 import { Product, PaginatedProducts } from "../types/product";
+import { ADMIN_API } from "../../lib/config";
 
 export default function CategoryPage() {
   const [searchQuery] = useState("");
@@ -40,7 +41,7 @@ export default function CategoryPage() {
     try {
       const token = Cookies.get("token");
       if (!token) throw new Error("Token không tồn tại");
-      await axios.delete(`http://127.0.0.1:8000/api/v1/admin/categories/${id}`, {
+      await axios.delete(`${ADMIN_API.CATEGORIES}/${id}`, {
         headers: { Authorization: `Bearer ${token}`, Accept: "application/json" },
       });
       await mutate();

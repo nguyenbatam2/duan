@@ -1,12 +1,13 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Coupon } from "../types/coupon";
 import Cookies from "js-cookie";
+import { ADMIN_API } from "../../lib/config";
 
 export async function getAllCoupons(): Promise<Coupon[]> {
   const token = Cookies.get("token");
   if (!token) throw new Error("Token không tồn tại hoặc không hợp lệ");
 
-  const res = await fetch(`http://127.0.0.1:8000/api/v1/admin/coupons`, {
+  const res = await fetch(ADMIN_API.COUPONS, {
     headers: {
       Accept: "application/json",
       Authorization: `Bearer ${token}`,
@@ -42,7 +43,7 @@ export async function addCoupon(data: AddCouponPayload): Promise<Coupon> {
   const token = Cookies.get("token");
   if (!token) throw new Error("Token không tồn tại hoặc không hợp lệ");
 
-  const res = await fetch(`http://127.0.0.1:8000/api/v1/admin/coupons`, {
+  const res = await fetch(ADMIN_API.COUPONS, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -63,7 +64,7 @@ export async function updateCouponStatus(id: number): Promise<{ is_active: boole
   const token = Cookies.get("token");
   if (!token) throw new Error("Token không tồn tại hoặc không hợp lệ");
 
-  const res = await fetch(`http://127.0.0.1:8000/api/v1/admin/coupons/${id}/toggle-status`, {
+  const res = await fetch(`${ADMIN_API.COUPONS}/${id}/toggle-status`, {
     method: "POST",
     headers: {
       Accept: "application/json",
