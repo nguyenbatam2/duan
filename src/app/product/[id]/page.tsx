@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { getProductById, getProductReviews, reportProductReview } from '@/app/lib/product';
 import { getHisToRy } from '@/app/lib/addCart';
 import { getCoupons, saveCoupon } from "@/app/lib/Coupon";
+import { decreaseQuantity, getCart, increaseQuantity } from "@/app/lib/addCart";
 
 
 import CartModal from '@/app/cartModal/page';
@@ -26,6 +27,8 @@ export default function ProductDetail() {
     const [history, setHistory] = useState<Product[]>([]);
 
     const [message, setMessage] = useState("");
+    const [cart, setCart] = useState<Product[]>([]);
+
     const [showReportAlert, setShowReportAlert] = useState(false);
     const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
     const [savedCoupons, setSavedCoupons] = useState<number[]>([]);
@@ -66,6 +69,19 @@ export default function ProductDetail() {
     const hasHalfStar = Number(averageRating) % 1 >= 0.5;
     const emptyStars = 5 - fullStars - (hasHalfStar ? 1 : 0);
 
+    useEffect(() => {
+        setCart(getCart());
+    }, []);
+
+    const handleIncrease = (productId: number) => {
+        increaseQuantity(productId);
+        setCart(getCart());
+    };
+
+    const handleDecrease = (productId: number) => {
+        decreaseQuantity(productId);
+        setCart(getCart());
+    };
 
 
     if (history.length === 0) return null;
@@ -79,6 +95,8 @@ export default function ProductDetail() {
         { id: '#tab-2', title: 'Hướng dẫn mua hàng' },
         { id: '#tab-3', title: 'Đánh giá' },
     ];
+
+    
     const handleReport = async (reviewId: number) => {
         try {
             await reportProductReview(reviewId, { reason: 'Nội dung không phù hợp' });
@@ -196,18 +214,9 @@ export default function ProductDetail() {
                                                     ))
                                                 ) : (
                                                     <div className="swiper-slide swiper-slide-visible swiper-slide-active swiper-slide-thumb-active" data-hash="0" role="group" aria-label="1 / 1" style={{ height: "111.5px", marginBottom: "10px" }}>
-                                                        <img src={`/${product.image || "img/sp1.webp"}`} alt={product.name} />
+                                                        <img src={`/${product.image}`} alt={product.name} />
                                                     </div>
                                                 )}
-                                                {/* <div className="swiper-slide swiper-slide-visible swiper-slide-next" data-hash="1" role="group" aria-label="2 / 4" style={{ height: "111.5px", marginBottom: "10px" }}>
-                                                    <img src="/img/1.1.webp" alt="Set quà 2010 – Maneli #1 bồi bổ sức khỏe, dưỡng nhan" />
-                                                </div>
-                                                <div className="swiper-slide swiper-slide-visible" data-hash="2" role="group" aria-label="3 / 4" style={{ height: "111.5px", marginBottom: "10px" }}>
-                                                    <img src="/img/1.2.webp" alt="Set quà 2010 – Maneli #1 bồi bổ sức khỏe, dưỡng nhan" />
-                                                </div>
-                                                <div className="swiper-slide swiper-slide-visible" data-hash="3" role="group" aria-label="4 / 4" style={{ height: "111.5px", marginBottom: "10px" }}>
-                                                    <img src="/img/1.3.webp" alt="Set quà 2010 – Maneli #1 bồi bổ sức khỏe, dưỡng nhan" />
-                                                </div> */}
                                             </div>
                                             {/* <!-- Navigation --> */}
                                             <div className="swiper-button-next swiper-button-disabled swiper-button-lock" tabIndex={-1} role="button" aria-label="Next slide" aria-controls="swiper-wrapper-db10af86476757f58" aria-disabled="true"></div>
@@ -319,38 +328,29 @@ export default function ProductDetail() {
                                         {/* <div className="box-variant clearfix  d-none ">
                                             <input type="hidden" id="one_variant" name="variantId" defaultValue="Giá trị ban đầu" />
                                         </div> */}
+                                        
                                         <div className="boz-form ">
                                             <div className="flex-quantity">
                                                 <div className="custom custom-btn-number show">
                                                     <span>Số lượng: </span>
                                                     <div className="input_number_product">
-                                                        <button
-                                                            className="btn_num num_1 button button_qty"
-                                                            onClick={() => {
-                                                                const result = document.getElementById('qtym') as HTMLInputElement | null;
-                                                                if (result) {
-                                                                    const qtypro = parseInt(result.value, 10);
-                                                                    if (!isNaN(qtypro) && qtypro > 1) {
-                                                                        result.value = String(qtypro - 1);
-                                                                    }
-                                                                }
-                                                            }}
-                                                            type="button"
+                                                        <button  type="button" className="btn_num num_1 button button_qty"
+                                                            data-id={product.id}
+                                                            data-qty={1}
+                                                            data-line={1}
+                                                            aria-label="-"
+                                                            onClick={() => handleDecrease(product.id)}
                                                         >
                                                             -
                                                         </button>
-                                                        <input type="text" id="qtym" name="quantity" defaultValue="1" readOnly min="1" maxLength={3} className="form-control prd_quantity" />
+                                                        <input type="text" id="qtym" name="quantity" value={cart.find((p) => p.id === product.id)?.quantity || 1} readOnly min="1" maxLength={3} className="form-control prd_quantity" />
                                                         <button
                                                             className="btn_num num_2 button button_qty"
-                                                            onClick={() => {
-                                                                const result = document.getElementById('qtym') as HTMLInputElement | null;
-                                                                if (result) {
-                                                                    const qtypro = parseInt(result.value, 10);
-                                                                    if (!isNaN(qtypro)) {
-                                                                        result.value = String(qtypro + 1);
-                                                                    }
-                                                                }
-                                                            }}
+                                                            data-id={product.id}
+                                                            data-line={1}
+                                                            data-qty={product.quantity + 1}
+                                                            aria-label="+"
+                                                            onClick={() => handleIncrease(product.id)}
                                                             type="button"
                                                         >
                                                             <span>+</span>
@@ -362,13 +362,10 @@ export default function ProductDetail() {
                                                         <span className="txt-main">Mua ngay</span>
                                                     </button>
                                                     <AddToCart product={product} onAddToCart={(product) => setSelectedProduct(product)} />
-
-                                                    {/* <button type="submit" name="themgh" className="btn btn_base normal_button btn_add_cart add_to_cart btn-cart btn-extent is-added">
-                                                        <span className="txt-main">Thêm vào giỏ</span>
-                                                    </button> */}
                                                 </div>
                                             </div>
                                         </div>
+                                        
                                     </div>
                                 </form>
                                 {/* <!-- form start --> */}

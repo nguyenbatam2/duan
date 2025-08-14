@@ -1,0 +1,63 @@
+.order-card {
+    background: #fff;
+    border: 1px solid #eee;
+    border-radius: 6px;
+    padding: 12px;
+    margin-bottom: 16px;
+    font-family: sans-serif;
+}
+
+.order-header {
+    display: flex;
+    justify-content: space-between;
+    font-size: 14px;
+    margin-bottom: 8px;
+}
+
+.shop-name {
+    color: #d0011b;
+    font-weight: bold;
+}
+
+.status {
+    font-weight: bold;
+}
+
+.status.cancelled {
+    color: #dc143c;
+}
+
+.order-body {
+    padding: 8px 0;
+    border-top: 1px solid #f5f5f5;
+    border-bottom: 1px solid #f5f5f5;
+}
+
+.order-meta {
+    font-size: 14px;
+    color: #555;
+}
+
+.order-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 8px;
+}
+
+.order-total div {
+    font-size: 14px;
+}
+
+.total-amount {
+    color: #d0011b;
+}
+
+.order-actions .btn-outline {
+    border: 1px solid #d0011b;
+    background: white;
+    color: #d0011b;
+    padding: 4px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+}

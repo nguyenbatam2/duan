@@ -9,6 +9,9 @@ import { Product } from "../types/product";
 import { Category } from "../types/cartegory";
 import Cookies from "js-cookie";
 
+// State cho sắp xếp A-Z/Z-A
+import { useMemo } from "react";
+
 export default function DataTablePage() {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [currentPage, setCurrentPage] = useState<number>(1);
@@ -60,9 +63,16 @@ export default function DataTablePage() {
   const [formError, setFormError] = useState<string>("");
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [variantErrors, setVariantErrors] = useState<string[][]>([]);
+  const [viewingProduct, setViewingProduct] = useState<Product | null>(null);
+  type SortOrder = 'default' | 'name-asc' | 'name-desc' | 'price-asc' | 'price-desc';
+  const [sortOrder, setSortOrder] = useState<SortOrder>('default');
   useEffect(() => {
     require("bootstrap/dist/js/bootstrap.bundle.min.js");
   }, []);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery]);
 
   const { data: productData, isLoading: loadingProducts, mutate } = useSWR(
     ["products", currentPage],
@@ -77,11 +87,22 @@ export default function DataTablePage() {
     setVariants([...variants, { name: "", price: 0, stock_quantity: 0, sku: "", image: null }]);
   };
 
+  const slugify = (str: string) => str.toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-');
+
   // Sửa updateVariant để dùng controlled input
   const updateVariant = (index: number, field: string, value: any) => {
     setVariants(prev => {
       const newVariants = [...prev];
-      newVariants[index] = { ...newVariants[index], [field]: value };
+      if (field === "name") {
+        // Tự động cập nhật SKU khi thay đổi tên biến thể
+        newVariants[index] = {
+          ...newVariants[index],
+          name: value,
+          sku: slugify(value)
+        };
+      } else {
+        newVariants[index] = { ...newVariants[index], [field]: value };
+      }
       return newVariants;
     });
     if (field === "image") {
@@ -111,16 +132,17 @@ export default function DataTablePage() {
     setFormError("");
     setMessage(null);
     setVariantErrors([]);
-    if (formData.product_type === "variable" && variants.length === 0) {
-      setFormError("Bạn phải thêm ít nhất 1 biến thể cho sản phẩm có biến thể!");
-      return;
-    }
-    // Validate từng dòng biến thể
+    // Validate biến thể nếu là sản phẩm có biến thể
     if (formData.product_type === "variable") {
+      if (variants.length === 0) {
+        setFormError("Bạn phải thêm ít nhất 1 biến thể cho sản phẩm có biến thể!");
+        return;
+      }
       const errors: string[][] = variants.map(variant => {
         const errs: string[] = [];
         if (!variant.name) errs.push("Tên biến thể là bắt buộc");
         if (!variant.price) errs.push("Giá là bắt buộc");
+        if (!variant.sku || variant.sku.trim() === "") errs.push("SKU là bắt buộc");
         return errs;
       });
       setVariantErrors(errors);
@@ -151,7 +173,7 @@ export default function DataTablePage() {
         formPayload.append("images[]", file);
       });
     }
-    // Nếu có biến thể
+    // Nếu là sản phẩm có biến thể thì append variants
     if (formData.product_type === "variable") {
       variants.forEach((variant, index) => {
         formPayload.append(`variants[${index}][name]`, variant.name);
@@ -188,9 +210,30 @@ export default function DataTablePage() {
       setMessage({ type: 'success', text: editingProduct ? "Cập nhật sản phẩm thành công!" : "Thêm sản phẩm thành công!" });
       setTimeout(() => setMessage(null), 3000);
       handleCloseModal();
-      mutate(); // reload lại danh sách sản phẩm
+      // Nếu thêm mới và có sản phẩm mới trả về, đưa lên đầu danh sách
+      if (!editingProduct && res && res.data) {
+        mutate((oldData: any) => ({
+          ...oldData,
+          data: [res.data, ...oldData.data]
+        }), false);
+      } else {
+        mutate(); // reload lại danh sách sản phẩm
+      }
     } catch (err: any) {
       // Log lỗi chi tiết nếu có
+      if (formData.product_type === "variable") {
+        console.error('LỖI THÊM SẢN PHẨM CÓ BIẾN THỂ:', {
+          variants,
+          formData,
+          error: err,
+          apiError: err?.response?.data || err?.message
+        });
+        // Log lại toàn bộ dữ liệu gửi lên
+        console.log('FormData gửi lên (biến thể):');
+        for (const [key, value] of formPayload.entries()) {
+          console.log(key, value);
+        }
+      }
       if (err.response) {
         console.error('API error:', err.response.data);
       }
@@ -224,6 +267,10 @@ export default function DataTablePage() {
       images: [], // Reset images for editing
       variant_id: product.variant_id
     });
+  };
+
+  const handleViewProduct = (product: Product) => {
+    setViewingProduct(product);
   };
 
   // Hàm xoá sản phẩm
@@ -287,6 +334,29 @@ export default function DataTablePage() {
             </button>
           </div>
         </div>
+        {/* Nút sắp xếp */}
+        <div style={{ display: 'flex', gap: 16, marginBottom: 12, alignItems: 'center' }}>
+          <input
+            type="text"
+            className="product-modern-input"
+            placeholder="Tìm kiếm theo tên sản phẩm..."
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            style={{ width: 220, fontWeight: 500 }}
+          />
+          <select
+            className="product-modern-input"
+            value={sortOrder}
+            onChange={e => setSortOrder(e.target.value as SortOrder)}
+            style={{ width: 180, fontWeight: 500 }}
+          >
+            <option value="default">Sắp xếp: Mặc định</option>
+            <option value="name-asc">Tên A-Z</option>
+            <option value="name-desc">Tên Z-A</option>
+            <option value="price-asc">Giá thấp → cao</option>
+            <option value="price-desc">Giá cao → thấp</option>
+          </select>
+        </div>
         {/* Table */}
         <div className="product-modern-table-wrap">
           <table className="product-modern-table product-modern-table-compact">
@@ -307,8 +377,46 @@ export default function DataTablePage() {
               {loadingProducts ? (
                 <tr><td colSpan={9} className="text-center">Loading...</td></tr>
               ) : (
-                products.filter(p => p.name.toLowerCase().includes(searchQuery.toLowerCase()))
-                  .map(product => (
+                (() => {
+                  let displayedProducts = [...products]
+                    .filter(p => p.name.toLowerCase().includes(searchQuery.trim().toLowerCase()));
+                  if (sortOrder === 'name-asc') {
+                    displayedProducts.sort((a, b) => a.name.localeCompare(b.name));
+                  } else if (sortOrder === 'name-desc') {
+                    displayedProducts.sort((a, b) => b.name.localeCompare(a.name));
+                  } else if (sortOrder === 'price-asc') {
+                    displayedProducts.sort((a, b) => Number(a.price) - Number(b.price));
+                  } else if (sortOrder === 'price-desc') {
+                    displayedProducts.sort((a, b) => Number(b.price) - Number(a.price));
+                  }
+                  if (displayedProducts.length === 1) {
+                    const product = displayedProducts[0];
+                    return (
+                      <tr key={product.id}>
+                        <td className="center">{product.id}</td>
+                        <td className="center"><img src={product.image || "https://via.placeholder.com/50"} className="product-modern-img product-modern-img-round" /></td>
+                        <td>{product.category?.name || ""}</td>
+                        <td>{product.name}</td>
+                        <td className="center">{product.product_type}</td>
+                        <td>{product.price}</td>
+                        <td>{product.discount}</td>
+                        <td className="center">{product.stock_quantity}</td>
+                        <td className="center">
+                          <button
+                            className="product-modern-btn product-modern-btn-info product-modern-btn-icon"
+                            onClick={() => handleViewProduct(product)}
+                            title="Xem"
+                            type="button"
+                          >
+                            <span>Xem</span>
+                          </button>
+                          <button className="product-modern-btn product-modern-btn-warning product-modern-btn-icon" onClick={() => handleEditProduct(product)} title="Sửa"><span>Sửa</span></button>
+                          <button className="product-modern-btn product-modern-btn-danger product-modern-btn-icon" onClick={() => handleDeleteProduct(product.id)} title="Xoá"><span>Xoá</span></button>
+                        </td>
+                      </tr>
+                    );
+                  }
+                  return displayedProducts.map(product => (
                     <tr key={product.id}>
                       <td className="center">{product.id}</td>
                       <td className="center"><img src={product.image || "https://via.placeholder.com/50"} className="product-modern-img product-modern-img-round" /></td>
@@ -319,44 +427,59 @@ export default function DataTablePage() {
                       <td>{product.discount}</td>
                       <td className="center">{product.stock_quantity}</td>
                       <td className="center">
-                        <button className="product-modern-btn product-modern-btn-warning product-modern-btn-icon" onClick={() => handleEditProduct(product)} title="Sửa"><span>sửa</span></button>
+                        <button
+                          className="product-modern-btn product-modern-btn-info product-modern-btn-icon"
+                          onClick={() => handleViewProduct(product)}
+                          title="Xem"
+                          type="button"
+                        >
+                          <span>Xem</span>
+                        </button>
+                        <button className="product-modern-btn product-modern-btn-warning product-modern-btn-icon" onClick={() => handleEditProduct(product)} title="Sửa"><span>Sửa</span></button>
                         <button className="product-modern-btn product-modern-btn-danger product-modern-btn-icon" onClick={() => handleDeleteProduct(product.id)} title="Xoá"><span>Xoá</span></button>
                       </td>
                     </tr>
-                  ))
+                  ));
+                })()
               )}
             </tbody>
           </table>
         </div>
-        {/* Pagination */}
-        {productData && productData.meta && (
-          <div className="product-modern-pagination product-modern-pagination-compact">
-            <button
-              className="product-modern-btn product-modern-btn-light product-modern-btn-page"
-              disabled={!productData.links.prev}
-              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-            >
-              &lt;
-            </button>
-            {Array.from({ length: productData.meta.last_page }, (_, i) => i + 1).map(pageNum => (
+        {/* Ẩn phân trang nếu chỉ có 1 sản phẩm sau khi tìm kiếm */}
+        {(() => {
+          let displayedProducts = [...products]
+            .filter(p => p.name.toLowerCase().includes(searchQuery.trim().toLowerCase()));
+          if (displayedProducts.length === 1) return null;
+          if (!productData || !productData.links || !productData.meta) return null;
+          return (
+            <div className="product-modern-pagination product-modern-pagination-compact">
               <button
-                key={pageNum}
-                className={`product-modern-btn product-modern-btn-page${productData.meta.current_page === pageNum ? " active" : ""}`}
-                onClick={() => setCurrentPage(pageNum)}
-                disabled={productData.meta.current_page === pageNum}
+                className="product-modern-btn product-modern-btn-light product-modern-btn-page"
+                disabled={!productData.links.prev}
+                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
               >
-                {pageNum}
+                &lt;
               </button>
-            ))}
-            <button
-              className="product-modern-btn product-modern-btn-light product-modern-btn-page"
-              disabled={!productData.links.next}
-              onClick={() => setCurrentPage(p => Math.min(productData.meta.last_page, p + 1))}
-            >
-              &gt;
-            </button>
-          </div>
-        )}
+              {Array.from({ length: productData.meta.last_page }, (_, i) => i + 1).map(pageNum => (
+                <button
+                  key={pageNum}
+                  className={`product-modern-btn product-modern-btn-page${productData.meta.current_page === pageNum ? " active" : ""}`}
+                  onClick={() => setCurrentPage(pageNum)}
+                  disabled={productData.meta.current_page === pageNum}
+                >
+                  {pageNum}
+                </button>
+              ))}
+              <button
+                className="product-modern-btn product-modern-btn-light product-modern-btn-page"
+                disabled={!productData.links.next}
+                onClick={() => setCurrentPage(p => Math.min(productData.meta.last_page, p + 1))}
+              >
+                &gt;
+              </button>
+            </div>
+          );
+        })()}
         {/* Modal Form */}
         {showModal && (
           <div className="product-modern-modal-bg">
@@ -365,164 +488,193 @@ export default function DataTablePage() {
                 <h3>{editingProduct ? "Sửa sản phẩm" : "Thêm sản phẩm mới"}</h3>
                 <button className="product-modern-btn-close" onClick={handleCloseModal}>×</button>
               </div>
-              <form onSubmit={handleFormSubmit} className="product-modern-form">
-                <div className="product-modern-modal-body">
-                  <label>Tên sản phẩm *</label>
-                  <input name="name" value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} required className="product-modern-input" />
-                  <label>Mô tả</label>
-                  <textarea name="description" value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })} className="product-modern-input"></textarea>
-                  <label>Trạng thái *</label>
-                  <select name="status" value={formData.status} onChange={e => setFormData({ ...formData, status: parseInt(e.target.value, 10) })} className="product-modern-input" required>
-                    <option value={1}>Hiển thị</option>
-                    <option value={0}>Ẩn</option>
-                  </select>
-                  <label>Loại sản phẩm *</label>
-                  <select name="product_type" value={formData.product_type} onChange={e => {
-                    const value = e.target.value;
-                    setFormData({ ...formData, product_type: value });
-                    if (value === "simple") {
-                      setVariants([]);
-                      setVariantImagePreviews([]);
-                      setVariantErrors([]);
-                    }
-                  }} className="product-modern-input" required>
-                    <option value="simple">Đơn</option>
-                    <option value="variable">Có biến thể</option>
-                  </select>
-                  <label>Giá *</label>
-                  <input type="number" name="price" value={formData.price} onChange={e => setFormData({ ...formData, price: e.target.value })} min="0" required className="product-modern-input" />
-                  <label>Giảm giá</label>
-                  <input type="number" name="discount" value={formData.discount} onChange={e => setFormData({ ...formData, discount: e.target.value })} min="0" className="product-modern-input" />
-                  <label>Tồn kho</label>
-                  <input type="number" name="stock_quantity" value={formData.stock_quantity} onChange={e => setFormData({ ...formData, stock_quantity: parseInt(e.target.value, 10) })} min="0" className="product-modern-input" />
-                  <label>ID danh mục *</label>
-                  <select name="category_id" value={formData.category_id} onChange={e => setFormData({ ...formData, category_id: parseInt(e.target.value, 10) })} className="product-modern-input" required>
-                    <option value="">-- Chọn danh mục --</option>
-                    {categories.map(cat => (
-                      <option key={cat.id} value={cat.id}>{cat.name}</option>
-                    ))}
-                  </select>
-                  <label>Ảnh sản phẩm</label>
-                  <input
-                    type="file"
-                    name="images[]"
-                    multiple
-                    className="product-modern-input"
-                    onChange={e => setFormData({ ...formData, images: Array.from(e.target.files || []) })}
-                  />
-                  {formData.images && formData.images.length > 0 && (
-                    <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
-                      {formData.images.map((file, idx) => (
-                        <img
-                          key={idx}
-                          src={URL.createObjectURL(file)}
-                          alt="preview"
-                          style={{ maxWidth: 60, maxHeight: 60, border: "1px solid #ccc", borderRadius: 8 }}
-                        />
+              {/* Form luôn hiển thị và có thể cuộn lướt */}
+              <div className="product-modern-form-scroll">
+                <form onSubmit={handleFormSubmit} className="product-modern-form">
+                  <div className="product-modern-modal-body">
+                    <label>Tên sản phẩm *</label>
+                    <input name="name" value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} required className="product-modern-input" />
+                    <label>Mô tả</label>
+                    <textarea name="description" value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })} className="product-modern-input"></textarea>
+                    <label>Trạng thái *</label>
+                    <select name="status" value={formData.status} onChange={e => setFormData({ ...formData, status: parseInt(e.target.value, 10) })} className="product-modern-input" required>
+                      <option value={1}>Hiển thị</option>
+                      <option value={0}>Ẩn</option>
+                    </select>
+                    <label>Loại sản phẩm *</label>
+                    <select name="product_type" value={formData.product_type} onChange={e => {
+                      const value = e.target.value;
+                      setFormData({ ...formData, product_type: value });
+                      if (value === "simple") {
+                        setVariants([]);
+                        setVariantImagePreviews([]);
+                        setVariantErrors([]);
+                      }
+                    }} className="product-modern-input" required>
+                      <option value="simple">Đơn</option>
+                      <option value="variable">Có biến thể</option>
+                    </select>
+                    <label>Giá *</label>
+                    <input type="number" name="price" value={formData.price} onChange={e => setFormData({ ...formData, price: e.target.value })} min="0" required className="product-modern-input" />
+                    <label>Giảm giá</label>
+                    <input type="number" name="discount" value={formData.discount} onChange={e => setFormData({ ...formData, discount: e.target.value })} min="0" className="product-modern-input" />
+                    <label>Tồn kho</label>
+                    <input type="number" name="stock_quantity" value={formData.stock_quantity} onChange={e => setFormData({ ...formData, stock_quantity: parseInt(e.target.value, 10) })} min="0" className="product-modern-input" />
+                    <label>ID danh mục *</label>
+                    <select name="category_id" value={formData.category_id} onChange={e => setFormData({ ...formData, category_id: parseInt(e.target.value, 10) })} className="product-modern-input" required>
+                      <option value="">-- Chọn danh mục --</option>
+                      {categories.map(cat => (
+                        <option key={cat.id} value={cat.id}>{cat.name}</option>
                       ))}
-                    </div>
-                  )}
-                  {/* Variants */}
-                  {formData.product_type === "variable" && (
-                    <div className="product-modern-variants">
-                      <h6>Biến thể</h6>
-                      <table className="product-modern-table product-modern-variant-table">
-                        <thead>
-                          <tr>
-                            <th>STT</th>
-                            <th>Tên biến thể *</th>
-                            <th>Giá *</th>
-                            <th>Tồn kho</th>
-                            <th>SKU</th>
-                            <th>Ảnh</th>
-                            <th></th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {variants.map((variant, index) => (
-                            <tr key={index} className="align-middle">
-                              <td>{index + 1}</td>
-                              <td>
-                                <input
-                                  className="product-modern-input"
-                                  placeholder="Tên biến thể"
-                                  required
-                                  value={variant.name}
-                                  onChange={e => updateVariant(index, "name", e.target.value)}
-                                />
-                                {variantErrors[index] && variantErrors[index].includes("Tên biến thể là bắt buộc") && (
-                                  <div className="product-modern-error">Tên biến thể là bắt buộc</div>
-                                )}
-                              </td>
-                              <td>
-                                <input
-                                  type="number"
-                                  className="product-modern-input"
-                                  placeholder="Giá"
-                                  min="0"
-                                  required
-                                  value={variant.price}
-                                  onChange={e => updateVariant(index, "price", e.target.value)}
-                                />
-                                {variantErrors[index] && variantErrors[index].includes("Giá là bắt buộc") && (
-                                  <div className="product-modern-error">Giá là bắt buộc</div>
-                                )}
-                              </td>
-                              <td>
-                                <input
-                                  type="number"
-                                  className="product-modern-input"
-                                  placeholder="Tồn kho"
-                                  min="0"
-                                  value={variant.stock_quantity}
-                                  onChange={e => updateVariant(index, "stock_quantity", e.target.value)}
-                                />
-                              </td>
-                              <td>
-                                <input
-                                  className="product-modern-input"
-                                  placeholder="SKU"
-                                  value={variant.sku}
-                                  onChange={e => updateVariant(index, "sku", e.target.value)}
-                                />
-                              </td>
-                              <td>
-                                <input
-                                  type="file"
-                                  accept="image/*"
-                                  className="product-modern-input"
-                                  onChange={e => updateVariant(index, "image", e.target.files?.[0])}
-                                />
-                                {variantImagePreviews[index] && (
-                                  <div className="mt-1">
-                                    <img src={variantImagePreviews[index]!} alt="preview" style={{ maxWidth: 48, maxHeight: 48, borderRadius: 4, border: '1px solid #ccc' }} />
-                                  </div>
-                                )}
-                                {!variantImagePreviews[index] && variant.image && typeof variant.image === 'string' && (
-                                  <div className="mt-1 text-muted" style={{ fontSize: 12 }}>{variant.image}</div>
-                                )}
-                              </td>
-                              <td>
-                                <button type="button" className="product-modern-btn product-modern-btn-danger" onClick={() => removeVariant(index)}>
-                                  Xoá
-                                </button>
-                              </td>
+                    </select>
+                    <label>Ảnh sản phẩm</label>
+                    <input
+                      type="file"
+                      name="images[]"
+                      multiple
+                      className="product-modern-input"
+                      onChange={e => setFormData({ ...formData, images: Array.from(e.target.files || []) })}
+                    />
+                    {formData.images && formData.images.length > 0 && (
+                      <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
+                        {formData.images.map((file, idx) => (
+                          <img
+                            key={idx}
+                            src={URL.createObjectURL(file)}
+                            alt="preview"
+                            style={{ maxWidth: 60, maxHeight: 60, border: "1px solid #ccc", borderRadius: 8 }}
+                          />
+                        ))}
+                      </div>
+                    )}
+                    {/* Variants */}
+                    {formData.product_type === "variable" && (
+                      <div className="product-modern-variants">
+                        <h6>Biến thể</h6>
+                        <table className="product-modern-variant-table">
+                          <thead>
+                            <tr>
+                              <th>STT</th>
+                              <th>Tên biến thể *</th>
+                              <th>Giá *</th>
+                              <th>Tồn kho</th>
+                              <th>SKU</th>
+                              <th>Ảnh</th>
+                              <th></th>
                             </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                      <button type="button" className="product-modern-btn product-modern-btn-success" onClick={addVariant}>+ Thêm biến thể</button>
-                    </div>
-                  )}
+                          </thead>
+                          <tbody>
+                            {variants.map((variant, index) => (
+                              <tr key={index} className="align-middle">
+                                <td>{index + 1}</td>
+                                <td>
+                                  <input
+                                    className="product-modern-input"
+                                    placeholder="Tên biến thể"
+                                    required
+                                    value={variant.name}
+                                    onChange={e => updateVariant(index, "name", e.target.value)}
+                                  />
+                                  {variantErrors[index] && variantErrors[index].includes("Tên biến thể là bắt buộc") && (
+                                    <div className="product-modern-error">Tên biến thể là bắt buộc</div>
+                                  )}
+                                </td>
+                                <td>
+                                  <input
+                                    type="number"
+                                    className="product-modern-input"
+                                    placeholder="Giá"
+                                    min="0"
+                                    required
+                                    value={variant.price}
+                                    onChange={e => updateVariant(index, "price", e.target.value)}
+                                  />
+                                  {variantErrors[index] && variantErrors[index].includes("Giá là bắt buộc") && (
+                                    <div className="product-modern-error">Giá là bắt buộc</div>
+                                  )}
+                                </td>
+                                <td>
+                                  <input
+                                    type="number"
+                                    className="product-modern-input"
+                                    placeholder="Tồn kho"
+                                    min="0"
+                                    value={variant.stock_quantity}
+                                    onChange={e => updateVariant(index, "stock_quantity", e.target.value)}
+                                  />
+                                </td>
+                                <td>
+                                  <input
+                                    className="product-modern-input"
+                                    placeholder="SKU"
+                                    value={variant.sku}
+                                    onChange={e => updateVariant(index, "sku", e.target.value)}
+                                  />
+                                  {variantErrors[index] && variantErrors[index].includes("SKU là bắt buộc") && (
+                                    <div className="product-modern-error">SKU là bắt buộc</div>
+                                  )}
+                                </td>
+                                <td>
+                                  <input
+                                    type="file"
+                                    accept="image/*"
+                                    className="product-modern-input"
+                                    onChange={e => updateVariant(index, "image", e.target.files?.[0])}
+                                  />
+                                  {variantImagePreviews[index] && (
+                                    <div className="mt-1">
+                                      <img src={variantImagePreviews[index]!} alt="preview" style={{ maxWidth: 48, maxHeight: 48, borderRadius: 4, border: '1px solid #ccc' }} />
+                                    </div>
+                                  )}
+                                  {!variantImagePreviews[index] && variant.image && typeof variant.image === 'string' && (
+                                    <div className="mt-1 text-muted" style={{ fontSize: 12 }}>{variant.image}</div>
+                                  )}
+                                </td>
+                                <td>
+                                  <button type="button" className="product-modern-btn product-modern-btn-danger" onClick={() => removeVariant(index)}>
+                                    Xoá
+                                  </button>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                        <button type="button" className="product-modern-btn product-modern-btn-success" onClick={addVariant}>+ Thêm biến thể</button>
+                      </div>
+                    )}
+                  </div>
+                  <div className="product-modern-modal-footer">
+                    {formError && <div className="product-modern-alert product-modern-alert-danger">{formError}</div>}
+                    {message && (
+                      <div className={`product-modern-alert product-modern-alert-${message.type}`}>{message.text}</div>
+                    )}
+                    <button type="submit" className="product-modern-btn product-modern-btn-primary">Lưu sản phẩm</button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        )}
+        {viewingProduct && (
+          <div className="product-modern-modal-bg">
+            <div className="product-modern-modal" style={{maxWidth: 500}}>
+              <div className="product-modern-modal-header">
+                <h3>Chi tiết sản phẩm</h3>
+                <button className="product-modern-btn-close" onClick={() => setViewingProduct(null)}>×</button>
+              </div>
+              <div className="product-modern-modal-body">
+                <img src={viewingProduct.image || "https://via.placeholder.com/120"} alt={viewingProduct.name} style={{maxWidth: 120, borderRadius: 8, marginBottom: 12}} />
+                <div><b>Tên:</b> {viewingProduct.name}</div>
+                <div><b>Mô tả:</b> {viewingProduct.description}</div>
+                <div><b>Giá:</b> {viewingProduct.price}</div>
+                <div><b>Giảm giá:</b> {viewingProduct.discount}</div>
+                <div><b>Tồn kho:</b> {viewingProduct.stock_quantity}</div>
+                <div><b>Danh mục:</b> {viewingProduct.category?.name || viewingProduct.category_id}</div>
+                <div><b>Loại:</b> {viewingProduct.product_type}</div>
+                <div style={{textAlign: 'center', marginTop: 18}}>
+                 
                 </div>
-                <div className="product-modern-modal-footer">
-                  {formError && <div className="product-modern-alert product-modern-alert-danger">{formError}</div>}
-                  {message && (
-                    <div className={`product-modern-alert product-modern-alert-${message.type}`}>{message.text}</div>
-                  )}
-                  <button type="submit" className="product-modern-btn product-modern-btn-primary">Lưu sản phẩm</button>
-                </div>
-              </form>
+              </div>
             </div>
           </div>
         )}
@@ -641,9 +793,9 @@ export default function DataTablePage() {
           background: #fff;
           border-radius: 18px;
           box-shadow: 0 8px 32px #6366f133, 0 1.5px 8px #2563eb22;
-          min-width: 380px;
-          max-width: 98vw;
-          width: 600px;
+          min-width: 700px;
+          max-width: 1200px;
+          width: 98vw;
           padding: 0;
           overflow: hidden;
         }
@@ -663,13 +815,13 @@ export default function DataTablePage() {
           cursor: pointer;
         }
         .product-modern-form {
-          padding: 18px 24px 18px 24px;
+          padding: 48px 60px 48px 60px;
         }
         .product-modern-modal-body label {
-          font-size: 0.97em;
+          font-size: 1.08em;
           color: #2563eb;
           font-weight: 500;
-          margin-top: 8px;
+          margin-top: 10px;
         }
         .product-modern-input {
           width: 100%;
@@ -714,11 +866,98 @@ export default function DataTablePage() {
           margin-top: 2px;
         }
         .product-modern-variants {
-          margin-top: 18px;
+          margin-top: 32px;
+          background: #f8fafc;
+          border-radius: 18px;
+          box-shadow: 0 4px 16px #6366f122;
+          padding: 36px 28px 28px 28px;
+          overflow-x: auto;
         }
-        .product-modern-variant-table th, .product-modern-variant-table td {
-          font-size: 0.95em;
-          padding: 6px 6px;
+        .product-modern-variant-table {
+          width: 100%;
+          border-collapse: separate;
+          border-spacing: 0;
+          background: #fff;
+          border-radius: 16px;
+          overflow: hidden;
+          box-shadow: 0 2px 12px #6366f111;
+          font-size: 1.22em;
+        }
+        .product-modern-variant-table th {
+          background: linear-gradient(90deg, #e0e7ff 0%, #f1f5f9 100%);
+          color: #2563eb;
+          font-weight: 800;
+          padding: 20px 14px;
+          border-bottom: 3px solid #6366f1;
+          text-align: center;
+          font-size: 1.18em;
+        }
+        .product-modern-variant-table td {
+          background: #fff;
+          padding: 18px 12px;
+          border-bottom: 1.5px solid #e5e7eb;
+          text-align: center;
+          vertical-align: middle;
+          font-size: 1.15em;
+        }
+        .product-modern-variant-table tr:hover {
+          background: #f0f4ff;
+        }
+        .product-modern-variant-table input[type='text'],
+        .product-modern-variant-table input[type='number'] {
+          width: 100%;
+          border-radius: 12px;
+          border: 2px solid #e0e7ef;
+          padding: 16px 18px;
+          font-size: 1.13em;
+          background: #f8fafc;
+          color: #222;
+          outline: none;
+          transition: border 0.18s;
+        }
+        .product-modern-variant-table input[type='text']:focus,
+        .product-modern-variant-table input[type='number']:focus {
+          border: 2px solid #6366f1;
+          background: #fff;
+        }
+        .product-modern-error {
+          color: #ef4444;
+          font-size: 1.08em;
+          margin-top: 2px;
+          text-align: left;
+        }
+        .product-modern-btn-success {
+          background: linear-gradient(90deg, #22c55e 0%, #16a34a 100%);
+          color: #fff;
+          border: none;
+          border-radius: 12px;
+          padding: 14px 32px;
+          font-size: 1.13em;
+          font-weight: 600;
+          margin-top: 18px;
+          box-shadow: 0 2px 8px #22c55e22;
+          cursor: pointer;
+          transition: background 0.18s, box-shadow 0.18s;
+        }
+        .product-modern-btn-success:hover {
+          background: linear-gradient(90deg, #16a34a 0%, #22c55e 100%);
+          box-shadow: 0 4px 16px #22c55e33;
+        }
+        .product-modern-btn-danger {
+          background: linear-gradient(90deg, #ef4444 0%, #dc2626 100%);
+          color: #fff;
+          border: none;
+          border-radius: 12px;
+          padding: 14px 32px;
+          font-size: 1.13em;
+          font-weight: 600;
+          box-shadow: 0 2px 8px #ef444422;
+          cursor: pointer;
+          transition: background 0.18s, box-shadow 0.18s;
+        }
+        .product-modern-btn-danger:hover {
+          background: linear-gradient(90deg, #dc2626 0%, #ef4444 100%);
+          box-shadow: 0 4px 16px #ef444433;
         }
         .gradient-text {
           background: linear-gradient(90deg, #6366f1 0%, #2563eb 100%);
@@ -780,6 +1019,16 @@ export default function DataTablePage() {
           font-size: 0.97em;
           padding: 0;
         }
+        .product-modern-form-scroll {
+          max-height: 80vh;
+          overflow-y: auto;
+          background: #fff;
+          border-radius: 12px;
+          box-shadow: 0 2px 16px #6366f122;
+          padding: 24px 18px;
+          margin: 32px auto;
+          max-width: 600px;
+        }
         @media (max-width: 900px) {
           .product-modern-bg { padding-left: 54px; }
           .product-modern-container { padding: 8px 2vw; }
@@ -788,6 +1037,125 @@ export default function DataTablePage() {
           .product-modern-table-compact th, .product-modern-table-compact td { font-size: 0.91em; padding: 6px 2px; }
           .product-modern-header { flex-direction: column; gap: 8px; align-items: flex-start; }
           .product-modern-title { font-size: 1.05rem; }
+        }
+        .product-modern-modal-body b {
+          color: #2563eb;
+          font-weight: 600;
+          min-width: 90px;
+          display: inline-block;
+        }
+        /* Modal xem chi tiết sản phẩm */
+        .product-modern-modal-bg {
+          position: fixed;
+          z-index: 9999;
+          left: 0; top: 0; right: 0; bottom: 0;
+          background: rgba(30, 41, 59, 0.25);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          animation: fadeInModalBg 0.2s;
+        }
+        @keyframes fadeInModalBg {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        .product-modern-modal {
+          background: #fff;
+          border-radius: 16px;
+          box-shadow: 0 8px 32px #2563eb33, 0 1.5px 8px #0001;
+          padding: 32px 28px 24px 28px;
+          max-width: 500px;
+          width: 100%;
+          animation: fadeInModal 0.2s;
+          position: relative;
+        }
+        @keyframes fadeInModal {
+          from { transform: translateY(40px); opacity: 0; }
+          to { transform: translateY(0); opacity: 1; }
+        }
+        .product-modern-modal-header {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          margin-bottom: 18px;
+        }
+        .product-modern-modal-header h3 {
+          font-size: 1.25rem;
+          font-weight: 700;
+          color: #2563eb;
+          margin: 0;
+        }
+        .product-modern-btn-close {
+          background: none;
+          border: none;
+          font-size: 2rem;
+          color: #2563eb;
+          cursor: pointer;
+          line-height: 1;
+          padding: 0 8px;
+          transition: color 0.15s;
+        }
+        .product-modern-btn-close:hover {
+          color: #dc2626;
+        }
+        .product-modern-modal-body {
+          font-size: 1.08rem;
+          color: #22223b;
+          padding-bottom: 8px;
+        }
+        .product-modern-modal-body img {
+          display: block;
+          margin: 0 auto 16px auto;
+          border-radius: 10px;
+          box-shadow: 0 2px 8px #2563eb22;
+          max-width: 140px;
+          max-height: 140px;
+        }
+        .product-modern-modal-body div {
+          margin-bottom: 10px;
+          border-bottom: 1px solid #f1f5f9;
+          padding-bottom: 6px;
+        }
+        .product-modern-variant-table th,
+        .product-modern-variant-table td {
+          white-space: nowrap;
+        }
+        .product-modern-variant-table th {
+          font-weight: 600;
+          font-size: 1.08em;
+          padding: 16px 18px;
+        }
+        .product-modern-variant-table td {
+          padding: 14px 18px;
+        }
+        .product-modern-variant-table th:nth-child(1),
+        .product-modern-variant-table td:nth-child(1) {
+          min-width: 60px;
+          max-width: 80px;
+        }
+        .product-modern-variant-table th:nth-child(2),
+        .product-modern-variant-table td:nth-child(2) {
+          min-width: 180px;
+        }
+        .product-modern-variant-table th:nth-child(3),
+        .product-modern-variant-table td:nth-child(3) {
+          min-width: 120px;
+        }
+        .product-modern-variant-table th:nth-child(4),
+        .product-modern-variant-table td:nth-child(4) {
+          min-width: 120px;
+        }
+        .product-modern-variant-table th:nth-child(5),
+        .product-modern-variant-table td:nth-child(5) {
+          min-width: 140px;
+        }
+        .product-modern-variant-table th:nth-child(6),
+        .product-modern-variant-table td:nth-child(6) {
+          min-width: 120px;
+        }
+        .product-modern-variant-table th:nth-child(7),
+        .product-modern-variant-table td:nth-child(7) {
+          min-width: 100px;
         }
       `}</style>
     </div>

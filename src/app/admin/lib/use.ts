@@ -1,22 +1,16 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import Cookies from "js-cookie";
-import axios from "axios";
+import adminAxios from "./axios";
 import { CustomerRank, User } from "../types/user";
 
-export async function getUsers(): Promise<User[]> {
-  const token = Cookies.get("token");
-  console.log("Token khi gọi getUsers:", token);
-  if (!token) throw new Error("Token không tồn tại");
+export async function getUsers(params?: { customer_rank_id?: string | number }): Promise<User[]> {
+  let url = "/admin/users";
+  if (params?.customer_rank_id) {
+    url += `?customer_rank_id=${params.customer_rank_id}`;
+  }
 
   try {
-    const res = await axios.get("http://127.0.0.1:8000/api/v1/admin/users", {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        Accept: "application/json",
-      },
-    });
-    console.log("Dữ liệu users:", res.data);
-    return res.data.users as User[];
+    const res = await adminAxios.get(url);
+    return (res.data as any).users as User[];
   } catch (err: any) {
     console.error("Lỗi API getUsers:", err.response?.data || err.message);
     throw err;
@@ -24,21 +18,26 @@ export async function getUsers(): Promise<User[]> {
 }
 
 export async function getRanks(): Promise<CustomerRank[]> {
-  const token = Cookies.get("token");
-  console.log("Token khi gọi getRanks:", token);
-  if (!token) throw new Error("Token không tồn tại");
-
   try {
-    const res = await axios.get("http://127.0.0.1:8000/api/v1/admin/users/customer-ranks", {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        Accept: "application/json",
-      },
-    });
+    const res = await adminAxios.get("/admin/users/customer-ranks");
     console.log("Dữ liệu ranks:", res.data);
-    return res.data.ranks as CustomerRank[];
+    return (res.data as any).ranks as CustomerRank[];
   } catch (err: any) {
     console.error("Lỗi API getRanks:", err.response?.data || err.message);
+    throw err;
+  }
+}
+
+export async function toggleUserStatus(id: number): Promise<any> {
+  try {
+    const res = await adminAxios.post(`/admin/users/${id}/toggle-status`, {});
+    return res.data;
+  } catch (err: any) {
+    if (err.response) {
+      console.error("Lỗi API toggleUserStatus:", err.response.data, "Status:", err.response.status);
+      throw new Error(err.response.data?.message || `Lỗi API: ${err.response.status}`);
+    }
+    console.error("Lỗi API toggleUserStatus (no response):", err);
     throw err;
   }
 }

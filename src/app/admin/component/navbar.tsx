@@ -1,17 +1,20 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import LogoutButton from "./LogoutButton";
 
 
-const menu = [
-  { label: "Quản lý Sản phẩm", href: "/admin/product", icon: "📦" },
-  { label: "Quản lý Danh Mục", href: "/admin/category", icon: "📁" },
-  { label: "Quản lý Đơn Hàng", href: "/admin/Oder", icon: "🧾" },
-  { label: "Quản lý Khách Hàng", href: "/admin/user", icon: "👤" },
-  { label: "Quản lý Bài viết", href: "/admin/posts", icon: "📝" },
-  { label: "Quản lý Sự Kiện", href: "/admin/Event", icon: "🎉" },
-  { label: "Quản lý Mã Giảm Giá", href: "/admin/CouponPage", icon: "🏷️" },
-  { label: "Quản lý Admin", href: "/admin/Admin", icon: "🛡️" },
+const menu = [ 
+  { label: "Thống kê", href: "/admin/Statistic", icon: "" },
+  { label: "Quản lý Sản phẩm", href: "/admin/product", icon: "" },
+  { label: "Quản lý Danh Mục", href: "/admin/category", icon: "" },
+  { label: "Quản lý Đơn Hàng", href: "/admin/Oder", icon: "" },
+  { label: "Quản lý Khách Hàng", href: "/admin/user", icon: "" },
+  { label: "Quản lý Sự Kiện", href: "/admin/Event", icon: "" },
+  { label: "Quản lý Mã Giảm Giá", href: "/admin/CouponPage", icon: "" },
+  { label: "Quản lý bình luận", href: "/admin/reviews", icon: "" },
+  { label: "Quản lý Bài viết", href: "/admin/posts", icon: "" },
+
 ];
 
 interface NavbarProps {
@@ -29,7 +32,7 @@ export default function Navbar({ showNavbar = true, onToggle }: NavbarProps) {
           onClick={onToggle}
           style={{
             position: 'absolute',
-            top: 18,
+            top: 700,
             right: 18,
             background: '#2563eb',
             color: '#fff',
@@ -60,6 +63,7 @@ export default function Navbar({ showNavbar = true, onToggle }: NavbarProps) {
       </ul>
       <div className="navbar-user">
         <div className="avatar" title="Tài khoản">N</div>
+        <LogoutButton variant="compact" />
       </div>
       <style>{`
         .navbar-modern {

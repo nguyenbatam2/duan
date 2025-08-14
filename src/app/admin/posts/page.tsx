@@ -5,6 +5,7 @@ import Link from "next/link";
 import { getAllPosts, deletePost, togglePostStatus } from "@/app/lib/adminPosts";
 import { Post } from "@/app/types/post";
 
+
 export default function AdminPostsPage() {
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);

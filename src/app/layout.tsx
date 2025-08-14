@@ -12,6 +12,7 @@ import Footer from "@/app/Component/footer";
 import { AuthProviderContext } from "@/app/context/authContext";
 import { PopupProvider } from "@/app/context/PopupContext";
 import { usePopup } from "@/app/context/PopupContext";
+import { Toaster } from 'react-hot-toast';
 import "@/app/styles/index.css";
 import "@/app/styles/main.css";
 import { Montserrat } from 'next/font/google';
@@ -70,6 +71,7 @@ export default function RootLayout({
             {!isAdminPage && <Header />}
             {isHomePage && <Slider />}
             <div className="bodywrap">{children}</div>
+            <Toaster position="top-right" reverseOrder={false} />
             {!isAdminPage && <Footer />}
             <CouponPopup />
           </PopupProvider>

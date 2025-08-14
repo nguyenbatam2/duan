@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import useSWR from 'swr';
-import { fetchOrders, updateOrderStatus } from '@/app/admin/lib/oder';
+import { fetchOrders, updateOrderStatus } from '../lib/oder';
 import Image from 'next/image';
 
 const OrderManagement = () => {
@@ -9,6 +9,7 @@ const OrderManagement = () => {
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState('');
   const [paymentStatus, setPaymentStatus] = useState('');
+  const [perPage] = useState(10); // Giới hạn 10 đơn hàng mỗi trang
   const [showUpdateModal, setShowUpdateModal] = useState(false);
   const [showViewModal, setShowViewModal] = useState(false);
   const [updateForm, setUpdateForm] = useState({
@@ -20,7 +21,7 @@ const OrderManagement = () => {
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  const query = `page=${page}&search=${search}&status=${status}&payment_status=${paymentStatus}`;
+  const query = `page=${page}&per_page=${perPage}&search=${search}&status=${status}&payment_status=${paymentStatus}`;
   const { data, error, mutate } = useSWR([query], fetchOrders);
 
   useEffect(() => {
@@ -52,7 +53,7 @@ const OrderManagement = () => {
     }
   };
 
-  const openUpdateModal = (order) => {
+  const openUpdateModal = (order: any) => {
     setUpdateForm({
       id: order.id,
       status: order.status,
@@ -62,33 +63,54 @@ const OrderManagement = () => {
     setShowUpdateModal(true);
   };
 
-  const openViewModal = (order) => {
+  const openViewModal = (order: any) => {
     setSelectedOrder(order);
     setShowViewModal(true);
   };
 
-  const getStatusBadge = (status) => {
-    const statusMap = {
-      pending: 'badge-warning',
-      confirmed: 'badge-info',
-      processing: 'badge-primary',
-      shipped: 'badge-success',
-      delivered: 'badge-success',
-      cancelled: 'badge-danger'
+  const getStatusBadge = (status: string) => {
+    const statusMap: { [key: string]: string } = {
+      pending: 'status-pending',
+      confirmed: 'status-confirmed',
+      processing: 'status-processing',
+      shipped: 'status-shipped',
+      delivered: 'status-delivered',
+      cancelled: 'status-cancelled'
     };
-    return statusMap[status] || 'badge-secondary';
+    return statusMap[status] || 'status-default';
   };
 
-  const getPaymentBadge = (paymentStatus) => {
-    const paymentMap = {
-      pending: 'badge-warning',
-      paid: 'badge-success',
-      failed: 'badge-danger'
+  const getPaymentBadge = (paymentStatus: string) => {
+    const paymentMap: { [key: string]: string } = {
+      pending: 'payment-pending',
+      paid: 'payment-paid',
+      failed: 'payment-failed'
     };
-    return paymentMap[paymentStatus] || 'badge-secondary';
+    return paymentMap[paymentStatus] || 'payment-default';
   };
 
-  const formatCurrency = (amount) => {
+  const getStatusText = (status: string) => {
+    const statusTextMap: { [key: string]: string } = {
+      pending: 'Chờ xác nhận',
+      confirmed: 'Đã xác nhận',
+      processing: 'Đang xử lý',
+      shipped: 'Đã giao',
+      delivered: 'Đã nhận',
+      cancelled: 'Đã hủy'
+    };
+    return statusTextMap[status] || status;
+  };
+
+  const getPaymentText = (paymentStatus: string) => {
+    const paymentTextMap: { [key: string]: string } = {
+      pending: 'Chờ thanh toán',
+      paid: 'Đã thanh toán',
+      failed: 'Thất bại'
+    };
+    return paymentTextMap[paymentStatus] || paymentStatus;
+  };
+
+  const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('vi-VN', {
       style: 'currency',
       currency: 'VND',
@@ -96,7 +118,7 @@ const OrderManagement = () => {
     }).format(amount).replace('₫', '₫');
   };
 
-  const formatDate = (dateString) => {
+  const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleString('vi-VN');
   };
 
@@ -105,7 +127,7 @@ const OrderManagement = () => {
       name: 'John Michael',
       email: 'john@creative-tim.com',
       role: 'Giám đốc',
-      organization: 'Tổ chức',
+organization: 'Tổ chức',
       status: 'Trực tuyến',
       date: '23/04/18',
       imgSrc: '/assets/img/team-2.jpg',
@@ -158,238 +180,511 @@ const OrderManagement = () => {
   ];
   return (
     <>
-
-      <div className="container-fluid py-4">
-        {/* <div className="row">
-          <div className="col-12">
-            <div className="card mb-4">
-              <div className="card-header pb-0">
-                <h6>Bảng tác giả</h6>
-              </div>
-              <div className="card-body px-0 pt-0 pb-2">
-                <div className="table-responsive p-0">
-                  <table className="table align-items-center mb-0">
-                    <thead>
-                      <tr>
-                        <th className="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Tác giả</th>
-                        <th className="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Chức năng</th>
-                        <th className="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Trạng thái</th>
-                        <th className="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Có việc làm</th>
-                        <th className="text-secondary opacity-7"></th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {authors.map((author, index) => (
-                        <tr key={index}>
-                          <td>
-                            <div className="d-flex px-2 py-1">
-                              <div>
-                                <Image src={author.imgSrc} className="avatar avatar-sm me-3" alt={author.name} width={40} height={40} />
-                              </div>
-                              <div className="d-flex flex-column justify-content-center">
-                                <h6 className="mb-0 text-sm">{author.name}</h6>
-                                <p className="text-xs text-secondary mb-0">{author.email}</p>
-                              </div>
-                            </div>
-                          </td>
-                          <td>
-                            <p className="text-xs font-weight-bold mb-0">{author.role}</p>
-                            <p className="text-xs text-secondary mb-0">{author.organization}</p>
-                          </td>
-                          <td className="align-middle text-center text-sm">
-                            <span className={`badge badge-sm ${author.status === 'Trực tuyến' ? 'bg-gradient-success' : 'bg-gradient-secondary'}`}>
-                              {author.status}
-                            </span>
-                          </td>
-                          <td className="align-middle text-center">
-                            <span className="text-secondary text-xs font-weight-bold">{author.date}</span>
-                          </td>
-                          <td className="align-middle">
-                            <a href="javascript:;" className="text-secondary font-weight-bold text-xs" data-toggle="tooltip" data-original-title="Edit user">
-                              Biên tập
-                            </a>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+      <style>{`
+        .order-modern-container {
+          background: linear-gradient(120deg, #f8fafc 0%, #e0e7ff 100%);
+          min-height: 100vh;
+          padding: 20px;
+          margin-left: 0;
+          transition: margin-left 0.2s;
+        }
+        
+        @media (min-width: 901px) {
+          .order-modern-container {
+            margin-left: 0px;
+          }
+        }
+        
+        .order-modern-header {
+          font-size: 1.8rem;
+          font-weight: 700;
+          color: #1e293b;
+          margin-bottom: 24px;
+          letter-spacing: -0.025em;
+        }
+        
+        .order-modern-card {
+          background: #fff;
+          border-radius: 18px;
+          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+          overflow: hidden;
+          margin-bottom: 24px;
+        }
+        
+        .order-modern-card-header {
+          background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+          padding: 20px 24px;
+          border-bottom: 1px solid #e2e8f0;
+        }
+        
+        .order-modern-card-title {
+          font-size: 1.4rem;
+          font-weight: 600;
+          color: #1e293b;
+          margin: 0;
+        }
+        
+        .order-modern-card-body {
+          padding: 24px;
+        }
+        
+        .order-modern-controls {
+          display: flex;
+          align-items: flex-end;
+          gap: 20px;
+          margin-bottom: 24px;
+          flex-wrap: wrap;
+        }
+        
+        .order-modern-control-group {
+          display: flex;
+          flex-direction: column;
+          flex: 1;
+          min-width: 0;
+        }
+        
+        .order-modern-label {
+          color: #374151 !important;
+          font-weight: 600;
+          font-size: 0.85rem;
+          margin-bottom: 6px;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+        }
+        
+        .order-modern-input,
+        .order-modern-select {
+          border-radius: 8px;
+          border: 1px solid #d1d5db;
+          padding: 10px 14px;
+          font-size: 0.9rem;
+          background: #fff;
+          color: #374151;
+          transition: all 0.2s ease;
+          width: 100%;
+          box-sizing: border-box;
+        }
+        
+        .order-modern-input:focus,
+        .order-modern-select:focus {
+          border-color: #3b82f6;
+          outline: none;
+          box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+        
+        .order-modern-table {
+          background: #fff;
+          border-radius: 12px;
+          overflow: hidden;
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+        }
+        
+        .order-modern-table th {
+          background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+          color: #1e293b;
+          font-weight: 600;
+          font-size: 0.85rem;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+          padding: 16px 12px;
+          border-bottom: 2px solid #e2e8f0;
+        }
+        
+        .order-modern-table td {
+          padding: 16px 12px;
+          border-bottom: 1px solid #f1f5f9;
+          vertical-align: middle;
+          font-size: 0.9rem;
+        }
+        
+        .order-modern-table tr:hover {
+          background-color: #f8fafc;
+        }
+        
+        .order-modern-table tr:last-child td {
+          border-bottom: none;
+        }
+        
+        .status-badge {
+          display: inline-block;
+          padding: 6px 12px;
+          border-radius: 20px;
+          font-size: 0.8rem;
+          font-weight: 600;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+        }
+        
+        .status-pending {
+          background: #fef3c7;
+          color: #92400e;
+        }
+        
+        .status-confirmed {
+          background: #dbeafe;
+          color: #1e40af;
+        }
+        
+        .status-processing {
+          background: #e0e7ff;
+          color: #3730a3;
+        }
+        
+        .status-shipped {
+          background: #dcfce7;
+          color: #166534;
+        }
+        
+        .status-delivered {
+          background: #dcfce7;
+          color: #166534;
+        }
+        
+        .status-cancelled {
+          background: #fee2e2;
+          color: #991b1b;
+        }
+        
+        .payment-badge {
+          display: inline-block;
+          padding: 6px 12px;
+          border-radius: 20px;
+          font-size: 0.8rem;
+          font-weight: 600;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+        }
+        
+        .payment-pending {
+          background: #fef3c7;
+          color: #92400e;
+        }
+        
+        .payment-paid {
+          background: #dcfce7;
+          color: #166534;
+        }
+        
+        .payment-failed {
+          background: #fee2e2;
+          color: #991b1b;
+        }
+        
+        .order-amount {
+          font-weight: 600;
+          color: #059669;
+          font-size: 0.95rem;
+        }
+        
+        .order-number {
+          font-weight: 600;
+          color: #1e293b;
+        }
+        
+        .action-button {
+          background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+          color: #fff;
+          border: none;
+          border-radius: 6px;
+          padding: 8px 12px;
+          cursor: pointer;
+          font-size: 0.85rem;
+          font-weight: 600;
+          transition: all 0.2s ease;
+          margin-right: 6px;
+        }
+        
+        .action-button:hover {
+          transform: translateY(-1px);
+          box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+        }
+        
+        .action-button.info {
+          background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+        }
+        
+        .action-button.info:hover {
+          box-shadow: 0 4px 12px rgba(6, 182, 212, 0.3);
+        }
+        
+        .pagination-modern {
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          gap: 8px;
+          margin-top: 24px;
+        }
+        
+        .pagination-button {
+          background: #fff;
+          border: 1px solid #d1d5db;
+          border-radius: 6px;
+          padding: 8px 12px;
+          cursor: pointer;
+          font-size: 0.9rem;
+          transition: all 0.2s ease;
+          min-width: 40px;
+          text-align: center;
+        }
+        
+        .pagination-button:hover:not(:disabled) {
+          background: #f8fafc;
+          border-color: #3b82f6;
+        }
+        
+        .pagination-button.active {
+          background: #3b82f6;
+          color: #fff;
+          border-color: #3b82f6;
+        }
+        
+        .pagination-button:disabled {
+          opacity: 0.5;
+          cursor: not-allowed;
+        }
+        
+        .pagination-info {
+          text-align: center;
+          color: #6b7280;
+          font-size: 0.9rem;
+          margin-top: 12px;
+        }
+        
+        .empty-state {
+          text-align: center;
+          padding: 40px;
+          color: #6b7280;
+          font-size: 1.1rem;
+        }
+        
+        @media (max-width: 1200px) {
+          .order-modern-controls {
+            flex-direction: column;
+            align-items: stretch;
+            gap: 15px;
+          }
+          
+          .order-modern-control-group {
+            min-width: 0;
+            flex: none;
+          }
+        }
+        
+        @media (max-width: 768px) {
+          .order-modern-container {
+            padding: 15px;
+            margin-left: 0;
+          }
+          
+          .order-modern-header {
+            font-size: 1.5rem;
+          }
+          
+          .order-modern-card-body {
+            padding: 16px;
+          }
+          
+          .order-modern-table th,
+          .order-modern-table td {
+            padding: 12px 8px;
+            font-size: 0.85rem;
+          }
+          
+          .status-badge,
+          .payment-badge {
+            padding: 4px 8px;
+            font-size: 0.75rem;
+          }
+          
+          .action-button {
+            padding: 6px 10px;
+            font-size: 0.8rem;
+            margin-right: 4px;
+          }
+        }
+        
+        @media (max-width: 480px) {
+          .order-modern-table {
+            font-size: 0.8rem;
+          }
+          
+          .order-modern-table th,
+          .order-modern-table td {
+            padding: 8px 4px;
+          }
+          
+          .order-modern-header {
+            font-size: 1.3rem;
+          }
+        }
+      `}</style>
+      
+      <div className="order-modern-container">
+        <div className="container-fluid">
+          <h2 className="order-modern-header">Quản lý đơn hàng</h2>
+          
+          <div className="order-modern-card">
+            <div className="order-modern-card-header">
+              <h3 className="order-modern-card-title">Bộ lọc và tìm kiếm</h3>
+            </div>
+            <div className="order-modern-card-body">
+              <div className="order-modern-controls">
+                <div className="order-modern-control-group">
+                  <label className="order-modern-label">TÌM KIẾM</label>
+                  <input
+                    className="order-modern-input"
+                    type="text"
+                    placeholder="Nhập mã đơn hoặc tên khách hàng..."
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                  />
+                </div>
+                <div className="order-modern-control-group">
+                  <label className="order-modern-label">TRẠNG THÁI</label>
+                  <select
+                    className="order-modern-select"
+                    value={status}
+                    onChange={(e) => setStatus(e.target.value)}
+                  >
+                    <option value="">Tất cả trạng thái</option>
+                    <option value="pending">Chờ xác nhận</option>
+                    <option value="confirmed">Đã xác nhận</option>
+                    <option value="processing">Đang xử lý</option>
+                    <option value="shipped">Đã giao</option>
+                    <option value="delivered">Đã nhận</option>
+                    <option value="cancelled">Đã hủy</option>
+                  </select>
+                </div>
+                <div className="order-modern-control-group">
+                  <label className="order-modern-label">THANH TOÁN</label>
+                  <select
+                    className="order-modern-select"
+                    value={paymentStatus}
+                    onChange={(e) => setPaymentStatus(e.target.value)}
+                  >
+                    <option value="">Tất cả thanh toán</option>
+                    <option value="pending">Chờ thanh toán</option>
+                    <option value="paid">Đã thanh toán</option>
+                    <option value="failed">Thất bại</option>
+                  </select>
                 </div>
               </div>
             </div>
           </div>
-        </div> */}
-        <div className="row">
-          <div className="col-12">/
-            <div className="card">
-              <div className="card-header">
-                <h2 className="mb-0">
-                  <i className="fas fa-shopping-cart mr-2"></i>
-                  Quản lý đơn hàng
-                </h2>
-              </div>
-              <div className="card-body">
-                {/* Filters */}
-                <div className="row mb-4">
-                  <div className="col-md-3 mb-2">
-                    <input
-                      type="text"
-                      className="form-control"
-                      placeholder="Tìm kiếm..."
-                      value={search}
-                      onChange={(e) => setSearch(e.target.value)}
-                    />
-                  </div>
-                  <div className="col-md-2 mb-2">
-                    <select
-                      className="form-control"
-                      value={status}
-                      onChange={(e) => setStatus(e.target.value)}
-                    >
-                      <option value="">Tất cả trạng thái</option>
-                      <option value="pending">Chờ xác nhận</option>
-                      <option value="confirmed">Đã xác nhận</option>
-                      <option value="processing">Đang xử lý</option>
-                      <option value="shipped">Đã giao</option>
-                      <option value="delivered">Đã nhận</option>
-                      <option value="cancelled">Đã hủy</option>
-                    </select>
-                  </div>
-                  <div className="col-md-2 mb-2">
-                    <select
-                      className="form-control"
-                      value={paymentStatus}
-                      onChange={(e) => setPaymentStatus(e.target.value)}
-                    >
-                      <option value="">Tất cả thanh toán</option>
-                      <option value="pending">Chờ thanh toán</option>
-                      <option value="paid">Đã thanh toán</option>
-                      <option value="failed">Thất bại</option>
-                    </select>
-                  </div>
-                </div>
 
-                {/* Orders Table */}
-                <div className="table-responsive">
-                  <table className="table table-striped table-hover">
-                    <thead className="thead-dark">
-                      <tr>
-                        <th scope="col">#</th>
-                        <th scope="col">Mã đơn</th>
-                        <th scope="col">Khách hàng</th>
-                        <th scope="col">Tổng tiền</th>
-                        <th scope="col">Thanh toán</th>
-                        <th scope="col">Trạng thái</th>
-                        <th scope="col">Ngày tạo</th>
-                        <th scope="col">Thao tác</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {data?.orders?.length > 0 ? (
-                        data.orders.map((order, index) => (
-                          <tr key={order.id}>
-                            <td>{index + 1 + (page - 1) * 10}</td>
-                            <td>
-                              <strong>#{order.order_number}</strong>
-                            </td>
-                            <td>{order.name}</td>
-                            <td>
-                              <span className="text-success font-weight-bold">
-                                {formatCurrency(order.total)}
-                              </span>
-                            </td>
-                            <td>
-                              <span className={`badge ${getPaymentBadge(order.payment_status)}`}>
-                                {order.payment_status === 'pending' && 'Chờ thanh toán'}
-                                {order.payment_status === 'paid' && 'Đã thanh toán'}
-                                {order.payment_status === 'failed' && 'Thất bại'}
-                              </span>
-                            </td>
-                            <td>
-                              <span className={`badge ${getStatusBadge(order.status)}`}>
-                                {order.status === 'pending' && 'Chờ xác nhận'}
-                                {order.status === 'confirmed' && 'Đã xác nhận'}
-                                {order.status === 'processing' && 'Đang xử lý'}
-                                {order.status === 'shipped' && 'Đã giao'}
-                                {order.status === 'delivered' && 'Đã nhận'}
-                                {order.status === 'cancelled' && 'Đã hủy'}
-                              </span>
-                            </td>
-                            <td>{formatDate(order.created_at)}</td>
-                            <td>
-                              <button
-                                className="btn btn-sm btn-outline-primary"
-                                onClick={() => openUpdateModal(order)}
-                              >
-                                <i className="fas fa-edit"></i>
-                              </button>
-                              <button
-                                className="btn btn-sm btn-outline-info ml-1"
-                                onClick={() => openViewModal(order)}
-                              >
-                                <i className="fas fa-eye"></i>
-                              </button>
-                            </td>
-                          </tr>
-                        ))
-                      ) : (
-                        <tr>
-                          <td colSpan="8" className="text-center">
-                            {data ? 'Không có đơn hàng nào' : 'Đang tải...'}
+          <div className="order-modern-card">
+            <div className="order-modern-card-header">
+              <h3 className="order-modern-card-title">Danh sách đơn hàng</h3>
+            </div>
+            <div className="order-modern-card-body">
+              <div className="order-modern-table">
+                <table className="table" style={{ marginBottom: 0 }}>
+                  <thead>
+                    <tr>
+                      <th>#</th>
+                      <th>Mã đơn</th>
+                      <th>Khách hàng</th>
+                      <th>Tổng tiền</th>
+                      <th>Thanh toán</th>
+                      <th>Trạng thái</th>
+                      <th>Ngày tạo</th>
+                      <th>Thao tác</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {data?.orders && data.orders.length > 0 ? (
+                      data.orders.slice(0, perPage).map((order: any, index: number) => (
+                        <tr key={order.id}>
+                          <td>{index + 1 + (page - 1) * perPage}</td>
+                          <td>
+                            <span className="order-number">#{order.order_number}</span>
+                          </td>
+                          <td>{order.name}</td>
+                          <td>
+                            <span className="order-amount">
+                              {formatCurrency(Number(order.total))}
+                            </span>
+                          </td>
+                          <td>
+                            <span className={`payment-badge ${getPaymentBadge(order.payment_status)}`}>
+                              {getPaymentText(order.payment_status)}
+                            </span>
+                          </td>
+                          <td>
+                            <span className={`status-badge ${getStatusBadge(order.status)}`}>
+                              {getStatusText(order.status)}
+                            </span>
+                          </td>
+                          <td>{formatDate(order.created_at)}</td>
+                          <td>
+                            <button
+                              className="action-button"
+                              onClick={() => openUpdateModal(order)}
+                              title="Cập nhật đơn hàng"
+                            >
+                              sửa
+                            </button>
+                            <button
+                              className="action-button info"
+                              onClick={() => openViewModal(order)}
+                              title="Xem chi tiết"
+                            >
+                              hiển thị 
+                            </button>
                           </td>
                         </tr>
-                      )}
-                    </tbody>
-                  </table>
-                </div>
-
-                {/* Pagination */}
-                {data?.pagination && (
-                  <nav aria-label="Phân trang đơn hàng">
-                    <ul className="pagination justify-content-center">
-                      <li className={`page-item ${page === 1 ? 'disabled' : ''}`}>
-                        <button
-                          className="page-link"
-                          onClick={() => setPage(page - 1)}
-                          disabled={page === 1}
-                        >
-                          Trang trước
-                        </button>
-                      </li>
-
-                      {[...Array(Math.min(5, data.pagination.last_page))].map((_, i) => {
-                        const pageNum = i + 1;
-                        return (
-                          <li key={pageNum} className={`page-item ${page === pageNum ? 'active' : ''}`}>
-                            <button
-                              className="page-link"
-                              onClick={() => setPage(pageNum)}
-                            >
-                              {pageNum}
-                            </button>
-                          </li>
-                        );
-                      })}
-
-                      <li className={`page-item ${page === data.pagination.last_page ? 'disabled' : ''}`}>
-                        <button
-                          className="page-link"
-                          onClick={() => setPage(page + 1)}
-                          disabled={page === data.pagination.last_page}
-                        >
-                          Trang sau
-                        </button>
-                      </li>
-                    </ul>
-                  </nav>
-                )}
-
-                {data?.pagination && (
-                  <div className="text-center text-muted">
-                    Hiển thị {((page - 1) * 10) + 1}-{Math.min(page * 10, data.pagination.total)}
-                    trong tổng số {data.pagination.total} đơn hàng
-                  </div>
-                )}
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan={8} className="empty-state">
+                          {data ? 'Không có đơn hàng nào' : 'Đang tải...'}
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
               </div>
+
+              {/* Pagination */}
+              {data?.pagination && (
+                <>
+                  <div className="pagination-modern">
+                    <button
+                      className="pagination-button"
+                      onClick={() => setPage(page - 1)}
+                      disabled={page === 1}
+                    >
+                      ← Trước
+                    </button>
+
+                    {[...Array(Math.min(5, data.pagination.last_page))].map((_, i) => {
+                      const pageNum = i + 1;
+                      return (
+                        <button
+                          key={pageNum}
+                          className={`pagination-button ${page === pageNum ? 'active' : ''}`}
+                          onClick={() => setPage(pageNum)}
+                        >
+                          {pageNum}
+                        </button>
+                      );
+                    })}
+
+                    <button
+                      className="pagination-button"
+                      onClick={() => setPage(page + 1)}
+                      disabled={page === data.pagination.last_page}
+                    >
+                      Sau →
+                    </button>
+                  </div>
+
+                  <div className="pagination-info">
+                    Hiển thị {((page - 1) * perPage) + 1}-{Math.min(page * perPage, (data.pagination as any).total)}
+                    trong tổng số {(data.pagination as any).total} đơn hàng ({perPage} đơn hàng/trang)
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -456,8 +751,180 @@ const OrderManagement = () => {
       </div>
 
       {/* View Order Modal */}
-      <div className={`modal fade ${showViewModal ? 'show' : ''}`} style={{ display: showViewModal ? 'block' : 'none' }} id="viewOrderModal" tabIndex="-1" role="dialog" aria-hidden={!showViewModal}>
-        <div className="modal-dialog modal-xl" role="document">
+      <style>{`
+        .order-view-modal .modal-content {
+          border-radius: 14px;
+          box-shadow: 0 4px 32px #6366f133;
+          border: none;
+        }
+        .order-view-modal .modal-header {
+          border-bottom: 1px solid #e5e7eb;
+          background: #f8fafc;
+        }
+        .order-view-modal .modal-title {
+          color: #222;
+          font-weight: 700;
+          font-size: 1.25rem;
+        }
+        .order-view-modal .modal-body {
+          background: #f9fafb;
+          padding: 24px 18px 18px 18px;
+          color: #222;
+          max-height: 70vh;
+          overflow-y: auto;
+        }
+        .order-view-modal .info-block {
+          background: #fff;
+          border-radius: 10px;
+          box-shadow: 0 1px 8px #0001;
+          padding: 18px 16px 10px 16px;
+          margin-bottom: 18px;
+          color: #222;
+        }
+        .order-view-modal .info-block h6,
+        .order-view-modal .info-block p,
+        .order-view-modal .info-block strong,
+        .order-view-modal .info-block label {
+          color: #222;
+        }
+        .order-view-modal .table {
+          background: #fff;
+          border-radius: 8px;
+          overflow: hidden;
+          color: #222;
+        }
+        .order-view-modal .table th {
+          background: #e0e7ff;
+          color: #222;
+          font-weight: 600;
+        }
+        .order-view-modal .table td, .order-view-modal .table th {
+          vertical-align: middle;
+          padding: 10px 8px;
+          color: #222;
+        }
+        .order-view-modal .order-total {
+          text-align: right;
+          font-size: 1.2rem;
+          color: #d97706;
+          font-weight: 700;
+          margin-top: 10px;
+        }
+        .order-view-modal .order-summary h6 {
+          text-align: right;
+          margin-bottom: 6px;
+          color: #222;
+        }
+        /* --- Modal cập nhật đơn hàng --- */
+        .modal#updateOrderModal .modal-content {
+          border-radius: 14px;
+          box-shadow: 0 4px 32px #6366f133;
+          border: none;
+        }
+        .modal#updateOrderModal .modal-header {
+          border-bottom: 1px solid #e5e7eb;
+          background: #f8fafc;
+        }
+        .modal#updateOrderModal .modal-title {
+          color: #222;
+          font-weight: 700;
+          font-size: 1.15rem;
+        }
+        .modal#updateOrderModal .modal-body,
+        .modal#updateOrderModal label,
+        .modal#updateOrderModal input,
+        .modal#updateOrderModal textarea,
+        .modal#updateOrderModal select,
+        .modal#updateOrderModal strong,
+        .modal#updateOrderModal p,
+        .modal#updateOrderModal h5 {
+          color: #222;
+        }
+        .modal#updateOrderModal .form-control {
+          color: #222;
+        }
+        .modal#updateOrderModal .form-group label {
+          font-weight: 600;
+        }
+        .modal#updateOrderModal .modal-footer {
+          border-top: 1px solid #e5e7eb;
+        }
+        /* --- Modal xem chi tiết đơn hàng --- */
+        .order-view-modal .modal-content {
+          border-radius: 14px;
+          box-shadow: 0 4px 32px #6366f133;
+          border: none;
+        }
+        .order-view-modal .modal-header {
+          border-bottom: 1px solid #e5e7eb;
+          background: #f8fafc;
+        }
+        .order-view-modal .modal-title {
+          color: #222;
+          font-weight: 700;
+          font-size: 1.25rem;
+        }
+        .order-view-modal .modal-body {
+          background: #f9fafb;
+          padding: 24px 18px 18px 18px;
+          color: #222;
+          max-height: 70vh;
+          overflow-y: auto;
+        }
+        .order-view-modal .info-block {
+          background: #fff;
+          border-radius: 10px;
+          box-shadow: 0 1px 8px #0001;
+          padding: 18px 16px 10px 16px;
+          margin-bottom: 18px;
+          color: #222;
+        }
+        .order-view-modal .info-block h6,
+        .order-view-modal .info-block p,
+        .order-view-modal .info-block strong,
+        .order-view-modal .info-block label {
+          color: #222;
+        }
+        .order-view-modal .table {
+          background: #fff;
+          border-radius: 8px;
+          overflow: hidden;
+          color: #222;
+        }
+        .order-view-modal .table th {
+          background: #e0e7ff;
+          color: #222;
+          font-weight: 600;
+        }
+        .order-view-modal .table td, .order-view-modal .table th {
+          vertical-align: middle;
+          padding: 10px 8px;
+          color: #222;
+        }
+        .order-view-modal .order-total {
+          text-align: right;
+          font-size: 1.2rem;
+          color: #d97706;
+          font-weight: 700;
+          margin-top: 10px;
+        }
+        .order-view-modal .order-summary h6 {
+          text-align: right;
+          margin-bottom: 6px;
+          color: #222;
+        }
+        @media (max-width: 768px) {
+          .order-view-modal .row {
+            flex-direction: column;
+          }
+          .order-view-modal .col-md-6 {
+            width: 100%;
+            margin-bottom: 16px;
+          }
+        }
+      `}</style>
+      <div className={`modal fade order-view-modal ${showViewModal ? 'show' : ''}`} style={{ display: showViewModal ? 'block' : 'none' }} id="viewOrderModal" tabIndex="-1" role="dialog" aria-hidden={!showViewModal}>
+        <div className="modal-dialog modal-lg" role="document">
           <div className="modal-content">
             <div className="modal-header">
               <h5 className="modal-title">
@@ -473,17 +940,16 @@ const OrderManagement = () => {
                 <>
                   <div className="row">
                     {/* Thông tin khách hàng */}
-                    <div className="col-md-6">
-                      <h6 className="font-weight-bold">Thông tin khách hàng</h6>
+                    <div className="col-md-6 info-block">
+                      <h6>Thông tin khách hàng</h6>
                       <p><strong>Tên:</strong> {selectedOrder.name}</p>
                       <p><strong>Email:</strong> {selectedOrder.email || 'N/A'}</p>
                       <p><strong>SĐT:</strong> {selectedOrder.phone || 'N/A'}</p>
                       <p><strong>Địa chỉ:</strong> {selectedOrder.address || 'N/A'}</p>
                     </div>
-
                     {/* Thông tin đơn hàng */}
-                    <div className="col-md-6">
-                      <h6 className="font-weight-bold">Thông tin đơn hàng</h6>
+                    <div className="col-md-6 info-block">
+                      <h6>Thông tin đơn hàng</h6>
                       <p><strong>Mã đơn:</strong> #{selectedOrder.order_number}</p>
                       <p><strong>Ngày tạo:</strong> {formatDate(selectedOrder.created_at)}</p>
                       <p>
@@ -502,59 +968,60 @@ const OrderManagement = () => {
                       <p><strong>Ghi chú:</strong> {selectedOrder.note || 'Không có'}</p>
                     </div>
                   </div>
-
                   {/* Danh sách sản phẩm */}
-                  {selectedOrder.items?.length > 0 && (
-                    <div className="mt-4">
-                      <h6 className="font-weight-bold">Sản phẩm trong đơn hàng</h6>
-                      <div className="table-responsive">
-                        <table className="table table-bordered table-striped">
-                          <thead className="thead-light">
-                            <tr>
-                              <th>#</th>
-                              <th>Hình ảnh</th>
-                              <th>Tên sản phẩm</th>
-                              <th>Giá</th>
-                              <th>Số lượng</th>
-                              <th>Thành tiền</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {selectedOrder.items.map((item, index) => (
-                              <tr key={item.id || index}>
-                                <td>{index + 1}</td>
-                                <td>
+                  <div className="mt-4">
+                    <h6 className="font-weight-bold">Sản phẩm trong đơn hàng</h6>
+                    <div className="table-responsive">
+                      <table className="table table-bordered table-striped">
+                        <thead className="thead-light">
+                          <tr>
+                            <th>#</th>
+                            <th>Hình ảnh</th>
+                            <th>Tên sản phẩm</th>
+                            <th>Giá</th>
+                            <th>Số lượng</th>
+                            <th>Thành tiền</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {selectedOrder.items.map((item, index) => (
+                            <tr key={item.id || index}>
+                              <td>{index + 1}</td>
+                              <td>
                                   <img
-                                    src={`/${item.product_image}`}
+                                    src={
+                                      item.product_image?.startsWith('http')
+                                        ? item.product_image
+                                        : `/img/${item.product_image}`
+                                    }
                                     alt={item.product_name}
                                     style={{ width: '50px', height: '50px', objectFit: 'cover' }}
                                   />
                                 </td>
-                                <td>{item.product_name}</td>
-                                <td>{formatCurrency(parseFloat(item.final_price))}</td>
-                                <td>{item.quantity}</td>
-                                <td>{formatCurrency(parseFloat(item.total))}</td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
+                              <td>{item.product_name}</td>
+                              <td>{formatCurrency(parseFloat(item.final_price))}</td>
+                              <td>{item.quantity}</td>
+                              <td>{formatCurrency(parseFloat(item.total))}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
                     </div>
-                  )}
-
+                  </div>
                   {/* Tổng đơn hàng */}
-                  <div className="mt-4 text-right">
+                  <div className="order-summary mt-3">
                     <h6><strong>Tổng tiền hàng:</strong> {formatCurrency(parseFloat(selectedOrder.subtotal || 0))}</h6>
                     <h6><strong>Phí vận chuyển:</strong> {formatCurrency(parseFloat(selectedOrder.shipping_fee || 0))}</h6>
                     {selectedOrder.discount && (
                       <h6><strong>Giảm giá:</strong> -{formatCurrency(parseFloat(selectedOrder.discount))}</h6>
                     )}
-                    <h5 className="text-danger"><strong>Tổng thanh toán:</strong> {formatCurrency(parseFloat(selectedOrder.total || 0))}</h5>
+                    <div className="order-total">
+                      <span><strong>Tổng thanh toán:</strong> {formatCurrency(parseFloat(selectedOrder.total || 0))}</span>
+                    </div>
                   </div>
                 </>
               )}
             </div>
-
             <div className="modal-footer">
               <button type="button" className="btn btn-secondary" onClick={() => setShowViewModal(false)}>
                 <i className="fas fa-times mr-1"></i>Đóng

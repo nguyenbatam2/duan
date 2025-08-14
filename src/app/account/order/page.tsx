@@ -31,7 +31,6 @@ const STATUS_DISPLAY: Record<string, { text: string, color: string }> = {
 
 // Các trạng thái không thể hủy đơn hàng
 const CANNOT_CANCEL_STATUSES = ['delivered', 'completed', 'cancelled', 'refunded'];
-
 // Các trạng thái bình luận 
 const Reviews_STATUSES = ["delivered"];
 
@@ -40,11 +39,12 @@ const calculateOrderTotal = (items: any[]) => items.reduce((total, item) => tota
 
 export default function Order() {
     const [showModal, setShowModal] = useState(false);
-    const [selectedOrder, setSelectedOrder] = useState(null);
+    const [selectedOrder, setSelectedOrder] = useState<any>(null);
     const [status, setStatus] = useState("Tất cả");
     const [, setModalLoading] = useState(false);
     const [page, setPage] = useState(1);
     const { data, error, isLoading, mutate } = useSWR(['orders', page], () => getOrders(page));
+
     const [showReviewForm, setShowReviewForm] = useState<number | null>(null); // chứa ID đơn hàng đang được mở form
     const [reviewData, setReviewData] = useState({
         rating: 5,
@@ -132,9 +132,8 @@ export default function Order() {
                                                 <div className="order-container" key={order.id}>
                                                     <div className="order-header">
                                                         <div className="order-info">
-                                                            <span style={{ fontWeight: "bold" }}>Đơn hàng</span>
-                                                            <strong>#{order.id}</strong>
-                                                            <span>{new Date(order.created_at).toLocaleDateString('vi-VN')}</span>
+                                                            <span style={{ fontWeight: "bold" }}>Đơn hàng :</span>
+                                                            <span>{order.order_number}</span>
                                                             <span className="order-status" style={{ backgroundColor: `${color}20`, color }}>{text}</span>
                                                         </div>
                                                         <div className="order-buttons">
@@ -147,126 +146,15 @@ export default function Order() {
                                                                     Hủy đơn
                                                                 </button>
                                                             )}
-
                                                         </div>
                                                     </div>
-                                                            
-                                                    <div className="order-items">
-                                                        {order.items.map(item => (
-                                                            <div className="order-item" key={item.id}>
-                                                                <div className="item-left">
-                                                                    <img
-                                                                        src={item.product_image?.startsWith('http') ? item.product_image : `/${item.product_image}`}
-                                                                        alt={item.product_name}
-                                                                        className="item-image"
-                                                                        width="48"
-                                                                        height="48"
-                                                                    />
-                                                                    <div className="item-details">
-                                                                        <strong>{item.product_name}</strong>
-                                                                        <div className="item-details_price">
-                                                                            Giá: {item.price.toLocaleString('vi-VN')} đ
-                                                                            <span style={{ marginLeft: "16px" }}>Số lượng: <span style={{ color: "red" }}>x{item.quantity}</span></span>
-                                                                        </div>
-                                                                    </div>
-                                                                </div>
-                                                                <div className="item-price">
-                                                                    {(item.price * item.quantity).toLocaleString('vi-VN')} đ
-                                                                </div>
-                                                                {Reviews_STATUSES.includes(order.status) && (
-                                                                    <>
-                                                                        <button
-                                                                            className="btn-reviews"
-                                                                            onClick={() => {
-                                                                                setShowReviewForm(item.product_id)
-                                                                            }}
-                                                                        >
-                                                                            Bình luận
-                                                                        </button>
-                                                                    </>
-                                                                )}
-                                                                {showReviewForm === item.product_id && (
-                                                        <div className="mt-3 p-3 border rounded bg-light shadow-sm">
-                                                                        <h4 className="mb-3">Gửi đánh giá cho sản phẩm #{item.product_id}</h4>
 
-                                                            <div className="mb-3">
-                                                                {[1, 2, 3, 4, 5].map((star) => (
-                                                                    <i
-                                                                        key={star}
-                                                                        className={`fa-star me-1 ${reviewData.rating >= star ? 'fas text-warning' : 'far text-muted'}`}
-                                                                        style={{ cursor: "pointer", fontSize: "20px" }}
-                                                                        onClick={() => setReviewData((prev) => ({ ...prev, rating: star }))}
-                                                                    />
-                                                                ))}
-                                                                <span className="ms-2"> {reviewData.rating}  / 5</span>
-                                                            </div>
-
-                                                            <div className="mb-3">
-                                                                <textarea
-                                                                    className="form-control"
-                                                                    placeholder="Viết đánh giá của bạn..."
-                                                                    rows={3}
-                                                                    value={reviewData.comment}
-                                                                    onChange={(e) =>
-                                                                        setReviewData((prev) => ({ ...prev, comment: e.target.value }))
-                                                                    }
-                                                                />
-                                                            </div>
-
-                                                            <div className="mb-3">
-                                                                <label className="form-label">Ảnh minh họa (tối đa 3 ảnh)</label>
-                                                                <input
-                                                                    type="file"
-                                                                    className="form-control"
-                                                                    accept="image/*"
-                                                                    multiple
-                                                                    onChange={(e) =>
-                                                                        setReviewData((prev) => ({
-                                                                            ...prev,
-                                                                            images: Array.from(e.target.files || []).slice(0, 3),
-                                                                        }))
-                                                                    }
-                                                                />
-                                                                <div className="mt-2 d-flex gap-2 flex-wrap">
-                                                                    {reviewData.images?.map((file: File, idx: number) => (
-                                                                        <img
-                                                                            key={idx}
-                                                                            src={URL.createObjectURL(file)}
-                                                                            alt="preview"
-                                                                            width={100}
-                                                                            height={100}
-                                                                            style={{ objectFit: "cover", borderRadius: "8px" }}
-                                                                        />
-                                                                    ))}
-                                                                </div>
-                                                            </div>
-
-                                                            <div className="d-flex gap-2">
-                                                                <button
-                                                                    className="btn btn-success btn-sm"
-                                                                                onClick={() => handleSubmitReview(item.product_id)
-                                                                    }
-                                                                >
-                                                                    Gửi đánh giá
-                                                                </button>
-                                                                <button
-                                                                    className="btn btn-secondary btn-sm"
-                                                                    onClick={() => setShowReviewForm(null)}
-                                                                >
-                                                                    Hủy
-                                                                </button>
-                                                            </div>
+                                                    {/* Chỉ hiển thị tổng số sản phẩm và tiền nếu chưa có items */}
+                                                    <div className="oder-footers">
+                                                        <span>Ngày tạo: {new Date(order.created_at).toLocaleDateString('vi-VN')} - Dự kiến ngày nhận đơn hàng: {new Date(new Date(order.created_at).getTime() + (3 + Math.floor(Math.random() * 2)) * 24 * 60 * 60 * 1000).toLocaleDateString('vi-VN')}</span>
+                                                        <div className="order-footer">
+                                                            <div style={{ fontWeight: "bold", color: "#140f0fcb" }}>Thanh toán: <strong style={{ color: "red" }}>{(order.total).toLocaleString('vi-VN')}đ</strong> </div>
                                                         </div>
-                                                    )}
-                                                            </div>
-                                                        ))}
-                                                    </div>
-
-
-                                                    
-                                                    <div className="order-footer">
-                                                        <div>Tổng {order.items.reduce((sum, item) => sum + item.quantity, 0)} sản phẩm</div>
-                                                        <div className="total-price">Tổng tiền: {calculateOrderTotal(order.items).toLocaleString('vi-VN')}đ</div>
                                                     </div>
                                                 </div>
                                             );
@@ -276,8 +164,8 @@ export default function Order() {
                                             <div>Không có đơn hàng nào.</div>
                                         </div>
                                     )}
-                                    
-                                    {/* 🔽 CHÈN PHÂN TRANG Ở ĐÂY */}
+
+                                    {/* PHÂN TRANG */}
                                     <div className="pagination">
                                         <button
                                             disabled={page === 1}
@@ -285,15 +173,16 @@ export default function Order() {
                                         >
                                             ← Trang trước
                                         </button>
-                                        <span>Trang {pagination.current_page} / {pagination.last_page}</span>
+                                        <span>Trang {pagination?.current_page} / {pagination?.last_page}</span>
                                         <button
-                                            disabled={page === pagination.last_page}
+                                            disabled={page === pagination?.last_page}
                                             onClick={() => setPage(page + 1)}
                                         >
                                             Trang sau →
                                         </button>
                                     </div>
                                 </div>
+
 
                             </div>
                         </div>
@@ -349,23 +238,109 @@ export default function Order() {
                                     {/* Product List */}
                                     <div className={styles.productsSection}>
                                         <div className={styles.orderItems}>
-                                    {selectedOrder.items.map(item => (
-                                        <div className={styles.orderItem} key={item.id} style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
-                                            <img
-                                                src={`/${item.product_image}`}
-                                                alt={item.product_name}
+                                            {selectedOrder.items.map((item) => (
+                                                <div key={item.id}>
+                                                    <div
+                                                        className={styles.orderItem}
+                                                        style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}
+                                                    >
+                                                        <img
+                                                            src={`/${item.product_image}`}
+                                                            alt={item.product_name}
+                                                            style={{ width: 50, height: 50, objectFit: 'cover' }}
+                                                        />
+                                                        <div>
+                                                            <strong>{item.product_name}</strong>
+                                                            <p>{Number(item.price).toLocaleString('vi-VN')}đ x {item.quantity}</p>
+                                                        </div>
+                                                        <div style={{ marginLeft: 'auto', fontWeight: 'bold' }}>
+                                                            {(Number(item.price) * item.quantity).toLocaleString('vi-VN')}đ
+                                                        </div>
+                                                    </div>
 
-                                                style={{ width: 50, height: 50, objectFit: 'cover' }}
-                                            />
-                                            <div>
-                                                <strong>{item.product_name}</strong>
-                                                <p>{Number(item.price).toLocaleString('vi-VN')}đ x {item.quantity}</p>
-                                            </div>
-                                            <div style={{ marginLeft: 'auto', fontWeight: 'bold' }}>
-                                                {(Number(item.price) * item.quantity).toLocaleString('vi-VN')}đ
-                                            </div>
-                                        </div>
-                                    ))}
+                                                    <div
+                                                        className={styles.orderFooter}
+                                                        style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '8px' }}
+                                                    >
+                                                        {Reviews_STATUSES.includes(selectedOrder.status) && (
+                                                            <button
+                                                                className="btn-reviews"
+                                                                onClick={() => setShowReviewForm(item.id)}
+                                                            >
+                                                                Bình luận
+                                                            </button>
+                                                        )}
+                                                    </div>
+
+                                                    {showReviewForm === item.id && (
+                                                        <div className="mt-3 p-3 border rounded bg-light shadow-sm">
+                                                            <h4 className="mb-3">Gửi đánh giá cho sản phẩm #{item.product_id}</h4>
+                                                            <div className="mb-3">
+                                                                {[1, 2, 3, 4, 5].map((star) => (
+                                                                    <i key={star} className={`fa-star me-1 ${reviewData.rating >= star ? 'fas text-warning' : 'far text-muted'}`}
+                                                                        style={{ cursor: "pointer", fontSize: "20px" }}
+                                                                        onClick={() => setReviewData((prev) => ({ ...prev, rating: star }))}
+                                                                    />
+                                                                ))}
+                                                                <span className="ms-2"> {reviewData.rating} / 5</span>
+                                                            </div>
+
+                                                            <div className="mb-3">
+                                                                <textarea className="form-control" placeholder="Viết đánh giá của bạn..." rows={3} value={reviewData.comment}
+                                                                    onChange={(e) =>
+                                                                        setReviewData((prev) => ({ ...prev, comment: e.target.value }))
+                                                                    }
+                                                                />
+                                                            </div>
+
+                                                            <div className="mb-3">
+                                                                <label className="form-label">Ảnh minh họa (tối đa 3 ảnh)</label>
+                                                                <input
+                                                                    type="file"
+                                                                    className="form-control"
+                                                                    accept="image/*"
+                                                                    multiple
+                                                                    onChange={(e) =>
+                                                                        setReviewData((prev) => ({
+                                                                            ...prev,
+                                                                            images: Array.from(e.target.files || []).slice(0, 3),
+                                                                        }))
+                                                                    }
+                                                                />
+                                                                <div className="mt-2 d-flex gap-2 flex-wrap">
+                                                                    {reviewData.images?.map((file: File, idx: number) => (
+                                                                        <img
+                                                                            key={idx}
+                                                                            src={URL.createObjectURL(file)}
+                                                                            alt="preview"
+                                                                            width={100}
+                                                                            height={100}
+                                                                            style={{ objectFit: "cover", borderRadius: "8px" }}
+                                                                        />
+                                                                    ))}
+                                                                </div>
+                                                            </div>
+
+                                                            <div className="d-flex gap-2">
+                                                                <button
+                                                                    className="btn btn-success btn-sm"
+                                                                    onClick={() => handleSubmitReview(item.product_id)}
+                                                                >
+                                                                    Gửi đánh giá
+                                                                </button>
+                                                                <button
+                                                                    className="btn btn-secondary btn-sm"
+                                                                    onClick={() => setShowReviewForm(null)}
+                                                                >
+                                                                    Hủy
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            ))}
+
+
                                 </div>
                                     </div>
                                 </div>
@@ -405,6 +380,7 @@ export default function Order() {
                                         </div>
                                     </div>
                                     <button className={`${styles.btn} ${styles.btnBlock}`} onClick={() => setShowModal(false)}>Đóng</button>
+                                    {/* <button className="btn btn btn-primary" type="button"><span className="txt-main">Đóng</span></button> */}
                                 </div>
                             </div>
                         </div>

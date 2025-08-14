@@ -1,29 +1,40 @@
-export interface Event {
-  id?: number;
+export interface AdminEvent {
+  id: number;
   name: string;
-  description?: string;
-  start_time: string; // ISO format
-  end_time: string;
-  status: "draft" | "active";
-  banner_image?: string;
-  discount_type?: "percentage" | "fixed";
-  discount_value?: number;
-  is_featured: boolean;
-  sort_order: number;
-  created_at?: string;
-  updated_at?: string;
+  status: string;
+  is_featured?: boolean;
+  // Thêm các trường khác nếu API trả về
+}
+
+export interface PaginationLink {
+  url: string | null;
+  label: string;
+  active: boolean;
 }
 
 export interface PaginatedEvents {
   data: Event[];
+  links: {
+    first: string;
+    last: string;
+    prev: string | null;
+    next: string | null;
+  };
   meta: {
     current_page: number;
+    from: number | null;
     last_page: number;
-    total?: number;
-    per_page?: number;
+    links: PaginationLink[];
+    path: string;
+    per_page: number;
+    to: number | null;
+    total: number;
   };
-  links: {
-    prev?: string | null;
-    next?: string | null;
-  };
+}
+export interface Event {
+  id: number;
+  name: string;
+  status: string;
+  is_featured?: boolean;
+  // Thêm các trường khác nếu API trả về
 }

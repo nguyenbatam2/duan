@@ -61,6 +61,13 @@ export default function ReviewsPage() {
     }
   };
 
+  // Sắp xếp: bình luận bị tố cáo lên đầu
+  const sortedReviews = [...reviews].sort((a, b) => {
+    // Ưu tiên flagged lên đầu (giả sử flagged === 1 là bị tố cáo)
+    if ((b.flagged || b.status === 'flagged') && !(a.flagged || a.status === 'flagged')) return 1;
+    if ((a.flagged || a.status === 'flagged') && !(b.flagged || b.status === 'flagged')) return -1;
+    return 0;
+  });
   return (
     <>
       <style>{`
@@ -80,17 +87,29 @@ export default function ReviewsPage() {
           padding: 13px 20px;
           border-bottom: 1px solid #e9ebed;
           font-size: 1.04rem;
+          text-align: center;
         }
         .reviews-modern-table th {
           background: #f1f5f9;
-          font-weight: 600;
+          font-weight: 700;
           color: #2563eb;
           border-bottom: 2px solid #e0e7ff;
-          font-size: 1.08rem;
+          font-size: 1.12rem;
         }
         .reviews-modern-table tr:last-child td {
           border-bottom: none;
         }
+        .badge-status {
+          display: inline-block;
+          padding: 4px 14px;
+          border-radius: 12px;
+          font-weight: 600;
+          font-size: 0.97em;
+          color: #fff;
+        }
+        .badge-status.pending { background: #fbbf24; color: #b45309; }
+        .badge-status.approved { background: #22c55e; }
+        .badge-status.rejected { background: #ef4444; }
         .reviews-modern-btn {
           border: none;
           border-radius: 6px;
@@ -105,10 +124,6 @@ export default function ReviewsPage() {
         .reviews-modern-btn.approve:hover { background: #2563eb; color: #fff; }
         .reviews-modern-btn.reject { background: #fee2e2; color: #dc2626; }
         .reviews-modern-btn.reject:hover { background: #dc2626; color: #fff; }
-        .reviews-modern-btn.primary { background: linear-gradient(90deg, #6366f1 0%, #2563eb 100%); color: #fff; font-weight: 600; }
-        .reviews-modern-btn.primary:hover { background: #2563eb; }
-        .reviews-modern-btn.secondary { background: #e0e7ff; color: #2563eb; }
-        .reviews-modern-btn.secondary:hover { background: #2563eb; color: #fff; }
         .reviews-modern-modal .modal-content {
           border-radius: 14px;
           box-shadow: 0 4px 32px #6366f133;
@@ -167,41 +182,62 @@ export default function ReviewsPage() {
         }
       `}</style>
       <div className="reviews-modern-container">
-        <h1 className="text-2xl font-bold mb-4">Danh sách Reviews</h1>
+        <h1 className="reviews-modern-header">Quản lý đánh giá sản phẩm</h1>
 
         {loading && <p>Đang tải...</p>}
         {error && <p className="text-red-500">Lỗi: {error}</p>}
 
         {!loading && !error && (
-          <div className="space-y-4">
-            {reviews.length > 0 ? (
-              reviews.map((review) => (
-                <div key={review.id} className="border p-4 rounded-lg shadow">
-                  <h2 className="text-lg font-semibold">
-                    {review.product?.name || "Tên sản phẩm"}
-                  </h2>
-                  <p>Người dùng: {review.user?.name}</p>
-                  <p>Đánh giá: {review.rating} sao</p>
-                  <p>Bình luận: {review.comment}</p>
-                  <p>Trạng thái: {review.status}</p>
-                  <p>Ngày tạo: {new Date(review.created_at).toLocaleString()}</p>
-                  {(review.status === "pending") && (
-                    <div className="mt-2 flex gap-2">
-                      <button className="btn btn-success btn-sm" onClick={() => openModal(review, "approve")}>Duyệt</button>
-                      <button className="btn btn-danger btn-sm" onClick={() => openModal(review, "reject")}>Từ chối</button>
-                    </div>
-                  )}
-                </div>
-              ))
-            ) : (
-              <p>Không có review nào.</p>
-            )}
+          <div className="reviews-modern-table">
+            <table className="table" style={{ marginBottom: 0 }}>
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Sản phẩm</th>
+                  <th>Người dùng</th>
+                  <th>Đánh giá</th>
+                  <th>Bình luận</th>
+                  <th>Trạng thái</th>
+                  <th>Ngày tạo</th>
+                  <th>Hành động</th>
+                </tr>
+              </thead>
+              <tbody>
+                {sortedReviews.length > 0 ? (
+                  sortedReviews.map((review) => (
+                    <tr key={review.id}>
+                      <td>{review.id}</td>
+                      <td>{review.product?.name || "Tên sản phẩm"}</td>
+                      <td>{review.user?.name || "-"}</td>
+                      <td>{review.rating} ⭐</td>
+                      <td style={{ maxWidth: 220, whiteSpace: 'pre-line', overflow: 'hidden', textOverflow: 'ellipsis' }}>{review.comment}</td>
+                      <td>
+                        <span className={`badge-status ${review.status}`}>
+                          {review.status === 'pending' ? 'Chờ duyệt' : review.status === 'approved' ? 'Đã duyệt' : review.status === 'rejected' ? 'Từ chối' : review.status}
+                        </span>
+                      </td>
+                      <td>{new Date(review.created_at).toLocaleString()}</td>
+                      <td>
+                        {review.status === "pending" && (
+                          <>
+                            <button className="reviews-modern-btn approve" onClick={() => openModal(review, "approve")}>Duyệt</button>
+                            <button className="reviews-modern-btn reject" onClick={() => openModal(review, "reject")}>Từ chối</button>
+                          </>
+                        )}
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr><td colSpan={8}>Không có review nào.</td></tr>
+                )}
+              </tbody>
+            </table>
           </div>
         )}
 
         {/* Modal duyệt/từ chối review */}
         {showModal && (
-          <div className="modal show d-block" tabIndex={-1}>
+          <div className="modal show d-block reviews-modern-modal" tabIndex={-1}>
             <div className="modal-dialog">
               <div className="modal-content">
                 <div className="modal-header">
@@ -223,10 +259,10 @@ export default function ReviewsPage() {
                     </div>
                   </div>
                   <div className="modal-footer">
-                    <button type="button" className="btn btn-secondary" onClick={closeModal} disabled={submitting}>
+                    <button type="button" className="reviews-modern-btn secondary" onClick={closeModal} disabled={submitting}>
                       Đóng
                     </button>
-                    <button type="submit" className="btn btn-primary" disabled={submitting}>
+                    <button type="submit" className="reviews-modern-btn primary" disabled={submitting}>
                       {submitting ? "Đang gửi..." : (actionType === "approve" ? "Duyệt" : "Từ chối")}
                     </button>
                   </div>

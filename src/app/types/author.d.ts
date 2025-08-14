@@ -11,6 +11,16 @@ export interface LoginData {
   password: string;
 }
 
+export interface UserAddress {
+  id: number;
+  user_id: number;
+  name: string;
+  phone: string;
+  address: string;
+  is_default: number;
+  created_at: string;
+  updated_at: string;
+}
 export interface Author {
   id: number;
   name: string;

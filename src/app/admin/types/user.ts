@@ -10,7 +10,6 @@ export interface Order {
 }
 
 export interface User {
-  [x: string]: string;
   id: number;
   name: string;
   email: string;
@@ -22,4 +21,5 @@ export interface User {
   customer_rank_id: number | null;
   customer_rank: CustomerRank | null;
   orders: Order[];
+  is_locked: boolean;
 }

@@ -1,0 +1,112 @@
+ #productList {
+     max-height: 480px;
+     overflow-y: auto;
+     padding-right: 0.5rem;
+     scroll-behavior: smooth;
+ }
+
+ #productList::-webkit-scrollbar {
+     width: 8px;
+ }
+
+ #productList::-webkit-scrollbar-thumb {
+     background-color: rgba(107, 114, 128, 0.5);
+     border-radius: 4px;
+ }
+
+ #productList::-webkit-scrollbar-track {
+     background: transparent;
+ }
+
+ /* Firefox scrollbar */
+ #productList {
+     scrollbar-width: thin;
+     scrollbar-color: rgba(107, 114, 128, 0.5) transparent;
+ }
+
+ /* Product item styling */
+ .product-item {
+     display: flex;
+     align-items: center;
+     gap: 1rem;
+     padding: 0.75rem 0;
+     border-bottom: 1px solid #e5e7eb;
+     /* Tailwind gray-200 */
+ }
+
+ .product-item:last-child {
+     border-bottom: none;
+ }
+
+ .product-image {
+     width: 80px;
+     height: 80px;
+     object-fit: cover;
+     border-radius: 0.375rem;
+     /* rounded-md */
+     flex-shrink: 0;
+ }
+
+ .product-info {
+     flex-grow: 1;
+     display: flex;
+     flex-direction: column;
+     gap: 0.25rem;
+ }
+
+ .product-name {
+     font-weight: 600;
+     font-size: 1.125rem;
+     /* text-lg */
+     color: #1f2937;
+     /* gray-800 */
+ }
+
+ .product-price {
+     color: #4f46e5;
+     /* indigo-600 */
+     font-weight: 600;
+ }
+
+ .product-total {
+     color: #374151;
+     /* gray-700 */
+ }
+
+ .quantity-controls {
+     display: flex;
+     align-items: center;
+     gap: 0.5rem;
+ }
+
+ .quantity-btn {
+     border: 1px solid #d1d5db;
+     /* gray-300 */
+     background-color: white;
+     color: #374151;
+     /* gray-700 */
+     padding: 0.25rem 0.5rem;
+     border-radius: 0.375rem;
+     cursor: pointer;
+     user-select: none;
+     transition: background-color 0.2s;
+ }
+
+ .quantity-btn:hover,
+ .quantity-btn:focus {
+     background-color: #f3f4f6;
+     /* gray-100 */
+     outline: none;
+ }
+
+ .quantity-input {
+     width: 3rem;
+     text-align: center;
+     border: 1px solid #d1d5db;
+     /* gray-300 */
+     border-radius: 0.375rem;
+     padding: 0.25rem 0;
+     font-weight: 600;
+     color: #374151;
+     /* gray-700 */
+ }

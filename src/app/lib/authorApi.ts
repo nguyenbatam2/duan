@@ -2,7 +2,7 @@
 
 import axios from "axios";
 import Cookies from "js-cookie";
-import { RegisterData, LoginData } from "../types/author";
+import { RegisterData, LoginData, UserAddress } from "../types/author";
 const API_URL = "http://127.0.0.1:8000/api/v1/auth";
 const API_PassWord = "http://127.0.0.1:8000/api/v1/password";
 
@@ -150,16 +150,7 @@ export const updateUserAvatar = async (avatarFile: File) => {
 };
 
 // Địa chỉ user CRUD
-export interface UserAddress {
-  id: number;
-  user_id: number;
-  name: string;
-  phone: string;
-  address: string;
-  is_default: number;
-  created_at: string;
-  updated_at: string;
-}
+
 
 export async function getUserAddresses(): Promise<UserAddress[]> {
   const cookieData = Cookies.get("author");

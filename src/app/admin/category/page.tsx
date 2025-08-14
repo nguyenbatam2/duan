@@ -1,250 +1,161 @@
-"use client"; // Chỉ thị này đánh dấu đây là một Client Component trong Next.js 13+, nghĩa là nó sẽ được render ở phía trình duyệt để xử lý tương tác người dùng.
+"use client";
 
-import { useState } from "react"; // Import hook 'useState' từ React để quản lý trạng thái trong component.
-import useSWR from "swr"; // Import hook 'useSWR' để fetching (lấy) dữ liệu, quản lý cache và revalidation (kiểm tra lại dữ liệu).
-import Link from "next/link"; // Import component 'Link' từ Next.js để điều hướng giữa các trang mà không cần tải lại toàn bộ trang.
- // Import file CSS tùy chỉnh cho giao diện.
-import 'bootstrap/dist/css/bootstrap.min.css'; // Import toàn bộ thư viện Bootstrap CSS để định kiểu giao diện.
-import { getCategories, postCategory, putCategory } from "../lib/cartegory"; // Import các hàm API để lấy, tạo và cập nhật danh mục từ file local.
-import { Category } from "../types/cartegory"; // Import định nghĩa kiểu dữ liệu 'Category' từ TypeScript để đảm bảo an toàn kiểu dữ liệu.
-import axios from "axios"; // Import thư viện Axios để thực hiện các yêu cầu HTTP (API calls).
-import Cookies from "js-cookie"; // Import thư viện 'js-cookie' để làm việc dễ dàng với cookies của trình duyệt.
+import { useState } from "react";
+import useSWR from "swr";
+// import Link from "next/link";
+import 'bootstrap/dist/css/bootstrap.min.css';
+import { getCategories, postCategory, putCategory } from "../lib/cartegory";
+import { Category } from "../types/cartegory";
+import axios from "axios";
+import '../style/adminCategory.css'
+import Cookies from "js-cookie";
+import { fetchProductsByCategoryWithPage } from "../lib/product";
+import { Product, PaginatedProducts } from "../types/product";
 
-export default function CategoryPage() { // Định nghĩa component React chức năng 'CategoryPage'.
-  // --- Quản lý trạng thái của Component ---
-  const [searchQuery, setSearchQuery] = useState<string>(""); // Trạng thái cho chuỗi tìm kiếm, ban đầu là rỗng.
-  const [showModal, setShowModal] = useState(false); // Trạng thái điều khiển việc hiển thị modal (pop-up), ban đầu là ẩn.
-  const [editingCategory, setEditingCategory] = useState<Category | null>(null); // Trạng thái lưu trữ danh mục đang được chỉnh sửa (nếu có), ban đầu là null.
-  const [formData, setFormData] = useState<{ name: string; slug: string }>({ name: "", slug: "" }); // Trạng thái lưu trữ dữ liệu của form (tên và slug), ban đầu là rỗng.
+export default function CategoryPage() {
+  const [searchQuery] = useState("");
+  const [showModal, setShowModal] = useState(false);
+  const [editingCategory, setEditingCategory] = useState<Category | null>(null);
+  const [formData, setFormData] = useState<{ name: string; slug: string }>({ name: "", slug: "" });
+  const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [showProductModal, setShowProductModal] = useState(false);
 
-  // --- Lấy dữ liệu danh mục với useSWR ---
-  const { data: categoriesData, isLoading, mutate } = useSWR("categories", getCategories); // Sử dụng useSWR để lấy dữ liệu danh mục.
-  // "categories": key (khóa) để SWR nhận diện và quản lý cache cho dữ liệu này.
-  // getCategories: hàm sẽ được gọi để fetching dữ liệu.
-  // data: categoriesData: dữ liệu trả về từ API.
-  // isLoading: trạng thái cho biết dữ liệu có đang được tải hay không.
-  // mutate: hàm dùng để yêu cầu SWR re-fetch (tải lại) dữ liệu một cách thủ công.
-  
-  const categories: Category[] = Array.isArray(categoriesData?.data) ? categoriesData.data : []; // Đảm bảo 'categories' luôn là một mảng, trích xuất dữ liệu từ response hoặc là mảng rỗng nếu không có dữ liệu.
+  const { data: categoriesData, isLoading, mutate } = useSWR("categories", getCategories);
+  const categories: Category[] = Array.isArray(categoriesData?.data) ? categoriesData.data : [];
+  const filteredCategories = categories.filter(c => c.name.toLowerCase().includes(searchQuery.toLowerCase()));
 
-  // --- Lọc danh mục theo tìm kiếm ---
-  const filteredCategories = categories.filter(c =>
-    c.name.toLowerCase().includes(searchQuery.toLowerCase()) // Lọc danh mục mà tên của chúng chứa chuỗi tìm kiếm (không phân biệt hoa thường).
+  const { data: productsData, isLoading: loadingProducts } = useSWR<PaginatedProducts>(
+    selectedCategoryId !== null ? ["products", selectedCategoryId, currentPage] : null,
+    () => fetchProductsByCategoryWithPage(selectedCategoryId!, currentPage) as Promise<PaginatedProducts>
   );
 
-  // --- Các hàm xử lý sự kiện (Handlers) ---
-
-  // Xử lý khi click vào nút "Sửa"
   const handleEdit = (category: Category) => {
-    setEditingCategory(category); // Đặt danh mục hiện tại là danh mục đang chỉnh sửa.
-    setFormData({ name: category.name, slug: category.slug }); // Điền dữ liệu của danh mục vào form.
-    setShowModal(true); // Hiển thị modal chỉnh sửa.
+    setEditingCategory(category);
+    setFormData({ name: category.name, slug: category.slug });
+    setShowModal(true);
   };
 
-  // Xử lý khi click vào nút "Xoá"
   const handleDelete = async (id: number) => {
     try {
-      const token = Cookies.get("token"); // Lấy token xác thực từ cookie.
-      if (!token) throw new Error("Token không tồn tại"); // Nếu không có token, ném lỗi.
-
-      await axios.delete(`http://127.0.0.1:8000/api/v1/admin/categories/${id}`, { // Gửi yêu cầu DELETE đến API để xóa danh mục.
-        headers: {
-          Authorization: `Bearer ${token}`, // Gửi token trong header Authorization để xác thực.
-          Accept: "application/json",
-        },
+      const token = Cookies.get("token");
+      if (!token) throw new Error("Token không tồn tại");
+      await axios.delete(`http://127.0.0.1:8000/api/v1/admin/categories/${id}`, {
+        headers: { Authorization: `Bearer ${token}`, Accept: "application/json" },
       });
-      await mutate();  // Gọi mutate() để re-fetch dữ liệu, cập nhật lại danh sách sau khi xóa thành công.
+      await mutate();
     } catch (err) {
-      console.error("Xoá thất bại", err); // Ghi lỗi ra console nếu xóa thất bại.
-      alert("Xoá thất bại"); // Hiển thị thông báo lỗi cho người dùng.
+      console.error("Xoá thất bại", err);
+      alert("Xoá thất bại");
     }
   };
 
-  // Xử lý khi gửi form (Thêm mới hoặc Cập nhật)
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault(); // Ngăn chặn hành vi mặc định của form (tải lại trang).
+    e.preventDefault();
     try {
-      if (editingCategory) { // Nếu đang ở chế độ chỉnh sửa (editingCategory có giá trị).
-        await putCategory(editingCategory.id, formData); // Gọi hàm putCategory để cập nhật danh mục.
-      } else { // Nếu đang ở chế độ thêm mới.
-        await postCategory(formData); // Gọi hàm postCategory để tạo danh mục mới.
+      if (editingCategory) {
+        await putCategory(editingCategory.id, formData);
+      } else {
+        await postCategory(formData);
       }
-      setShowModal(false); // Ẩn modal sau khi submit thành công.
-      setEditingCategory(null); // Đặt lại editingCategory về null.
-      setFormData({ name: "", slug: "" }); // Xóa dữ liệu trong form.
-      await mutate(); // Gọi mutate() để re-fetch dữ liệu, cập nhật lại danh sách.
+      setShowModal(false);
+      setEditingCategory(null);
+      setFormData({ name: "", slug: "" });
+      await mutate();
     } catch (err) {
-      console.error("Lỗi submit", err); // Ghi lỗi ra console.
-      alert("Đã xảy ra lỗi khi lưu dữ liệu"); // Hiển thị thông báo lỗi cho người dùng.
+      console.error("Lỗi submit", err);
+      alert("Đã xảy ra lỗi khi lưu dữ liệu");
     }
   };
 
-  // --- JSX (Giao diện người dùng) ---
+  const openProductModal = (categoryId: number) => {
+    setSelectedCategoryId(categoryId);
+    setCurrentPage(1);
+    setShowProductModal(true);
+  };
+
+  const closeProductModal = () => {
+    setShowProductModal(false);
+    setSelectedCategoryId(null);
+  };
+
   return (
     <>
       <style>{`
-        .main_content_iner {
-          background: linear-gradient(120deg, #f8fafc 0%, #e0e7ff 100%);
-          min-height: 100vh;
-        }
-        .QA_table.mb_30 {
-          background: #fff;
-          border-radius: 18px;
-          box-shadow: 0 2px 16px #0001;
-          overflow: hidden;
-          margin-bottom: 32px;
-        }
-        .QA_table th, .QA_table td {
-          padding: 13px 20px;
-          border-bottom: 1px solid #f1f5f9;
-          font-size: 1.04rem;
-        }
-        .QA_table th {
-          background: #f1f5f9;
-          font-weight: 600;
-          color: #2563eb;
-          border-bottom: 2px solid #e0e7ff;
-          font-size: 1.08rem;
-        }
-        .QA_table tr:last-child td {
-          border-bottom: none;
-        }
-        .btn_1 {
+        .modal-content {
+          border-radius: 12px;
+          box-shadow: 0 4px 32px #6366f133;
           border: none;
-          border-radius: 7px;
-          padding: 8px 22px;
-          font-size: 1.05rem;
-          font-weight: 600;
-          background: linear-gradient(90deg, #6366f1 0%, #2563eb 100%);
-          color: #fff;
-          box-shadow: 0 2px 8px #6366f122;
-          transition: background 0.15s, color 0.15s, box-shadow 0.15s;
         }
-        .btn_1:hover {
-          background: #2563eb;
-          color: #fff;
-          box-shadow: 0 4px 16px #6366f133;
+        .modal-header {
+          border-bottom: 1px solid #e5e7eb;
+          background: #f8fafc;
         }
-        .btn-info {
-          background: #e0e7ff;
-          color: #2563eb;
-          border: none;
-          font-weight: 500;
-          border-radius: 6px;
-          transition: background 0.15s, color 0.15s;
+        .modal-title, .modal-header, .modal-body, .modal-footer, label, input, button, h5, .form-control {
+          color: #222 !important;
         }
-        .btn-info:hover {
-          background: #2563eb;
-          color: #fff;
+        .modal-title {
+          font-weight: 700;
         }
-        .btn-warning {
-          background: #fef9c3;
-          color: #b45309;
-          border: none;
-          font-weight: 500;
-          border-radius: 6px;
-          transition: background 0.15s, color 0.15s;
+        .modal-body {
+          background: #f9fafb;
         }
-        .btn-warning:hover {
-          background: #fde68a;
-          color: #a16207;
-        }
-        .btn-danger {
-          background: #fee2e2;
-          color: #dc2626;
-          border: none;
-          font-weight: 500;
-          border-radius: 6px;
-          transition: background 0.15s, color 0.15s;
-        }
-        .btn-danger:hover {
-          background: #dc2626;
-          color: #fff;
-        }
-        .serach_field_2 input[type="text"] {
+        .form-control {
           border-radius: 7px;
           border: 1.5px solid #e5e7eb;
-          padding: 9px 16px;
-          font-size: 1.04rem;
-          margin-right: 12px;
-          width: 240px;
-          background: #f8fafc;
-          transition: border 0.15s, background 0.15s;
+          margin-bottom: 12px;
+          color: #222;
         }
-        .serach_field_2 input[type="text"]:focus {
-          border: 1.5px solid #6366f1;
+        .form-control:focus {
+          border: 1.5px solid #2563eb;
           outline: none;
-          background: #fff;
         }
-        .dashboard_header h3 {
-          font-size: 2.1rem;
-          font-weight: 700;
-          color: #22223b;
-          margin-bottom: 0.5rem;
-          letter-spacing: 0.5px;
-        }
-        .list_header h4 {
-          font-size: 1.35rem;
-          font-weight: 600;
+        .btn-close {
+          background: #e0e7ff;
+          border-radius: 50%;
+          width: 32px; height: 32px;
+          display: flex; align-items: center; justify-content: center;
+          font-size: 1.1rem;
           color: #2563eb;
-          margin-bottom: 0.5rem;
+          border: none;
+          margin-left: 8px;
         }
-        .add_button {
-          display: flex;
-          align-items: center;
+        .btn-close:hover {
+          background: #2563eb;
+          color: #fff;
         }
-        @media (max-width: 900px) {
-          .QA_table th, .QA_table td { padding: 8px 8px; font-size: 0.97rem; }
-          .btn_1 { padding: 7px 12px; font-size: 0.97rem; }
-          .serach_field_2 input[type="text"] { width: 120px; font-size: 0.97rem; }
-          .dashboard_header h3 { font-size: 1.3rem; }
-          .list_header h4 { font-size: 1.05rem; }
+        .btn-primary {
+          background: #2563eb;
+          border: none;
+          font-weight: 600;
+        }
+        .btn-primary:hover {
+          background: #1d4ed8;
+        }
+        @media (max-width: 600px) {
+          .modal-dialog {
+            max-width: 98vw;
+            margin: 0;
+          }
         }
       `}</style>
-      <div className="main_content_iner"> {/* Container chính của nội dung */}
+      <div className="main_content_iner">
         <div className="container-fluid p-0">
           <div className="row justify-content-center">
             <div className="col-12">
-              <div className="dashboard_header mb_50"> {/* Header của Dashboard */}
-                <div className="row">
-                  <div className="col-lg-6">
-                  
-                  </div>
-                  <div className="col-lg-6 text-end">
-                   
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="col-12">
-              <div className="QA_section"> {/* Phần quản lý QA (Quality Assurance) hoặc bảng dữ liệu chung */}
+              <div className="QA_section">
                 <div className="white_box_tittle list_header">
-                  <h4>Categories</h4> {/* Tiêu đề phần danh mục */}
-                  <div className="box_right d-flex lms_block">
-                    <div className="serach_field_2"> {/* Phần tìm kiếm */}
-                      <form onSubmit={(e) => e.preventDefault()}> {/* Form tìm kiếm, ngăn chặn tải lại trang khi submit */}
-                        
-                      </form>
-                    </div>
-                    <div className="add_button ms-2"> {/* Nút "Add New" (Thêm mới) */}
-                      <button
-                        className="btn_1"
-                        onClick={() => { // Khi click, hiển thị modal và reset form để thêm mới.
-                          setShowModal(true);
-                          setEditingCategory(null);
-                          setFormData({ name: "", slug: "" });
-                        }}
-                      >
-                        Add New
-                      </button>
-                    </div>
+                  <h4>Categories</h4>
+                  <div className="add_button ms-2">
+                    <button className="btn_1" onClick={() => { setShowModal(true); setEditingCategory(null); setFormData({ name: "", slug: "" }); }}>
+                      Add New
+                    </button>
                   </div>
                 </div>
 
-                <div className="QA_table mb_30"> {/* Bảng hiển thị danh mục */}
+                <div className="QA_table mb_30">
                   <table className="table lms_table_active">
-                    <thead> {/* Header của bảng */}
+                    <thead>
                       <tr>
                         <th>Id</th>
                         <th>Tên danh mục</th>
@@ -252,22 +163,22 @@ export default function CategoryPage() { // Định nghĩa component React chứ
                         <th>Hành động</th>
                       </tr>
                     </thead>
-                    <tbody> {/* Body của bảng */}
-                      {isLoading ? ( // Nếu dữ liệu đang tải.
+                    <tbody>
+                      {isLoading ? (
                         <tr>
-                          <td colSpan={4} className="text-center">Loading...</td> {/* Hiển thị thông báo tải */}
+                          <td colSpan={4} className="text-center">Loading...</td>
                         </tr>
-                      ) : ( // Nếu dữ liệu đã tải xong.
-                        filteredCategories.map(category => ( // Duyệt qua mảng danh mục đã lọc để hiển thị từng hàng.
-                          <tr key={category.id}> {/* Mỗi hàng là một danh mục, dùng id làm key. */}
+                      ) : (
+                        filteredCategories.map(category => (
+                          <tr key={category.id}>
                             <td>{category.id}</td>
                             <td>{category.name}</td>
                             <td>{category.slug}</td>
                             <td>
-                              <div className="d-flex gap-2"> {/* Các nút hành động */}
-                                <Link href={`/admin/categories/${category.id}`} className="btn btn-sm btn-info">Xem</Link> {/* Nút xem chi tiết */}
-                                <button className="btn btn-sm btn-warning" onClick={() => handleEdit(category)}>Sửa</button> {/* Nút sửa, gọi handleEdit */}
-                                <button className="btn btn-sm btn-danger" onClick={() => handleDelete(category.id)}>Xoá</button> {/* Nút xóa, gọi handleDelete */}
+                              <div className="d-flex gap-2">
+                              <button className="btn btn-sm btn-info" onClick={() => openProductModal(category.id)}>Xem</button>
+                                <button className="btn btn-sm btn-warning" onClick={() => handleEdit(category)}>Sửa</button>
+                                <button className="btn btn-sm btn-danger" onClick={() => handleDelete(category.id)}>Xoá</button>
                               </div>
                             </td>
                           </tr>
@@ -276,47 +187,80 @@ export default function CategoryPage() { // Định nghĩa component React chứ
                     </tbody>
                   </table>
                 </div>
+
+                {showProductModal && selectedCategoryId && (
+                  <div className="modal fade show d-block" tabIndex={-1} style={{ background: "rgba(0,0,0,0.5)" }}>
+                    <div className="modal-dialog">
+                      <div className="modal-content p-3">
+                        <div className="modal-header">
+                          <h5 className="modal-title">Sản phẩm của danh mục ID: {selectedCategoryId}</h5>
+                          <button type="button" className="btn-close" onClick={closeProductModal}>X</button>
+                        </div>
+                        <div className="modal-body">
+                          {loadingProducts ? (
+                            <div>Đang tải sản phẩm...</div>
+                          ) : productsData && productsData.data.length > 0 ? (
+                            <>
+                              <div style={{fontWeight:600, color:'#2563eb', marginBottom:4}}>
+                                Số lượng sản phẩm: {productsData.data.length}
+                              </div>
+                              <div style={{fontWeight:600, color:'#2563eb', marginBottom:12}}>
+                                Tổng tồn kho: {productsData.data.reduce((sum, p) => sum + (p.stock_quantity || 0), 0)} sản phẩm
+                              </div>
+                              <div className="product-grid">
+                                {productsData.data.map((product: Product) => (
+                                  <div className="product-card" key={product.id}>
+                                    <img src={product.image} alt={product.name} className="product-image" style={{ width: "100%", height: 140, objectFit: "cover", borderRadius: 8 }} />
+                                    <div className="product-name">{product.name}</div>
+                                    <div style={{ color: '#2563eb', fontWeight: 500, fontSize: 14 }}>
+                                      Tồn kho: {product.stock_quantity}
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                              <div className="pagination mt-3">
+                                <button className="btn btn-outline-primary me-2" disabled={currentPage === 1} onClick={() => setCurrentPage(p => Math.max(1, p - 1))}>
+                                  Trang trước
+                                </button>
+                                <span>Trang {productsData.meta.current_page} / {productsData.meta.last_page}</span>
+                                <button className="btn btn-outline-primary ms-2" disabled={currentPage === productsData.meta.last_page} onClick={() => setCurrentPage(p => Math.min(productsData.meta.last_page, p + 1))}>
+                                  Trang sau
+                                </button>
+                              </div>
+                            </>
+                          ) : (
+                            <div>Không có sản phẩm nào cho danh mục này.</div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>
 
-          {/* --- Modal Thêm/Sửa Danh mục --- */}
-          <div className={`modal fade ${showModal ? "show d-block" : ""}`} tabIndex={-1} style={{ background: "rgba(0,0,0,0.5)" }}> {/* Modal overlay, hiển thị khi showModal là true. */}
+          <div className={`modal fade ${showModal ? "show d-block" : ""}`} tabIndex={-1} style={{ background: "rgba(0,0,0,0.5)" }}>
             <div className="modal-dialog">
               <div className="modal-content p-3">
                 <div className="modal-header">
-                  <h5 className="modal-title">{editingCategory ? "Sửa danh mục" : "Thêm danh mục"}</h5> {/* Tiêu đề modal động */}
-                  <button type="button" className="btn-close" onClick={() => { setShowModal(false); setEditingCategory(null); }}></button> {/* Nút đóng modal */}
+                  <h5 className="modal-title">{editingCategory ? "Sửa danh mục" : "Thêm danh mục"}</h5>
+                  <button type="button" className="btn-close" onClick={() => { setShowModal(false); setEditingCategory(null); }}></button>
                 </div>
                 <div className="modal-body">
-                  <form onSubmit={handleSubmit}> {/* Form thêm/sửa, khi submit gọi handleSubmit */}
+                  <form onSubmit={handleSubmit}>
                     <label>Tên danh mục:</label>
-                    <input
-                      type="text"
-                      name="name"
-                      required
-                      value={formData.name} // Giá trị input được điều khiển bởi formData.name.
-                      onChange={(e) => setFormData({ ...formData, name: e.target.value })} // Cập nhật formData.name khi người dùng nhập.
-                      className="form-control mb-2"
-                    />
+                    <input type="text" name="name" required value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} className="form-control mb-2" />
                     <label>Slug:</label>
-                    <input
-                      type="text"
-                      name="slug"
-                      required
-                      value={formData.slug} // Giá trị input được điều khiển bởi formData.slug.
-                      onChange={(e) => setFormData({ ...formData, slug: e.target.value })} // Cập nhật formData.slug khi người dùng nhập.
-                      className="form-control mb-2"
-                    />
+                    <input type="text" name="slug" required value={formData.slug} onChange={(e) => setFormData({ ...formData, slug: e.target.value })} className="form-control mb-2" />
                     <button type="submit" className="btn btn-primary mt-3">
-                      {editingCategory ? "Cập nhật" : "Tạo danh mục"} {/* Văn bản nút submit động */}
+                      {editingCategory ? "Cập nhật" : "Tạo danh mục"}
                     </button>
                   </form>
                 </div>
               </div>
             </div>
           </div>
-          {/* --- Kết thúc Modal --- */}
         </div>
       </div>
     </>

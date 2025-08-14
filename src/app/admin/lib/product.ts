@@ -101,5 +101,17 @@ export async function deleteProduct(id: number): Promise<void> {
     }
   );
 }
+export async function fetchProductsByCategory(categoryId: number, perPage: number = 15) {
+  const res = await axios.get("http://127.0.0.1:8000/api/v1/public/products", {
+    params: { category_id: categoryId, per_page: perPage },
+  });
+  return res.data;
 
+}
 
+export async function fetchProductsByCategoryWithPage(categoryId: number, page: number = 1) {
+  const res = await axios.get("http://127.0.0.1:8000/api/v1/public/products-filter", {
+    params: { category_id: categoryId, page },
+  });
+  return res.data;
+}
