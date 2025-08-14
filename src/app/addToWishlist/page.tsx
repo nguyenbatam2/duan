@@ -26,7 +26,14 @@ export default function AddToWishlist({ product, onToggle }: AddToWishlistProps)
             title={isFavorite ? "Xóa khỏi yêu thích" : "Thêm vào yêu thích"}
             onClick={handleToggleWishlist}
         >
-            <img width="25" height="25" src="/img/heart.webp" alt="Thêm vào yêu thích" />
+            <img
+                width="25"
+                height="25"
+                src={isFavorite ? "https://bizweb.dktcdn.net/100/506/650/files/heartadd-1.png?v=1704084436307" : "/img/heart.webp"}
+                alt={isFavorite ? "Xóa khỏi yêu thích" : "Thêm vào yêu thích"}
+            />
         </a>
     );
 }
+
+

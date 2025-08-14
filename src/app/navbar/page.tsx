@@ -7,12 +7,11 @@ export default function Navbar() {
     const tabs = [
         { id: '1', title: 'Thông tin tài khoản', href: '/account' },
         { id: '2', title: 'Đơn hàng của bạn', href: '/account/order' },
-        { id: '3', title: 'Đơn hàng của bạn', href: '/account/order' },
 
-        { id: '4', title: 'Danh sách Mã giảm', href: '/account/coupon' },
-        { id: '5', title: 'Đổi mật khẩu', href: '/account/password' },
-        { id: '6', title: 'Địa chỉ', href: '/account/addresse' },
-        { id: '7', title: 'Đăng xuất', href: '/logout' },
+        { id: '3', title: 'Danh sách Mã giảm', href: '/account/coupon' },
+        { id: '4', title: 'Đổi mật khẩu', href: '/account/password' },
+        { id: '5', title: 'Địa chỉ', href: '/account/addresse' },
+        { id: '6', title: 'Đăng xuất', href: '/logout' },
     ];
     return (
         <>
