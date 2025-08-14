@@ -1,11 +1,12 @@
 import axios from "axios";
 import Cookies from "js-cookie";
 import { Product, PaginatedProducts } from "../types/product";
+import { PUBLIC_API, ADMIN_API } from "../../lib/config";
 
 // Lấy danh sách sản phẩm phân trang
 export async function getProductsPage(page: number): Promise<PaginatedProducts> {
   const res = await axios.get(
-    `http://127.0.0.1:8000/api/v1/public/products/?per_page=16&page=${page}`
+    `${PUBLIC_API.PRODUCTS}/?per_page=16&page=${page}`
   );
   return res.data as PaginatedProducts;
 }
@@ -25,7 +26,7 @@ export async function postProductsPage(data: {
   if (!token) throw new Error("Token không tồn tại");
 
   const res = await axios.post(
-    "http://127.0.0.1:8000/api/v1/admin/products",
+    ADMIN_API.PRODUCTS,
     data,
     {
       headers: {
@@ -44,7 +45,7 @@ export async function postProductFormData(formData: FormData): Promise<Product> 
   if (!token) throw new Error("Token không tồn tại");
 
   const res = await axios.post(
-    "http://127.0.0.1:8000/api/v1/admin/products",
+    ADMIN_API.PRODUCTS,
     formData,
     {
       headers: {
@@ -72,14 +73,14 @@ export async function updateProduct(id: number, data: FormData | object): Promis
   if (isFormData) {
     (data as FormData).append('_method', 'PUT');
     const res = await axios.post(
-      `http://127.0.0.1:8000/api/v1/admin/products/${id}`,
+      `${ADMIN_API.PRODUCTS}/${id}`,
       data,
       { headers }
     );
     return res.data;
   } else {
     const res = await axios.put(
-      `http://127.0.0.1:8000/api/v1/admin/products/${id}`,
+      `${ADMIN_API.PRODUCTS}/${id}`,
       data,
       { headers }
     );
@@ -92,7 +93,7 @@ export async function deleteProduct(id: number): Promise<void> {
   const token = Cookies.get("token");
   if (!token) throw new Error("Token không tồn tại");
 
-  await axios.delete(`http://127.0.0.1:8000/api/v1/admin/products/${id}`,
+  await axios.delete(`${ADMIN_API.PRODUCTS}/${id}`,
     {
       headers: {
         Authorization: `Bearer ${token}`,
@@ -102,7 +103,7 @@ export async function deleteProduct(id: number): Promise<void> {
   );
 }
 export async function fetchProductsByCategory(categoryId: number, perPage: number = 15) {
-  const res = await axios.get("http://127.0.0.1:8000/api/v1/public/products", {
+  const res = await axios.get(PUBLIC_API.PRODUCTS, {
     params: { category_id: categoryId, per_page: perPage },
   });
   return res.data;
@@ -110,7 +111,7 @@ export async function fetchProductsByCategory(categoryId: number, perPage: numbe
 }
 
 export async function fetchProductsByCategoryWithPage(categoryId: number, page: number = 1) {
-  const res = await axios.get("http://127.0.0.1:8000/api/v1/public/products-filter", {
+  const res = await axios.get(`${PUBLIC_API.PRODUCTS}-filter`, {
     params: { category_id: categoryId, page },
   });
   return res.data;

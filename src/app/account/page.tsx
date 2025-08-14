@@ -12,10 +12,12 @@ interface UserApiResponse {
     user: Author;
 }
 
+import { API_BASE_URL } from "../lib/config";
+
 function getAvatarUrl(avatar: string | null | undefined) {
     if (!avatar) return '/default-avatar.png';
     if (avatar.startsWith('http')) return avatar;
-    return `http://127.0.0.1:8000/storage/${avatar.replace(/^users[\\/]/, 'users/')}`;
+    return `${API_BASE_URL.replace('/api/v1', '')}/storage/${avatar.replace(/^users[\\/]/, 'users/')}`;
 }
 
 export default function Account() {
@@ -58,7 +60,7 @@ export default function Account() {
             const parsed = JSON.parse(cookieData);
             const token = parsed.token;
             const res = await axios.patch(
-                "http://127.0.0.1:8000/api/v1/user/profile",
+                `${API_BASE_URL}/user/profile`,
                 {
                     name: form.name,
                     phone: form.phone,

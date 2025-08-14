@@ -24,4 +24,23 @@ export interface Product {
   quantity: number;
   variant_id?: number; 
   variants?: { id: number }[]; 
+  
+  // Event pricing fields (theo document.md)
+  base_price?: number;
+  base_discount?: number;
+  event_price?: number;
+  original_price?: number;
+  display_price?: number;
+  has_active_event?: boolean;
+  event_discount_percentage?: number;
+  event_info?: {
+    id: number;
+    name: string;
+    description: string;
+    start_time: string;
+    end_time: string;
+    discount_type: string;
+    discount_value: number;
+    banner_image: string;
+  };
 }

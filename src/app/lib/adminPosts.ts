@@ -1,6 +1,7 @@
 import axios from "axios";
 import Cookies from "js-cookie";
 import { Post } from "@/app/types/post";
+import { ADMIN_API } from "./config";
 
 // Helper function to get auth token
 const getAuthToken = () => {
@@ -12,7 +13,7 @@ const getAuthToken = () => {
 // 2.1. Lấy danh sách tất cả bài viết (bao gồm draft)
 export async function getAllPosts(): Promise<Post[]> {
   const token = getAuthToken();
-  const res = await axios.get("http://127.0.0.1:8000/api/v1/admin/posts", {
+  const res = await axios.get(ADMIN_API.POSTS, {
     headers: {
       Authorization: `Bearer ${token}`,
       Accept: "application/json",
@@ -40,7 +41,7 @@ export async function createPost(postData: {
   }
 
   const res = await axios.post(
-    "http://127.0.0.1:8000/api/v1/admin/posts",
+    ADMIN_API.POSTS,
     formData,
     {
       headers: {
@@ -57,7 +58,7 @@ export async function createPost(postData: {
 export async function getPostById(id: number): Promise<Post> {
   const token = getAuthToken();
   const res = await axios.get(
-    `http://127.0.0.1:8000/api/v1/admin/posts/${id}`,
+    `${ADMIN_API.POSTS}/${id}`,
     {
       headers: {
         Authorization: `Bearer ${token}`,
@@ -87,7 +88,7 @@ export async function updatePost(
   if (postData.image) formData.append("image", postData.image);
 
   const res = await axios.put(
-    `http://127.0.0.1:8000/api/v1/admin/posts/${id}`,
+    `${ADMIN_API.POSTS}/${id}`,
     formData,
     {
       headers: {
@@ -104,7 +105,7 @@ export async function updatePost(
 export async function deletePost(id: number): Promise<{ message: string }> {
   const token = getAuthToken();
   const res = await axios.delete(
-    `http://127.0.0.1:8000/api/v1/admin/posts/${id}`,
+    `${ADMIN_API.POSTS}/${id}`,
     {
       headers: {
         Authorization: `Bearer ${token}`,
@@ -119,7 +120,7 @@ export async function deletePost(id: number): Promise<{ message: string }> {
 export async function togglePostStatus(id: number): Promise<Post> {
   const token = getAuthToken();
   const res = await axios.patch(
-    `http://127.0.0.1:8000/api/v1/admin/posts/${id}/toggle-status`,
+    `${ADMIN_API.POSTS}/${id}/toggle-status`,
     {},
     {
       headers: {

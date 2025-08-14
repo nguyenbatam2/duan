@@ -1,36 +1,59 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Bird's Nest E-commerce
 
-## Getting Started
+## Cấu hình API
 
-First, run the development server:
+### Biến môi trường
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+Dự án sử dụng biến môi trường để quản lý URL API. Tạo file `.env.local` trong thư mục gốc với nội dung:
+
+```env
+# API Configuration
+NEXT_PUBLIC_API_BASE_URL=http://127.0.0.1:8000/api/v1
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Thay đổi URL API khi deploy
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Khi deploy lên production, chỉ cần thay đổi giá trị `NEXT_PUBLIC_API_BASE_URL` trong file `.env.local`:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```env
+# Development
+NEXT_PUBLIC_API_BASE_URL=http://127.0.0.1:8000/api/v1
 
-## Learn More
+# Production
+NEXT_PUBLIC_API_BASE_URL=https://your-api-domain.com/api/v1
+```
 
-To learn more about Next.js, take a look at the following resources:
+### Cấu trúc API Endpoints
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Dự án đã được tổ chức với các endpoint được định nghĩa trong `src/app/lib/config.ts`:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- **Public API**: Cho trang chủ và người dùng
+- **Admin API**: Cho quản trị viên
+- **User API**: Cho người dùng đã đăng nhập
 
-## Deploy on Vercel
+### Cài đặt và chạy
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```bash
+# Cài đặt dependencies
+npm install
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+# Chạy development server
+npm run dev
+
+# Build cho production
+npm run build
+
+# Chạy production
+npm start
+```
+
+## Tính năng
+
+- ✅ Quản lý sản phẩm và danh mục
+- ✅ Hệ thống sự kiện khuyến mãi
+- ✅ Quản lý mã giảm giá
+- ✅ Giỏ hàng và thanh toán
+- ✅ Hệ thống đánh giá sản phẩm
+- ✅ Quản lý đơn hàng
+- ✅ Dashboard thống kê
+- ✅ Responsive design

@@ -2,11 +2,10 @@
 import axios from "axios";
 import Cookies from "js-cookie";
 import { Coupon } from "../types/coupon";
-
-const BASE = "http://127.0.0.1:8000/api/v1";
+import { API_BASE_URL, USER_API } from "./config";
 
 export async function getCoupons(): Promise<Coupon[]> {
-  const res = await axios.get(`${BASE}/public/coupons/valid`);
+  const res = await axios.get(`${API_BASE_URL}/public/coupons/valid`);
   return res.data.coupons as Coupon[];
 }
 
@@ -15,7 +14,7 @@ export async function saveCoupon(coupon_id: number) {
   if (!cookieData) throw new Error("Không có token");
   const { token } = JSON.parse(cookieData);
   const res = await axios.post(
-    `${BASE}/user/coupons/${coupon_id}/save`,
+    `${USER_API.COUPONS}/${coupon_id}/save`,
     {},
     {
       headers: { Authorization: `Bearer ${token}`, Accept: "application/json" },

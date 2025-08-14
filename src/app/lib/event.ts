@@ -1,5 +1,6 @@
 import axios from "axios";
 import { Event, PaginatedEvents } from "@/app/admin/types/event";
+import { PUBLIC_API } from "./config";
 
 // Public Events API - cho trang chủ
 export async function getPublicEvents(params?: {
@@ -17,14 +18,14 @@ export async function getPublicEvents(params?: {
   if (params?.per_page) queryParams.append('per_page', params.per_page.toString());
   if (params?.page) queryParams.append('page', params.page.toString());
 
-  const url = `http://127.0.0.1:8000/api/v1/events${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+  const url = `${PUBLIC_API.EVENTS}${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
   
   const res = await axios.get(url);
   return res.data as PaginatedEvents;
 }
 
 export async function getPublicEventById(id: number): Promise<Event> {
-  const res = await axios.get(`http://127.0.0.1:8000/api/v1/events/${id}`);
+  const res = await axios.get(`${PUBLIC_API.EVENTS}/${id}`);
   return res.data.data as Event;
 }
 

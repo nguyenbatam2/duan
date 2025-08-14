@@ -1,5 +1,6 @@
 import axios from "axios";
 import { Category } from "@/app/types/category";
+import { PUBLIC_API } from "./config";
 
 interface CategoryResponse {
     data?: Category[];
@@ -8,7 +9,7 @@ interface CategoryResponse {
 export async function getCategories(): Promise<Category[]> {
     try {
         const res = await axios.get(
-          "http://127.0.0.1:8000/api/v1/public/public-categories?per_page=15 "
+          `${PUBLIC_API.CATEGORIES}?per_page=15`
         );
         // Handle both direct array response and wrapped response
         const responseData = res.data as Category[] | CategoryResponse;
@@ -27,7 +28,7 @@ export const getProductsByCategory = async (
   page: number = 1
 ) => {
   const res = await axios.get(
-    `http://127.0.0.1:8000/api/v1/public/products-filter?category_id=${categoryId}&page=${page}`
+    `${PUBLIC_API.PRODUCTS}-filter?category_id=${categoryId}&page=${page}`
   );
   return res.data;
 };

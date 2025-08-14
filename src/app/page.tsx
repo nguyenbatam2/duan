@@ -27,12 +27,15 @@ import { getActiveEvents } from "@/app/lib/event";
 import { Event } from "@/app/admin/types/event";
 
 
+// 🔧 Config
+import { PUBLIC_API } from "./lib/config";
+
 // 🔁 Fetcher
 const fetcher = (url: string) => axios.get(url).then(res => res.data.data);
 
 export default function Page() {
   const { data: products, isLoading, error } = useSWR(
-    "http://127.0.0.1:8000/api/v1/public/products",
+    PUBLIC_API.PRODUCTS,
     fetcher
   );
   const {
@@ -181,11 +184,11 @@ export default function Page() {
                <span className="sub-title">
                  Yến sào Sudes Nest
                </span>
-               <h2>
-                 <a href="/san-pham-khuyen-mai" title="Khuyến mãi đặc biệt">
-                   {event.name}
-                 </a>
-               </h2>
+                                <h2>
+                   <a href={`/events/${event.id}`} title="Khuyến mãi đặc biệt">
+                     {event.name}
+                   </a>
+                 </h2>
                <div className="title-separator">
                  <div className="separator-center"></div>
                </div>
@@ -392,7 +395,7 @@ export default function Page() {
             </div> */}
 
               <div className="view-more clearfix">
-                <a href="san-pham-khuyen-mai" title="Xem tất cả" className="btn btn-primary frame">
+                <a href="/events" title="Xem tất cả" className="btn btn-primary frame">
                   <svg width="14" height="32" viewBox="0 0 14 32" fill="none" xmlns="http://www.w3.org/2000/svg" className="border-svg border-svg-left">
                     <path d="M13.3726 0H0.372559V13.2018L3.16222 16L6.37256 19L9.5 16L7.93628 14.5L6.37256 13L0.372559 18.6069V32H13.3726" fill="none"></path>
                     <path d="M13.3726 0H0.372559V13.2018L3.16222 16L6.37256 19L9.5 16L7.93628 14.5L6.37256 13L0.372559 18.6069V32H13.3726" stroke="white"></path>
@@ -690,9 +693,11 @@ export default function Page() {
                         <div className="item_product_main">
                           <form method="post" className="variants product-action item-product-main duration-300" encType="multipart/form-data">
                             <span className="flash-sale">-
-                              {product.discount_price !== "0.00"
-                                ? ((parseInt(product.price) - parseInt(product.discount_price)) / parseInt(product.price) * 100).toFixed(0)
-                                : "0"}%
+                              {product.has_active_event 
+                                ? product.event_discount_percentage 
+                                : (product.base_discount > 0 
+                                    ? Math.round((product.base_discount / parseInt(product.base_price)) * 100)
+                                    : 0)}%
                             </span>
                             <div className="product-thumbnail">
                               <Link className="image_thumb scale_hover" href={`/product/${product.id}`} title={product.name}>
@@ -710,20 +715,31 @@ export default function Page() {
                                   <Link href={`/product/${product.slug}`} title={product.name}>{product.name}</Link>
                                 </h3>
                                 <div className="product-price-cart">
-                                  {product.discount_price !== "0.00" && (
-                                    <span className="compare-price">{parseInt(product.price).toLocaleString()}₫</span>
+                                  {product.has_active_event ? (
+                                    <>
+                                      <span className="compare-price">{parseInt(product.original_price).toLocaleString()}₫</span>
+                                      <span className="price">{parseInt(product.display_price).toLocaleString()}₫</span>
+                                    </>
+                                  ) : (
+                                    <>
+                                      {product.base_discount > 0 && (
+                                        <span className="compare-price">{parseInt(product.base_price).toLocaleString()}₫</span>
+                                      )}
+                                      <span className="price">{parseInt(product.display_price).toLocaleString()}₫</span>
+                                    </>
                                   )}
-                                  <span className="price">
-                                    {parseInt(
-                                      product.discount_price === "0.00" ? product.price : product.discount_price
-                                    ).toLocaleString()}₫
-                                  </span>
                                 </div>
                               </div>
                               <div className="product-button">
                                 <input type="hidden" name="variantId" value={product.id} />
                                 <div style={{ marginBottom: "0px" }}>
-                                  <AddToCart product={product} onAddToCart={(product) => setSelectedProduct(product)} />
+                                  <AddToCart 
+                                    product={{
+                                      ...product,
+                                      price: product.display_price
+                                    }} 
+                                    onAddToCart={(product) => setSelectedProduct(product)} 
+                                  />
                                 </div>
                                 <AddToWishlist product={product} onToggle={handleToggleWishlist} />
                               </div>

@@ -2,7 +2,9 @@ import Cookies from "js-cookie";
 import axios from "axios";
 import toast from "react-hot-toast";
 import {OrderItem} from '@/app/types/coupon'
-const API_URL = "http://127.0.0.1:8000/api/v1/user/orders";
+import { USER_API } from "./config";
+
+const API_URL = USER_API.ORDERS;
 
 
 export async function getOrders(page = 1): Promise<any> {
@@ -171,7 +173,7 @@ export async function placeOrder(
     console.log("📦 Payload gửi BE:", JSON.stringify(payload, null, 2));
 
     const res = await axios.post(
-      "http://127.0.0.1:8000/api/v1/user/orders/place-order",
+      `${API_URL}/place-order`,
       payload,
       {
         headers: {

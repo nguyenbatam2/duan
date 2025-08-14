@@ -3,8 +3,10 @@
 import axios from "axios";
 import Cookies from "js-cookie";
 import { RegisterData, LoginData, UserAddress } from "../types/author";
-const API_URL = "http://127.0.0.1:8000/api/v1/auth";
-const API_PassWord = "http://127.0.0.1:8000/api/v1/password";
+import { API_BASE_URL, USER_API } from "./config";
+
+const API_URL = `${API_BASE_URL}/auth`;
+const API_PassWord = `${API_BASE_URL}/password`;
 
 
 export const registerUser = async (data: RegisterData) => {
@@ -85,7 +87,7 @@ export const changePassword = async (
   if (!token) throw new Error("Token không hợp lệ");
 
   const response = await axios.post(
-    `http://127.0.0.1:8000/api/v1/user/change-password`,
+    `${USER_API.PROFILE}/change-password`,
     {
       current_password, 
       new_password,
@@ -112,7 +114,7 @@ export const updateUserAddress = async (address: string) => {
   if (!token) throw new Error("Token không hợp lệ");
 
   const response = await axios.patch(
-    "http://127.0.0.1:8000/api/v1/user/address",
+    USER_API.ADDRESS,
     { address },
     {
       headers: {
@@ -136,7 +138,7 @@ export const updateUserAvatar = async (avatarFile: File) => {
   formData.append('avatar', avatarFile);
 
   const response = await axios.post(
-    "http://127.0.0.1:8000/api/v1/auth/update-avatar",
+    `${API_URL}/update-avatar`,
     formData,
     {
       headers: {
@@ -157,7 +159,7 @@ export async function getUserAddresses(): Promise<UserAddress[]> {
   if (!cookieData) throw new Error("Không có token");
   const parsed = JSON.parse(cookieData);
   const token = parsed.token;
-  const res = await axios.get("http://127.0.0.1:8000/api/v1/user/addresses", {
+  const res = await axios.get(USER_API.ADDRESSES, {
     headers: {
       Authorization: `Bearer ${token}`,
       Accept: "application/json",
@@ -171,7 +173,7 @@ export async function addUserAddress(data: { name: string; phone: string; addres
   if (!cookieData) throw new Error("Không có token");
   const parsed = JSON.parse(cookieData);
   const token = parsed.token;
-  const res = await axios.post("http://127.0.0.1:8000/api/v1/user/addresses", data, {
+  const res = await axios.post(USER_API.ADDRESSES, data, {
     headers: {
       Authorization: `Bearer ${token}`,
       Accept: "application/json",
@@ -186,7 +188,7 @@ export async function updateUserAddressById(id: number, data: { name: string; ph
   if (!cookieData) throw new Error("Không có token");
   const parsed = JSON.parse(cookieData);
   const token = parsed.token;
-  const res = await axios.put(`http://127.0.0.1:8000/api/v1/user/addresses/${id}`, data, {
+  const res = await axios.put(`${USER_API.ADDRESSES}/${id}`, data, {
     headers: {
       Authorization: `Bearer ${token}`,
       Accept: "application/json",
@@ -201,7 +203,7 @@ export async function deleteUserAddress(id: number): Promise<void> {
   if (!cookieData) throw new Error("Không có token");
   const parsed = JSON.parse(cookieData);
   const token = parsed.token;
-  await axios.delete(`http://127.0.0.1:8000/api/v1/user/addresses/${id}`, {
+  await axios.delete(`${USER_API.ADDRESSES}/${id}`, {
     headers: {
       Authorization: `Bearer ${token}`,
       Accept: "application/json",
