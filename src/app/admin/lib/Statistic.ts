@@ -1,4 +1,4 @@
-import { AdminStatistics,RevenueStatistic,OrderCountByStatus,TopSellingProduct,SlowSellingProduct, NewUsersStatistic,RevenueByCategory, TopCustomer, RevenueSummary } from "../types/Statistic";
+import { AdminStatistics,RevenueStatistic,OrderCountByStatus,TopSellingProduct,SlowSellingProduct, NewUsersStatistic,RevenueByCategory, TopCustomer, RevenueSummary, VisitsStatistics } from "../types/Statistic";
 import adminAxios from "./axios";
 
 
@@ -56,4 +56,10 @@ export async function fetchRevenueByCategory(): Promise<RevenueByCategory[]> {
 export async function fetchTopCustomers(): Promise<TopCustomer[]> {
   const res = await adminAxios.get("/admin/statistics/top-customers");
   return res.data as TopCustomer[];
+}
+
+// Thống kê lượt truy cập
+export async function fetchVisitsStatistics(type: 'today' | 'week' | 'month' | 'year'): Promise<VisitsStatistics[]> {
+  const res = await adminAxios.get("/admin/statistics/visits", { params: { type } });
+  return res.data as VisitsStatistics[];
 }

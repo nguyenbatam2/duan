@@ -20,13 +20,40 @@ export async function getPublicEvents(params?: {
 
   const url = `${PUBLIC_API.EVENTS}${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
   
-  const res = await axios.get(url);
-  return res.data as PaginatedEvents;
+  try {
+    console.log('🌐 Fetching public events from:', url);
+    const res = await axios.get(url, { timeout: 30000 });
+    console.log('✅ Public events fetched successfully');
+    return res.data as PaginatedEvents;
+  } catch (error: any) {
+    console.error('❌ Failed to fetch public events:', {
+      url,
+      status: error.response?.status,
+      statusText: error.response?.statusText,
+      message: error.message,
+      code: error.code
+    });
+    throw error;
+  }
 }
 
 export async function getPublicEventById(id: number): Promise<Event> {
-  const res = await axios.get(`${PUBLIC_API.EVENTS}/${id}`);
-  return res.data.data as Event;
+  try {
+    console.log('🌐 Fetching public event by ID:', id);
+    const res = await axios.get(`${PUBLIC_API.EVENTS}/${id}`, { timeout: 30000 });
+    console.log('✅ Public event fetched successfully');
+    return res.data.data as Event;
+  } catch (error: any) {
+    console.error('❌ Failed to fetch public event by ID:', {
+      id,
+      url: `${PUBLIC_API.EVENTS}/${id}`,
+      status: error.response?.status,
+      statusText: error.response?.statusText,
+      message: error.message,
+      code: error.code
+    });
+    throw error;
+  }
 }
 
 // Lấy sự kiện nổi bật cho trang chủ

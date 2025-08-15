@@ -91,3 +91,10 @@ export interface RevenueSummary {
   revenue: number;
   orders: RevenueSummaryOrder[];
 }
+
+export interface VisitsStatistics {
+  date: string;
+  visits: number;
+  unique_visitors: number;
+  page_views: number;
+}

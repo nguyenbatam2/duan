@@ -9,21 +9,20 @@ import axios from "axios";
 import { useEffect, useState, Suspense } from "react";
 import toast from "react-hot-toast";
 import { getCart } from "../lib/addCart";
-import { applyCoupon, placeOrder, } from '../lib/orderApi';
+import { applyCoupon, placeOrder } from '../lib/orderApi';
 import { getUserAddresses } from '../lib/authorApi';
-// import { updateUserAddressById } from '@/app/lib/authorApi'
 import { OrderItem, Product } from '../types/product';
-
 import { useRouter } from 'next/navigation';
 import { UserAddress } from '@/app/types/author'
 import Cookies from 'js-cookie';
 import { useSearchParams } from "next/navigation";
 import PaymentMethodSelector from "../Component/PaymentMethodSelector";
 
-
 function CheckoutContent() {
-    const searchParams = useSearchParams();
+  const searchParams = useSearchParams();
+  const router = useRouter();
 
+  // State management
   const [cart, setCart] = useState<Product[]>([]);
   const [couponCode, setCouponCode] = useState('');
   const [addresses, setAddresses] = useState<UserAddress[]>([]);
@@ -32,18 +31,12 @@ function CheckoutContent() {
   const [selectedProvince, setSelectedProvince] = useState("");
   const [selectedDistrict, setSelectedDistrict] = useState("");
   const [specificAddress, setSpecificAddress] = useState("");
-
-
   const [appliedCoupon, setAppliedCoupon] = useState<string | null>(null);
   const [error, setError] = useState<string>('');
   const [paymentMethod, setPaymentMethod] = useState<string>('cod');
-  const router = useRouter();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const subtotal = cart.reduce((acc, item) => acc + (Number(item.price) || 0) * item.quantity, 0);
-  const shippingFee = 30000;
-  const tax = 5000;
-  const discount = appliedCoupon ? 50000 : 0; // hoặc từ API response nếu trả về giá trị discount
-  const total = subtotal + shippingFee + tax - discount;
+  // User info state
   const [userInfo, setUserInfo] = useState({
     name: '',
     phone: '',
@@ -52,8 +45,14 @@ function CheckoutContent() {
   });
   const [note, setNote] = useState('');
 
+  // Calculate order totals
+  const subtotal = cart.reduce((acc, item) => acc + (Number(item.price) || 0) * item.quantity, 0);
+  const shippingFee = 30000;
+  const tax = 5000;
+  const discount = appliedCoupon ? 50000 : 0; // hoặc từ API response nếu trả về giá trị discount
+  const total = subtotal + shippingFee + tax - discount;
 
-  // Load tỉnh/thành khi component mount
+  // Load provinces on mount
   useEffect(() => {
     fetch("https://vapi.vnappmob.com/api/v2/province/")
       .then(res => res.json())
@@ -61,7 +60,7 @@ function CheckoutContent() {
       .catch(err => console.error(err));
   }, []);
 
-  // Load quận/huyện khi chọn tỉnh
+  // Load districts when province changes
   useEffect(() => {
     if (selectedProvince) {
       const provinceCode = Number(selectedProvince);
@@ -76,8 +75,7 @@ function CheckoutContent() {
     }
   }, [selectedProvince]);
 
-
-
+  // Load user data and addresses
   useEffect(() => {
     getUserAddresses().then(setAddresses);
     const cookieData = Cookies.get('author');
@@ -100,26 +98,25 @@ function CheckoutContent() {
     }
   }, []);
 
-
-
+  // Load cart data
   useEffect(() => {
     const fetchCart = async () => {
       const cartData = await getCart();
       setCart(cartData);
     };
-
     fetchCart();
   }, []);
-// auto coupon_code
+
+  // Auto-fill coupon code from URL
   useEffect(() => {
     const code = searchParams.get("coupon_code");
     if (code) {
       setCouponCode(code);
-      // Hoặc show toast ở đây
       console.log("Mã giảm giá đã được điền sẵn:", code);
     }
   }, [searchParams]);
-  // btn giảm giá
+
+  // Apply coupon function
   const handleApplyCoupon = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!couponCode.trim()) {
@@ -139,7 +136,7 @@ function CheckoutContent() {
         subtotal,
         shippingFee,
         tax,
-        "cod" // hoặc paymentMethod nếu có
+        paymentMethod
       );
 
       if (response && response.total) {
@@ -162,19 +159,28 @@ function CheckoutContent() {
     setError('');
   };
 
+  // Place order function - theo VNPAY_PAYMENT_FLOW.md
   const handlePlaceOrder = async () => {
     try {
+      setIsSubmitting(true);
       console.log('🚀 Starting place order process...');
+      
       const { name, phone, email } = userInfo;
 
-      // Kiểm tra thiếu thông tin
+      // Validation theo VNPAY_PAYMENT_FLOW.md
       if (!name || !phone || !specificAddress || !selectedProvince || !selectedDistrict || !email) {
         console.error('❌ Missing required information:', { name, phone, specificAddress, selectedProvince, selectedDistrict, email });
         toast.error("Vui lòng điền đầy đủ thông tin giao hàng.");
         return;
       }
 
-      // Tìm thông tin tỉnh và quận từ danh sách đã fetch
+      // Validate cart
+      if (cart.length === 0) {
+        toast.error("Giỏ hàng trống!");
+        return;
+      }
+
+      // Find province and district info
       const province = provinces.find(p => String(p.province_id) === String(selectedProvince));
       const district = districts.find(d => String(d.district_id) === String(selectedDistrict));
 
@@ -183,14 +189,15 @@ function CheckoutContent() {
         return;
       }
 
-      // Gộp địa chỉ đầy đủ
+      // Build full address
       const address = `${specificAddress}, ${district.district_name}, ${province.province_name}`;
 
-      // Map sản phẩm trong giỏ hàng thành OrderItem
+      // Map cart items to OrderItem format
       const items: OrderItem[] = cart.map((item) => ({
         product_id: item.id,
         quantity: item.quantity,
         price: Number(item.price),
+        product_name: item.name, // Thêm product_name để fix SQL error
       }));
 
       console.log('📦 Order details:', {
@@ -209,6 +216,7 @@ function CheckoutContent() {
         total
       });
 
+      // Call placeOrder API theo VNPAY_PAYMENT_FLOW.md
       const result = await placeOrder(
         items,
         name,
@@ -227,25 +235,20 @@ function CheckoutContent() {
 
       console.log('📋 Place order result:', result);
 
-      // Xử lý response dựa trên payment method
+      // Handle response based on payment method
       if (paymentMethod === 'online_payment') {
-        // Đã được redirect trong placeOrder function
+        // Redirect handled in placeOrder function
         toast.success("Đang chuyển hướng đến trang thanh toán...");
       } else {
-        // COD hoặc bank transfer
+        // COD payment - success
         toast.success("Đặt hàng thành công!");
         setCart([]);
         router.push("/");
       }
     } catch (error: any) {
       console.error('💥 Place order error:', error);
-      console.error('Error details:', {
-        message: error.message,
-        stack: error.stack,
-        name: error.name
-      });
       
-      // Xử lý lỗi tồn kho
+      // Handle specific errors
       if (error.response?.status === 422) {
         const errorData = error.response.data;
         if (errorData?.message?.includes('không đủ số lượng') || errorData?.message?.includes('chỉ còn')) {
@@ -255,6 +258,8 @@ function CheckoutContent() {
       }
       
       toast.error("Đặt hàng thất bại!");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -283,46 +288,52 @@ function CheckoutContent() {
           <div className="bg-shadow">
             <div className="row">
               <div className="col-lg-7 col-12">
-
                 <div className="form-contact">
-                  <h4>
-                    Thông tin giao hàng
-                  </h4>
+                  <h4>Thông tin giao hàng</h4>
                   <div id="pagelogin">
                     <div id="contact">
                       <div className="group_contact">
-
                         <div className="row">
                           <div className="col-lg-6 col-md-6 col-sm-12 col-12">
-                            <input placeholder="Họ và tên" type="text"
-                              className="form-control  form-control-lg" value={userInfo.name}
-                              onChange={(e) =>
-                                setUserInfo({
-                                  ...userInfo, name: e.target.value
-                                })}
+                            <input 
+                              placeholder="Họ và tên" 
+                              type="text"
+                              className="form-control form-control-lg" 
+                              value={userInfo.name}
+                              onChange={(e) => setUserInfo({...userInfo, name: e.target.value})}
+                              required
                             />
                           </div>
 
                           <div className="col-lg-6 col-md-6 col-sm-12 col-12">
-                            <input placeholder="Email" type="email" className="form-control form-control-lg"
-                              value={userInfo.email} onChange={(e) =>
-                                setUserInfo({
-                                  ...userInfo, email: e.target.value
-                                })}
+                            <input 
+                              placeholder="Email" 
+                              type="email" 
+                              className="form-control form-control-lg"
+                              value={userInfo.email} 
+                              onChange={(e) => setUserInfo({...userInfo, email: e.target.value})}
+                              required
                             />
                           </div>
 
                           <div className="col-lg-12 col-md-12 col-sm-12 col-12">
-                            <input type="text" placeholder="Điện thoại" name="contact[phone]"
-                              className="form-control form-control-lg" value={userInfo.phone}
-                              onChange={(e) =>
-                                setUserInfo({
-                                  ...userInfo, phone: e.target.value
-                                })} />
+                            <input 
+                              type="text" 
+                              placeholder="Điện thoại" 
+                              className="form-control form-control-lg" 
+                              value={userInfo.phone}
+                              onChange={(e) => setUserInfo({...userInfo, phone: e.target.value})}
+                              required
+                            />
                           </div>
+
                           <div className="col-lg-6 col-md-6 col-sm-12 col-12 mb-5">
-                            <select className="form-control form-control-lg" value={selectedProvince}
-                              onChange={(e) => setSelectedProvince(e.target.value)}>
+                            <select 
+                              className="form-control form-control-lg" 
+                              value={selectedProvince}
+                              onChange={(e) => setSelectedProvince(e.target.value)}
+                              required
+                            >
                               <option value="">Chọn tỉnh/thành</option>
                               {provinces.map((prov) => (
                                 <option key={prov.province_id} value={prov.province_id}>
@@ -333,38 +344,55 @@ function CheckoutContent() {
                           </div>
 
                           <div className="col-lg-6 col-md-6 col-sm-12 col-12">
-                            <select className="form-control form-control-lg" value={selectedDistrict}
+                            <select 
+                              className="form-control form-control-lg" 
+                              value={selectedDistrict}
                               onChange={(e) => setSelectedDistrict(e.target.value)}
+                              required
                             >
                               <option value="">Chọn quận/huyện</option>
                               {districts.map((dist) => (
                                 <option key={dist.district_id} value={dist.district_id}>
                                   {dist.district_name}
                                 </option>
-                                ))}
+                              ))}
                             </select>
                           </div>
 
                           <div className="col-lg-12 col-md-6 col-sm-12 col-12">
-                            <input placeholder="Số địa chỉ nhà" type="text"
-                              className="form-control form-control-lg" value={specificAddress}
+                            <input 
+                              placeholder="Số địa chỉ nhà" 
+                              type="text"
+                              className="form-control form-control-lg" 
+                              value={specificAddress}
                               onChange={(e) => setSpecificAddress(e.target.value)}
+                              required
                             />
                           </div>
 
-                                                     <div className="col-lg-12 col-md-12 col-sm-12 col-12">
-                             <PaymentMethodSelector 
-                               selected={paymentMethod}
-                               onSelect={setPaymentMethod}
-                             />
-                           </div>
+                          <div className="col-lg-12 col-md-12 col-sm-12 col-12">
+                            <PaymentMethodSelector 
+                              selected={paymentMethod}
+                              onSelect={setPaymentMethod}
+                            />
+                          </div>
+
                           <div className="col-lg-12 col-md-12 col-sm-12 col-12">
                             <p>Ghi chú đơn hàng</p>
-                            <textarea placeholder="Nhập ghi chú của bạn ở đây..." name="contact[body]"
-                              id="comment" className="form-control content-area form-control-lg" rows={5}
-                              value={note} onChange={(e) => setNote(e.target.value)} ></textarea>
-                            <button type="submit" className="btn btn-primary " onClick={handlePlaceOrder}>
-                              Đặt Hàng
+                            <textarea 
+                              placeholder="Nhập ghi chú của bạn ở đây..." 
+                              className="form-control content-area form-control-lg" 
+                              rows={5}
+                              value={note} 
+                              onChange={(e) => setNote(e.target.value)}
+                            />
+                            <button 
+                              type="submit" 
+                              className="btn btn-primary" 
+                              onClick={handlePlaceOrder}
+                              disabled={isSubmitting}
+                            >
+                              {isSubmitting ? 'Đang xử lý...' : 'Đặt Hàng'}
                             </button>
                           </div>
                         </div>
@@ -377,8 +405,10 @@ function CheckoutContent() {
               <div className="col-lg-5 col-12">
                 <div className="coorder12 col-12">
                   <div className="order-summary">
-                    <h4 style={{ marginBottom: "1rem" }}>Tổng đơn hàng (
-                      {cart.length} sản phẩm )</h4>
+                    <h4 style={{ marginBottom: "1rem" }}>
+                      Tổng đơn hàng ({cart.length} sản phẩm)
+                    </h4>
+                    
                     <ul className="order-list" role="list">
                       {cart.map((item) => (
                         <li className="order-item" role="listitem" key={item.id}>
@@ -386,24 +416,32 @@ function CheckoutContent() {
                           <div className="order-item-info">
                             <span className="product__description__name">{item.name}</span>
                             <p className="order-item-details">
-                              {Number(item.price).toLocaleString()}đ <span style={{ color: 'red' }}>
-                                x{item.quantity}</span></p>
+                              {Number(item.price).toLocaleString()}đ 
+                              <span style={{ color: 'red' }}> x{item.quantity}</span>
+                            </p>
                           </div>
-                          <div className="order-item-price">{Number(item.price *
-                            item.quantity).toLocaleString()}đ</div>
+                          <div className="order-item-price">
+                            {Number(item.price * item.quantity).toLocaleString()}đ
+                          </div>
                         </li>
                       ))}
                     </ul>
 
                     <form onSubmit={handleApplyCoupon} style={{ marginTop: "2rem", display: "flex" }}>
-                      <input id="discountCode" type="text" placeholder="Nhập mã giảm giá..."
-                        value={couponCode} onChange={(e) => setCouponCode(e.target.value)} />
-                      <button type="submit" className="btn-cart btn-views add_to_cart btn btn-primary">Áp
-                        dụng</button>
+                      <input 
+                        id="discountCode" 
+                        type="text" 
+                        placeholder="Nhập mã giảm giá..."
+                        value={couponCode} 
+                        onChange={(e) => setCouponCode(e.target.value)} 
+                      />
+                      <button type="submit" className="btn-cart btn-views add_to_cart btn btn-primary">
+                        Áp dụng
+                      </button>
                     </form>
+                    
                     {error && <p style={{ color: "red" }}>{error}</p>}
-                    {/* Hiển thị mã đã áp dụng nếu có */}
-
+                    
                     {appliedCoupon && (
                       <div className="row">
                         <div className="field">
@@ -430,7 +468,7 @@ function CheckoutContent() {
                     </div>
                     <div className="summary-row">
                       <span>Phí giao hàng</span>
-                      <span>{shippingFee} VND</span>
+                      <span>{shippingFee.toLocaleString()} VND</span>
                     </div>
                     <div className="summary-row">
                       <span>Thuế</span>
@@ -442,20 +480,18 @@ function CheckoutContent() {
                     </div>
                     <div className="summary-row total">
                       <span>Tổng cộng</span>
-                      <span className="font-weight-bold">{total.toLocaleString()}
-                        VND</span>
+                      <span className="font-weight-bold">{total.toLocaleString()} VND</span>
                     </div>
-
                   </div>
                 </div>
               </div>
             </div>
           </div>
-                 </div>
-       </div>
-             </>
-    );
-  }
+        </div>
+      </div>
+    </>
+  );
+}
 
 export default function CheckoutPage() {
   return (

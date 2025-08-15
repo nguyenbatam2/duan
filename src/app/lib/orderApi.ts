@@ -147,43 +147,35 @@ export async function placeOrder(
 
     const { token } = JSON.parse(cookieData);
 
-    // Đúng format BE yêu cầu
+    // Format theo VNPAY_PAYMENT_FLOW.md
     const formattedItems = items.map((item) => ({
       product_id: item.product_id,
-      price: item.price,
+      variant_id: null, // optional
       quantity: item.quantity,
+      price: item.price,
+      product_name: item.product_name || `Product ${item.product_id}` // Sử dụng product_name từ item
     }));
 
+    // Payload theo đúng format BE yêu cầu trong VNPAY_PAYMENT_FLOW.md
     const payload = {
       items: formattedItems,
       name,
       phone,
       address,
       email,
-      payment_method,
+      payment_method, // "cod", "online_payment"
       coupon_code: coupon_code ?? null,
       subtotal,
       shipping_fee,
       tax,
       discount,
       total,
-      notes,
+      notes
     };
 
     console.log("📦 Payload gửi BE:", JSON.stringify(payload, null, 2));
     console.log("🔗 API URL:", `${API_URL}/place-order`);
     console.log("🔑 Token:", token ? 'Present' : 'Missing');
-    console.log("📋 Items validation:", {
-      itemsCount: formattedItems.length,
-      itemsWithPrice: formattedItems.filter(item => item.price > 0).length,
-      itemsWithQuantity: formattedItems.filter(item => item.quantity > 0).length,
-      totalPrice: formattedItems.reduce((sum, item) => sum + (item.price * item.quantity), 0),
-      items: formattedItems.map(item => ({
-        product_id: item.product_id,
-        quantity: item.quantity,
-        price: item.price
-      }))
-    });
 
     const res = await axios.post(
       `${API_URL}/place-order`,
@@ -198,46 +190,57 @@ export async function placeOrder(
     );
 
     console.log("✅ Đặt hàng thành công:", res.data);
-    console.log("📊 Response status:", res.status);
-    console.log("📋 Response headers:", res.headers);
     
-    // Xử lý response cho thanh toán online
-    if (res.data.payment && res.data.payment.success && res.data.payment.data.payment_url) {
-      const paymentUrl = res.data.payment.data.payment_url;
-      console.log("🔗 Redirecting to payment URL:", paymentUrl);
-      console.log("🔍 Payment URL Analysis:", {
-        isVNPay: paymentUrl.includes('vnpayment.vn'),
-        isSandbox: paymentUrl.includes('sandbox'),
-        hasParams: paymentUrl.includes('?'),
-        urlLength: paymentUrl.length
-      });
-      
-      // Kiểm tra URL trước khi redirect
-      if (!paymentUrl.includes('vnpayment.vn')) {
-        console.error("❌ Invalid VNPay URL:", paymentUrl);
-        toast.error("URL thanh toán không hợp lệ!");
+    // Xử lý response theo VNPAY_PAYMENT_FLOW.md
+    if (payment_method === 'online_payment') {
+      // Kiểm tra response format cho online payment
+      if (res.data.success && res.data.data && res.data.data.payment_url) {
+        const paymentUrl = res.data.data.payment_url;
+        console.log("🔗 Redirecting to VNPay:", paymentUrl);
+        
+        // Kiểm tra URL hợp lệ
+        if (!paymentUrl.includes('vnpayment.vn')) {
+          console.error("❌ Invalid VNPay URL:", paymentUrl);
+          toast.error("URL thanh toán không hợp lệ!");
+          return res.data;
+        }
+        
+        // Redirect đến VNPay
+        window.location.href = paymentUrl;
+        return res.data;
+      } else {
+        console.error("❌ Invalid payment response:", res.data);
+        toast.error("Không thể tạo thanh toán. Vui lòng thử lại!");
         return res.data;
       }
-      
-      // Redirect đến VNPay nếu là thanh toán online
-      window.location.href = paymentUrl;
+    } else {
+      // COD payment - không cần redirect
+      console.log("💰 COD payment - no redirect needed");
       return res.data;
     }
     
-    return res.data;
   } catch (err: any) {
     console.error("❌ Lỗi đặt hàng:", err);
     console.error("🚨 Error details:", {
       message: err.message,
       status: err.response?.status,
       statusText: err.response?.statusText,
-      data: JSON.stringify(err.response?.data, null, 2),
+      data: err.response?.data,
       config: {
         url: err.config?.url,
         method: err.config?.method,
-        headers: err.config?.headers
       }
     });
+    
+    // Xử lý lỗi cụ thể
+    if (err.response?.status === 422) {
+      const errorData = err.response.data;
+      if (errorData?.message?.includes('không đủ số lượng') || errorData?.message?.includes('chỉ còn')) {
+        toast.error("Sản phẩm không đủ số lượng trong kho!");
+        return;
+      }
+    }
+    
     throw err;
   }
 }

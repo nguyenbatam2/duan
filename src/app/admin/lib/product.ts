@@ -5,8 +5,17 @@ import { PUBLIC_API, ADMIN_API } from "../../lib/config";
 
 // Lấy danh sách sản phẩm phân trang
 export async function getProductsPage(page: number): Promise<PaginatedProducts> {
+  const token = Cookies.get("token");
+  if (!token) throw new Error("Token không tồn tại");
+
   const res = await axios.get(
-    `${PUBLIC_API.PRODUCTS}/?per_page=16&page=${page}`
+    `${ADMIN_API.PRODUCTS}/?per_page=16&page=${page}`,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        Accept: "application/json",
+      },
+    }
   );
   return res.data as PaginatedProducts;
 }

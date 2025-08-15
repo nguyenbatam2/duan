@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import { fetchAdminEvents, createAdminEvent, toMySQLDatetime, changeEventStatus, addProductToEvent, getEventProducts, removeProductFromEvent, updateEventProduct, updateEvent, deleteEvent } from "../lib/event";
 import { getProductsPage } from "../lib/product";
-import { Event, PaginatedEvents, Product, EventProduct } from "../types/event";
+import { Event, PaginatedEvents, EventProduct } from "../types/event";
+import { Product, PaginatedProducts } from "../types/product";
 import "../style/login.css";
 import Cookies from "js-cookie";
 
@@ -69,8 +70,30 @@ export default function EventPage() {
   useEffect(() => {
     if (showAddProductEventId) {
       (async () => {
-        const data = await getProductsPage(1);
-        setProducts(data.data || []);
+        try {
+          const data: PaginatedProducts = await getProductsPage(1);
+          console.log("Loaded products:", data.data);
+          
+          // Lọc ra các sản phẩm có giá hợp lệ
+          const validProducts = data.data?.filter((product: Product) => {
+            // Sử dụng base_price hoặc display_price thay vì price
+            const priceValue = product.base_price || product.display_price || product.price;
+            if (!priceValue) return false;
+            const cleanPrice = String(priceValue).replace(/[^\d.]/g, '');
+            const price = parseFloat(cleanPrice);
+            return !isNaN(price) && price > 0;
+          }) || [];
+          
+          console.log("Valid products with price:", validProducts.length);
+          setProducts(validProducts);
+          
+          if (validProducts.length === 0) {
+            alert("Không có sản phẩm nào có giá hợp lệ để thêm vào sự kiện!");
+          }
+        } catch (error) {
+          console.error("Failed to load products:", error);
+          alert("Không thể tải danh sách sản phẩm!");
+        }
       })();
     }
   }, [showAddProductEventId]);
@@ -92,12 +115,38 @@ export default function EventPage() {
     try {
       // Lấy original_price từ sản phẩm đã chọn
       const selectedProduct = products.find(p => p.id === Number(selectedProductId));
-      const original_price = selectedProduct ? Number(selectedProduct.price) : 0;
-      if (!original_price || isNaN(original_price) || original_price <= 0) {
-        alert("Không lấy được giá gốc sản phẩm. Vui lòng kiểm tra lại dữ liệu sản phẩm!");
+      
+      if (!selectedProduct) {
+        alert("Không tìm thấy sản phẩm đã chọn!");
         setAddingProduct(false);
         return;
       }
+      
+             console.log("Selected product:", selectedProduct);
+       
+       // Sử dụng base_price hoặc display_price thay vì price
+       const priceValue = selectedProduct.base_price || selectedProduct.display_price || selectedProduct.price;
+       console.log("Product price value:", priceValue, "Type:", typeof priceValue);
+       
+       // Xử lý giá gốc sản phẩm
+       let original_price = 0;
+       if (priceValue) {
+         // Loại bỏ các ký tự không phải số và dấu chấm
+         const cleanPrice = String(priceValue).replace(/[^\d.]/g, '');
+         original_price = parseFloat(cleanPrice);
+         
+         if (isNaN(original_price) || original_price <= 0) {
+           console.error("Invalid price format:", priceValue);
+           alert(`Giá gốc sản phẩm không hợp lệ: "${priceValue}". Vui lòng kiểm tra lại dữ liệu sản phẩm!`);
+           setAddingProduct(false);
+           return;
+         }
+       } else {
+         console.error("Product has no valid price:", selectedProduct);
+         alert("Sản phẩm không có giá gốc hợp lệ. Vui lòng kiểm tra lại dữ liệu sản phẩm!");
+         setAddingProduct(false);
+         return;
+       }
       const token = Cookies.get("token") || "";
       await addProductToEvent(
         showAddProductEventId,

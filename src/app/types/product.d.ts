@@ -3,6 +3,7 @@ export interface OrderItem {
   product_id: number;
   quantity: number;
   price: number;
+  product_name: string; // Required để fix SQL error
   variant_id?: number; // <- optional
 }
 

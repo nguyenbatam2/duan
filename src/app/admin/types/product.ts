@@ -10,6 +10,9 @@ export interface Product {
   status: number;
   product_type: string;
   price: string;
+  base_price?: string;
+  display_price?: string;
+  original_price?: string | null;
   stock_quantity: number;
   image: string;
   average_rating: number | null;
