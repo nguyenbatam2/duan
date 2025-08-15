@@ -416,13 +416,11 @@ function CheckoutContent() {
                           <div className="order-item-info">
                             <span className="product__description__name">{item.name}</span>
                             <p className="order-item-details">
-                              {Number(item.price).toLocaleString()}đ 
-                              <span style={{ color: 'red' }}> x{item.quantity}</span>
-                            </p>
+                              {Number(item.base_price).toLocaleString()}đ <span style={{ color: 'red' }}>
+                                x{item.quantity}</span></p>
                           </div>
-                          <div className="order-item-price">
-                            {Number(item.price * item.quantity).toLocaleString()}đ
-                          </div>
+                          <div className="order-item-price">{Number(item.base_price *
+                            item.quantity).toLocaleString()}đ</div>
                         </li>
                       ))}
                     </ul>

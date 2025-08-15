@@ -3,10 +3,14 @@
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import useSWR from 'swr';
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { getProductsByCategory  } from "../../lib/category";
 import { Category } from "../..//types/category";
 import "../../styles/listProduct.css";
+import AddToCart from "@/app/addToCart/page";
+import AddToWishlist from "@/app/addToWishlist/page";
+import WishlistModal from "@/app/wishlistModal/page";
+import CartModal from "@/app/cartModal/page";
 
 const useCategory = (id: number) => {
     const { data, error, isLoading } = useSWR(['category', id], () => getProductsByCategory(id));
@@ -29,10 +33,17 @@ const useProducts = (categoryId: number, page: number) => {
 
 
 export default function CategoryProductPage() {
+
     const params = useParams();
     const categoryId = Number(params.id);
     const [currentPage, setCurrentPage] = useState<number>(1);
+    const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+    const [selectedRanges, setSelectedRanges] = useState<[number, number | null][]>([]); // [min, max]
+    const [showModal, setShowModal] = useState(false);
+    const [actionText, setActionText] = useState<"add" | "remove">("add");
 
+    const [isActive, setIsActive] = useState(false);
+    const [sortType, setSortType] = useState("default");
     const { category, isLoading: loadingCategory } = useCategory(categoryId);
     const { products, totalPages, isLoading: loadingProducts } = useProducts(categoryId, currentPage);
 
@@ -42,49 +53,106 @@ export default function CategoryProductPage() {
         }
     };
 
-    const renderPagination = () => {
-        const paginationItems = [];
-        const maxVisiblePages = 5;
-        let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
-        const endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
-
-        if (endPage - startPage < maxVisiblePages - 1) {
-            startPage = Math.max(1, endPage - (maxVisiblePages - 1));
-        }
-
-        if (startPage > 1) {
-            paginationItems.push(
-                <li key={1} className="page-item">
-                    <Link href="#" className="page-link" onClick={() => handlePageChange(1)}>1</Link>
-                </li>
-            );
-            if (startPage > 2) {
-                paginationItems.push(<li key="ellipsis-start" className="page-item disabled"><span className="page-link">...</span></li>);
+    
+        // Cập nhật khoảng giá khi tick
+        const handlePriceFilterChange = (min: number, max: number | null, checked: boolean) => {
+            setSelectedRanges(prev => {
+                if (checked) {
+                    return [...prev, [min, max]];
+                } else {
+                    return prev.filter(([pMin, pMax]) => pMin !== min || pMax !== max);
+                }
+            });
+        };
+    
+        // Lọc & Sắp xếp
+        const filteredAndSortedItems = useMemo(() => {
+            let filtered = [...products];
+    
+            // Lọc theo giá
+            if (selectedRanges.length > 0) {
+                filtered = filtered.filter(p => {
+                    return selectedRanges.some(([min, max]) => {
+                        if (max === null) return p.price > min; // Trên max
+                        return p.price >= min && p.price <= max;
+                    });
+                });
             }
-        }
-
-        for (let page = startPage; page <= endPage; page++) {
-            paginationItems.push(
-                <li key={page} className={`page-item ${currentPage === page ? 'active' : ''}`}>
-                    <Link href="#" className="page-link" onClick={() => handlePageChange(page)}>{page}</Link>
-                </li>
-            );
-        }
-
-        if (endPage < totalPages) {
-            if (endPage < totalPages - 1) {
-                paginationItems.push(<li key="ellipsis-end" className="page-item disabled"><span className="page-link">...</span></li>);
+    
+            // Sắp xếp
+            switch (sortType) {
+                case "alpha-asc":
+                    filtered.sort((a, b) => a.name.localeCompare(b.name));
+                    break;
+                case "alpha-desc":
+                    filtered.sort((a, b) => b.name.localeCompare(a.name));
+                    break;
+                case "created-desc":
+                    filtered.sort((a, b) => b.id - a.id);
+                    break;
+                case "price-asc":
+                    filtered.sort((a, b) => a.price - b.price);
+                    break;
+                case "price-desc":
+                    filtered.sort((a, b) => b.price - a.price);
+                    break;
+                default:
+                    break;
             }
-            paginationItems.push(
-                <li key={totalPages} className="page-item">
-                    <Link href="#" className="page-link" onClick={() => handlePageChange(totalPages)}>{totalPages}</Link>
-                </li>
-            );
-        }
-
-        return paginationItems;
-    };
-
+            return filtered;
+        }, [products, sortType, selectedRanges]);
+    
+        const handleToggleWishlist = (action: "add" | "remove") => {
+            setActionText(action);
+            setShowModal(true);
+            setTimeout(() => setShowModal(false), 2500);
+        };
+    
+    
+        const renderPagination = () => {
+            const paginationItems = [];
+            const maxVisiblePages = 5;
+            let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+            const endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+    
+            if (endPage - startPage < maxVisiblePages - 1) {
+                startPage = Math.max(1, endPage - (maxVisiblePages - 1));
+            }
+    
+            if (startPage > 1) {
+                paginationItems.push(
+                    <li key={1} className="page-item">
+                        <Link href="#" className="page-link" onClick={() => handlePageChange(1)}>1</Link>
+                    </li>
+                );
+                if (startPage > 2) {
+                    paginationItems.push(<li key="ellipsis-start" className="page-item disabled"><span className="page-link">...</span></li>);
+                }
+            }
+    
+            for (let page = startPage; page <= endPage; page++) {
+                paginationItems.push(
+                    <li key={page} className={`page-item ${currentPage === page ? 'active' : ''}`}>
+                        <Link href="#" className="page-link" onClick={() => handlePageChange(page)}>{page}</Link>
+                    </li>
+                );
+            }
+    
+            if (endPage < totalPages) {
+                if (endPage < totalPages - 1) {
+                    paginationItems.push(<li key="ellipsis-end" className="page-item disabled"><span className="page-link">...</span></li>);
+                }
+                paginationItems.push(
+                    <li key={totalPages} className="page-item">
+                        <Link href="#" className="page-link" onClick={() => handlePageChange(totalPages)}>{totalPages}</Link>
+                    </li>
+                );
+            }
+    
+            return paginationItems;
+        };
+    
+    
 
     return (
         <>
@@ -107,8 +175,8 @@ export default function CategoryProductPage() {
 
                 <div className="container">
                     <div className="row">
-                        <aside className="dqdt-sidebar left-content">
-                            <div className="close-filters" title="Đóng bộ lọc">
+                        <aside className={`dqdt-sidebar left-content ${isActive ? "active" : ""} `}>
+                            <div className="close-filters" title="Đóng bộ lọc" onClick={() => setIsActive(!isActive)}>
                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="bi bi-x-lg" viewBox="0 0 16 16">
                                     <path d="M2.146 2.854a.5.5 0 1 1 .708-.708L8 7.293l5.146-5.147a.5.5 0 0 1 .708.708L8.707 8l5.147 5.146a.5.5 0 0 1-.708.708L8 8.707l-5.146 5.147a.5.5 0 0 1-.708-.708L7.293 8 2.146 2.854Z"></path>
                                 </svg>
@@ -145,46 +213,35 @@ export default function CategoryProductPage() {
                                                     </li>
 
                                                     <li className="filter-item filter-item--check-box filter-item--green">
-                                                        <span>
-                                                            <label data-filter="6-000-000d" htmlFor="filter-2-000-000d-6-000-000d">
-                                                                <input type="checkbox" id="filter-2-000-000d-6-000-000d" data-group="Khoảng giá" data-field="price_min" data-text="2.000.000đ - 6.000.000đ" value="(>=2000000 AND <=6000000)" data-operator="OR" />
-                                                                <i className="fa"></i>
-                                                                Từ 2 triệu - 6 triệu
-                                                            </label>
-                                                        </span>
-                                                    </li>
-
-                                                    <li className="filter-item filter-item--check-box filter-item--green">
-                                                        <span>
-                                                            <label data-filter="15-000-000d" htmlFor="filter-6-000-000d-15-000-000d">
-                                                                <input type="checkbox" id="filter-6-000-000d-15-000-000d" data-group="Khoảng giá" data-field="price_min" data-text="6.000.000đ - 15.000.000đ" value="(>=6000000 AND <=15000000)" data-operator="OR" />
-                                                                <i className="fa"></i>
-                                                                Từ 6 triệu - 15 triệu
-                                                            </label>
-                                                        </span>
-                                                    </li>
-
-                                                    <li className="filter-item filter-item--check-box filter-item--green">
-                                                        <span>
-                                                            <label data-filter="20-000-000d" htmlFor="filter-15-000-000d-20-000-000d">
-                                                                <input type="checkbox" id="filter-15-000-000d-20-000-000d" data-group="Khoảng giá" data-field="price_min" data-text="15.000.000đ - 20.000.000đ" value="(>=15000000 AND <=20000000)" data-operator="OR" />
-                                                                <i className="fa"></i>
-                                                                Từ 15 triệu - 20 triệu
-                                                            </label>
-                                                        </span>
+                                                        <label>
+                                                            <input type="checkbox" onChange={(e) => handlePriceFilterChange(2000000, 6000000, e.target.checked)} />
+                                                            Từ 2 - 6 triệu
+                                                            <i className="fa"></i>
+                                                        </label>
                                                     </li>
                                                     <li className="filter-item filter-item--check-box filter-item--green">
-                                                        <span>
-                                                            <label data-filter="20-000-000d" htmlFor="filter-tren20-000-000d">
-                                                                <input type="checkbox" id="filter-tren20-000-000d" data-group="Khoảng giá" data-field="price_min" data-text="Trên 20.000.000đ" value="(>20000000)" data-operator="OR" />
-                                                                <i className="fa"></i>
-                                                                Trên 20 triệu
-                                                            </label>
-                                                        </span>
+                                                        <label>
+                                                            <input type="checkbox" onChange={(e) => handlePriceFilterChange(6000000, 15000000, e.target.checked)} />
+                                                            Từ 6 - 15 triệu
+                                                            <i className="fa"></i>
+
+                                                        </label>
                                                     </li>
+                                                    <li className="filter-item filter-item--check-box filter-item--green">
+                                                        <label>
+                                                            <input type="checkbox" onChange={(e) => handlePriceFilterChange(15000000, 20000000, e.target.checked)} />
+                                                            Từ 15 - 20 triệu
+                                                            <i className="fa"></i>
+                                                        </label>
+                                                    </li>
+                                                    <li className="filter-item filter-item--check-box filter-item--green">
+                                                        <label>
+                                                            <input type="checkbox" onChange={(e) => handlePriceFilterChange(20000000, null, e.target.checked)} />
+                                                            Trên 20 triệu
+                                                            <i className="fa"></i>
 
-
-
+                                                        </label>
+                                                    </li>
                                                 </ul>
                                             </div>
                                         </aside>
@@ -566,35 +623,29 @@ export default function CategoryProductPage() {
                                                     <path d="M12.96 14H9.028v-.691l2.579-3.72v-.054H9.098v-.867h3.785v.691l-2.567 3.72v.054h2.645V14zM4.5 2.5a.5.5 0 0 0-1 0v9.793l-1.146-1.147a.5.5 0 0 0-.708.708l2 1.999.007.007a.497.497 0 0 0 .7-.006l2-2a.5.5 0 0 0-.707-.708L4.5 12.293V2.5z"></path>
                                                 </svg> Xếp theo</h3>
                                             <ul>
-                                                <li className="btn-quick-sort default active">
-                                                    <Link href="javascript:; onclick=sortby('default')" title="Mặc định"><i></i>Mặc định</Link>
+                                                <li className={`btn-quick-sort default ${sortType === "default" ? "active" : ""}`}>
+                                                    <Link href="#" onClick={(e) => { e.preventDefault(); setSortType("default") }}>Mặc định</Link>
                                                 </li>
-                                                <li className="btn-quick-sort alpha-asc">
-                                                    <Link href="javascript:; onclick= sortby('alpha-asc')" title="Tên A-Z"><i></i>Tên A-Z</Link>
+                                                <li className={`btn-quick-sort alpha-asc ${sortType === "alpha-asc" ? "active" : ""}`}>
+                                                    <Link href="#" onClick={(e) => { e.preventDefault(); setSortType("alpha-asc") }}>Tên A-Z</Link>
                                                 </li>
-                                                <li className="btn-quick-sort alpha-desc">
-                                                    <Link href="javascript:; onclick=sortby('alpha-desc')" title="Tên Z-A"><i></i>Tên Z-A</Link>
+                                                <li className={`btn-quick-sort alpha-desc ${sortType === "alpha-desc" ? "active" : ""}`}>
+                                                    <Link href="#" onClick={(e) => { e.preventDefault(); setSortType("alpha-desc") }}>Tên Z-A</Link>
                                                 </li>
-                                                <li className="btn-quick-sort position-desc">
-                                                    <Link href="javascript:; onclick=sortby('created-desc')" title="Hàng mới"><i></i>Hàng mới</Link>
+                                                <li className={`btn-quick-sort position-desc ${sortType === "created-desc" ? "active" : ""}`}>
+                                                    <Link href="#" onClick={(e) => { e.preventDefault(); setSortType("created-desc") }}>Hàng mới</Link>
                                                 </li>
-                                                <li className="btn-quick-sort price-asc">
-                                                    <Link href="javascript:; onclick=sortby('price-asc')" title="Giá thấp đến cao"><i></i>Giá thấp đến cao</Link>
+                                                <li className={`btn-quick-sort price-asc ${sortType === "price-asc" ? "active" : ""}`}>
+                                                    <Link href="#" onClick={(e) => { e.preventDefault(); setSortType("price-asc") }}>Giá thấp đến cao</Link>
                                                 </li>
-                                                <li className="btn-quick-sort price-desc">
-                                                    <Link href="javascript:; onclick=sortby('price-desc')" title="Giá cao xuống thấp"><i></i>Giá cao xuống thấp</Link>
+                                                <li className={`btn-quick-sort price-desc ${sortType === "price-desc" ? "active" : ""}`}>
+                                                    <Link href="#" onClick={(e) => { e.preventDefault(); setSortType("price-desc") }}>Giá cao xuống thấp</Link>
                                                 </li>
                                             </ul>
                                         </div>
                                     </div>
 
-                                    {/* <script>
-                                            function countFilterItem() {
-		var countFilter = $('.filter-container__selected-filter-list ul li').length;
-                                            $(".count-filter-val").text(countFilter);
-	}
-                                            countFilterItem();
-                                        </script> */}
+
 
                                 </div>
 
@@ -604,32 +655,22 @@ export default function CategoryProductPage() {
                                         {loadingProducts ? (
                                             <p>Đang tải sản phẩm...</p>
                                         ) : (
-                                            products.slice(0, 8).map((product) => (
+                                            filteredAndSortedItems.map((product) => (
+                                                console.log("product", product),
+
                                                 <div className="col-6 col-md-3" key={product.id}>
                                                     <div className="item_product_main">
 
-                                                        <form action="/cart/add" method="post" className="variants product-action item-product-main duration-300" data-cart-form="" data-id="product-actions-34775949" encType="multipart/form-data">
-                                                            <span className="flash-sale">-
-                                                                6%
+                                                        <form method="post" className="variants product-action item-product-main duration-300" data-cart-form="" data-id="product-actions-34775949" encType="multipart/form-data">
+                                                            <span className="flash-sale">
+                                                                0%
                                                             </span>
-
-                                                            <div className="tag-promo" title="Quà tặng">
-                                                                <img src="//bizweb.dktcdn.net/100/506/650/themes/944598/assets/tag_pro_icon.svg?1739018973665" data-src="//bizweb.dktcdn.net/100/506/650/themes/944598/assets/tag_pro_icon.svg?1739018973665" alt="Quà tặng" className="lazyload loaded" data-was-processed="true" />
-                                                                <div className="promotion-content">
-                                                                    <div className="line-clamp-5-new" title=" - Tặng 1 túi giấy xách đi kèm - 1 Hộp đường phèn ">
-
-                                                                        <p>
-                                                                            <span style={{ letterSpacing: "-0.2px" }}>- Tặng 1 túi giấy xách đi kèm <br />- 1 Hộp đường phèn </span>
-                                                                        </p>
-
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-
                                                             <div className="product-thumbnail">
                                                                 <Link className="image_thumb scale_hover" href={`/product/${product.id}`} title={product.name}>
-                                                                    <img className="lazyload duration-300 loaded" src="https://bizweb.dktcdn.net/thumb/large/100/506/650/products/bb2-50gr-0-nap-494df53fb54c4233b0ba3c0a8ab3dfbe-97fc1701b8a14297ac03ee1e64edf1b2-master-d488b4d7-4784-48b2-a54a-c7d6343654fa.jpg?v=1709574876467" alt={product.name} data-was-processed="true" />
-                                                                </Link>
+                                                                    <img
+                                                                        src={`${product.image}`}
+                                                                        alt={product.name}
+                                                                    />                                                                </Link>
                                                             </div>
                                                             <div className="product-info">
                                                                 <div className="name-price">
@@ -637,20 +678,19 @@ export default function CategoryProductPage() {
                                                                         <Link href={`/product/${product.id}`} title={product.name}>{product.name}</Link>
                                                                     </h3>
                                                                     <div className="product-price-cart">
-                                                                        <span className="compare-price">{product.price}</span>
-
-                                                                        <span className="price">{product.price}</span>
+                                                                        {product.discount_price !== "0.00" && (
+                                                                            <span className="compare-price">   {Number(product.display_price).toLocaleString()}₫</span>
+                                                                        )}
+                                                                        <span className="price">
+                                                                            {Number(product.base_price).toLocaleString()}₫
+                                                                        </span>
                                                                     </div>
                                                                 </div>
                                                                 <div className="product-button">
                                                                     {/* <input type="hidden" name="variantId" value={product.variantId} /> */}
-                                                                    <button className="btn-cart btn-views add_to_cart btn btn-primary " title="Thêm vào giỏ hàng">
-                                                                        <span>Thêm vào giỏ</span>
-                                                                        <svg enableBackground="new 0 0 32 32" height="512" viewBox="0 0 32 32" width="512" xmlns="http://www.w3.org/2000/svg"><g><g><path d="m23.8 30h-15.6c-3.3 0-6-2.7-6-6v-.2l.6-16c.1-3.3 2.8-5.8 6-5.8h14.4c3.2 0 5.9 2.5 6 5.8l.6 16c.1 1.6-.5 3.1-1.6 4.3s-2.6 1.9-4.2 1.9c0 0-.1 0-.2 0zm-15-26c-2.2 0-3.9 1.7-4 3.8l-.6 16.2c0 2.2 1.8 4 4 4h15.8c1.1 0 2.1-.5 2.8-1.3s1.1-1.8 1.1-2.9l-.6-16c-.1-2.2-1.8-3.8-4-3.8z"></path></g><g><path d="m16 14c-3.9 0-7-3.1-7-7 0-.6.4-1 1-1s1 .4 1 1c0 2.8 2.2 5 5 5s5-2.2 5-5c0-.6.4-1 1-1s1 .4 1 1c0 3.9-3.1 7-7 7z"></path></g></g></svg>
-                                                                    </button>
-                                                                    <Link href="javascript:void(0)" className="setWishlist btn-views btn-circle" data-wish={`product-${product.id}`} tabIndex={0} title="Thêm vào yêu thích">
-                                                                        <img width="25" height="25" src="//bizweb.dktcdn.net/100/506/650/themes/944598/assets/heart.png?1739018973665" alt="Thêm vào yêu thích" />
-                                                                    </Link>
+                                                                    <AddToCart product={product} onAddToCart={(product) => setSelectedProduct(product)} />
+
+                                                                    <AddToWishlist product={product} onToggle={handleToggleWishlist} />
                                                                 </div>
                                                             </div>
                                                         </form>
@@ -658,6 +698,7 @@ export default function CategoryProductPage() {
                                                 </div>
                                             ))
                                         )}
+
                                         {/* hết sp 1 */}
 
                                     </div>
@@ -682,6 +723,14 @@ export default function CategoryProductPage() {
                     </div>
                 </div>
             </div>
+
+            {selectedProduct && (
+                <CartModal
+                    product={selectedProduct}
+                    onClose={() => setSelectedProduct(null)}
+                />
+            )}
+            {showModal && <WishlistModal action={actionText} />}
         </>
     );
 }

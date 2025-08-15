@@ -20,7 +20,7 @@ export async function getCategories(): Promise<Category[]> {
     } catch (error) {
         console.error('Error fetching categories:', error);
         return [];
-    }
+  }
 }
 
 export const getProductsByCategory = async (

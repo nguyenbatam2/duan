@@ -15,7 +15,7 @@ const useCategories = () => {
     const { data, error, isLoading } = useSWR("categories", getCategories);
 
     return {
-        categories: data?.data || [],
+        categories: Array.isArray(data) ? data : [],
         isLoading,
         isError: error
     };
@@ -39,7 +39,7 @@ export default function ListProductPage() {
 
     // Dùng SWR lấy danh mục
     const { categories, isLoading: loadingCategories } = useCategories();
-
+    
     const products: Product[] = productData?.data || [];
     const totalPages: number = productData?.meta?.last_page || 0;
 
@@ -371,11 +371,19 @@ export default function ListProductPage() {
                                     {loadingCategories ? (
                                         <p>Đang tải danh mục...</p>
                                     ) : (
-                                        categories.map((category) => (
-                                            <Link key={category.id} className="cate-item duration-300" href={`/collections/${category.slug}`} title={category.name}>
-                                                <div className="cate-info-title">{category.name}</div>
-                                            </Link>
-                                        ))
+                                        categories.map((category) => {
+                                            console.log("category", category);
+                                            return (
+                                                <Link
+                                                    key={category.id}
+                                                    className="cate-item duration-300"
+                                                    href={`/collections/${category.id}`}
+                                                    title={category.name}
+                                                >
+                                                    <div className="cate-info-title">{category.name}</div>
+                                                </Link>
+                                            );
+                                        })
                                     )}
                                 </div>
                             </div>
@@ -441,16 +449,15 @@ export default function ListProductPage() {
                                             <p>Đang tải sản phẩm...</p>
                                         ) : (
                                                 filteredAndSortedItems.map((product) => (
+                                                    console.log("product",product),
+
                                                 <div className="col-6 col-md-3" key={product.id}>
                                                     <div className="item_product_main">
 
                                                             <form method="post" className="variants product-action item-product-main duration-300" data-cart-form="" data-id="product-actions-34775949" encType="multipart/form-data">
-                                                            <span className="flash-sale">-
-                                                                    {product.discount_price !== "0.00"
-                                                                        ? ((parseInt(product.price) - parseInt(product.discount_price)) / parseInt(product.price) * 100).toFixed(0)
-                                                                        : "0"}%
+                                                                    <span className="flash-sale">
+                                                                        0%
                                                             </span>
-
                                                             <div className="product-thumbnail">
                                                                 <Link className="image_thumb scale_hover" href={`/product/${product.id}`} title={product.name}>
                                                                         <img
@@ -465,12 +472,10 @@ export default function ListProductPage() {
                                                                     </h3>
                                                                     <div className="product-price-cart">
                                                                             {product.discount_price !== "0.00" && (
-                                                                                <span className="compare-price">{parseInt(product.price).toLocaleString()}₫</span>
+                                                                                    <span className="compare-price">   {Number(product.display_price).toLocaleString()}₫</span>
                                                                             )}
                                                                             <span className="price">
-                                                                                {parseInt(
-                                                                                    product.discount_price === "0.00" ? product.price : product.discount_price
-                                                                                ).toLocaleString()}₫
+                                                                                   {Number(product.base_price).toLocaleString()}₫
                                                                             </span>
                                                                     </div>
                                                                 </div>
