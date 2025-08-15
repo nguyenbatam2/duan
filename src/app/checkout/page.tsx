@@ -3,6 +3,7 @@
 
 export const dynamic = 'force-dynamic';
 import "../styles/checkout.css";
+import "../styles/payment.css";
 import Link from "next/link";
 import axios from "axios";
 import { useEffect, useState, Suspense } from "react";

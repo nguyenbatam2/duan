@@ -1,13 +1,15 @@
 'use client';
 
+export const dynamic = 'force-dynamic';
+
 import { useEffect, useState } from 'react';
-import { useSearchParams, useRouter } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
 import { API_BASE_URL } from '../../lib/config';
+import '../../styles/payment.css';
 
-export default function PaymentReturnPage() {
-  const searchParams = useSearchParams();
+function PaymentReturnContent() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [paymentResult, setPaymentResult] = useState<any>(null);
@@ -63,7 +65,7 @@ export default function PaymentReturnPage() {
             router.push('/checkout');
           }, 3000);
         }
-      } catch (error) {
+      } catch (error: any) {
         console.error('💥 Payment return error:', error);
         console.error('Error details:', {
           message: error.message,
@@ -182,4 +184,8 @@ export default function PaymentReturnPage() {
       </div>
     </div>
   );
+}
+
+export default function PaymentReturnPage() {
+  return <PaymentReturnContent />;
 }
