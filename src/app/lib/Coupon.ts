@@ -23,26 +23,3 @@ export async function saveCoupon(coupon_id: number) {
   return res.data; // { message: "...", ... }
 }
 
-// Helper map code -> id
-export function buildCodeToIdMap(coupons: Coupon[]) {
-  const map: Record<string, number> = {};
-  for (const c of coupons) map[c.code.toUpperCase()] = c.id;
-  return map;
-}
-
-// Helper hiển thị nội dung giảm
-export function formatCoupon(c: Coupon) {
-  const badges = [];
-  if (c.free_shipping) badges.push("Miễn phí vận chuyển");
-  if (c.type === "percent" && c.total_discount)
-    badges.push(`Giảm ${c.total_discount}%`);
-  if (c.type !== "percent" && c.total_discount)
-    badges.push(`Giảm ${c.total_discount.toLocaleString()}đ`);
-  if (c.product_discount)
-    badges.push(`SP: ${c.product_discount}${c.type === "percent" ? "%" : "đ"}`);
-  if (c.shipping_discount)
-    badges.push(
-      `Ship: ${c.shipping_discount}${c.type === "percent" ? "%" : "đ"}`
-    );
-  return badges.join(" · ") || "Ưu đãi";
-}

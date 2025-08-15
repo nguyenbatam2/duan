@@ -392,8 +392,9 @@ export default function ProductDetail() {
                                                     </div>
                                                 </div>
                                                 <div className="btn-mua button_actions clearfix">
-                                                    <button className="btn-buyNow btn btn-primary" type="button" >
-                                                        <span className="txt-main">Mua ngay</span>
+                                                    <button className="btn-buyNow btn btn-primary" type="button" style={{ backgroundColor: "#d0a73c" }}
+ >
+                                                        <span className="txt-main"  >Mua ngay</span>
                                                     </button>
                                                     <AddToCart 
                                                         product={product.has_active_event ? {
