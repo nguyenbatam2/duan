@@ -301,7 +301,7 @@ export default function Header() {
                                                     <path d="m210.351562 246.632812c33.882813 0 63.21875-12.152343 87.195313-36.128906 23.96875-23.972656 36.125-53.304687 36.125-87.191406 0-33.875-12.152344-63.210938-36.128906-87.191406-23.976563-23.96875-53.3125-36.121094-87.191407-36.121094-33.886718 0-63.21875 12.152344-87.191406 36.125s-36.128906 53.308594-36.128906 87.1875c0 33.886719 12.15625 63.222656 36.128906 87.195312 23.980469 23.96875 53.316406 36.125 87.191406 36.125zm-65.972656-189.292968c18.394532-18.394532 39.972656-27.335938 65.972656-27.335938 25.996094 0 47.578126 8.941406 65.976563 27.335938 18.394531 18.398437 27.339844 39.980468 27.339844 65.972656 0 26-8.945313 47.578125-27.339844 65.976562-18.398437 18.398438-39.980469 27.339844-65.976563 27.339844-25.992187 0-47.570312-8.945312-65.972656-27.339844-18.398437-18.394531-27.34375-39.976562-27.34375-65.976562 0-25.992188 8.945313-47.574219 27.34375-65.972656zm0 0"></path><path d="m426.128906 393.703125c-.691406-9.976563-2.089844-20.859375-4.148437-32.351563-2.078125-11.578124-4.753907-22.523437-7.957031-32.527343-3.3125-10.339844-7.808594-20.550781-13.375-30.335938-5.769532-10.15625-12.550782-19-20.160157-26.277343-7.957031-7.613282-17.699219-13.734376-28.964843-18.199219-11.226563-4.441407-23.667969-6.691407-36.976563-6.691407-5.226563 0-10.28125 2.144532-20.042969 8.5-6.007812 3.917969-13.035156 8.449219-20.878906 13.460938-6.707031 4.273438-15.792969 8.277344-27.015625 11.902344-10.949219 3.542968-22.066406 5.339844-33.042969 5.339844-10.96875 0-22.085937-1.796876-33.042968-5.339844-11.210938-3.621094-20.300782-7.625-26.996094-11.898438-7.769532-4.964844-14.800782-9.496094-20.898438-13.46875-9.753906-6.355468-14.808594-8.5-20.035156-8.5-13.3125 0-25.75 2.253906-36.972656 6.699219-11.257813 4.457031-21.003906 10.578125-28.96875 18.199219-7.609375 7.28125-14.390625 16.121094-20.15625 26.273437-5.558594 9.785157-10.058594 19.992188-13.371094 30.339844-3.199219 10.003906-5.875 20.945313-7.953125 32.523437-2.0625 11.476563-3.457031 22.363282-4.148437 32.363282-.679688 9.777344-1.023438 19.953125-1.023438 30.234375 0 26.726562 8.496094 48.363281 25.25 64.320312 16.546875 15.746094 38.4375 23.730469 65.066406 23.730469h246.53125c26.621094 0 48.511719-7.984375 65.0625-23.730469 16.757813-15.945312 25.253906-37.589843 25.253906-64.324219-.003906-10.316406-.351562-20.492187-1.035156-30.242187zm-44.90625 72.828125c-10.933594 10.40625-25.449218 15.464844-44.378906 15.464844h-246.527344c-18.933594 0-33.449218-5.058594-44.378906-15.460938-10.722656-10.207031-15.933594-24.140625-15.933594-42.585937 0-9.59375.316406-19.066407.949219-28.160157.617187-8.921874 1.878906-18.722656 3.75-29.136718 1.847656-10.285156 4.199219-19.9375 6.996094-28.675782 2.683593-8.378906 6.34375-16.675781 10.882812-24.667968 4.332031-7.617188 9.316407-14.152344 14.816407-19.417969 5.144531-4.925781 11.628906-8.957031 19.269531-11.980469 7.066406-2.796875 15.007812-4.328125 23.628906-4.558594 1.050781.558594 2.921875 1.625 5.953125 3.601563 6.167969 4.019531 13.277344 8.605469 21.136719 13.625 8.859375 5.648437 20.273437 10.75 33.910156 15.152344 13.941406 4.507812 28.160156 6.796875 42.273437 6.796875 14.113282 0 28.335938-2.289063 42.269532-6.792969 13.648437-4.410156 25.058594-9.507813 33.929687-15.164063 8.042969-5.140624 14.953125-9.59375 21.121094-13.617187 3.03125-1.972656 4.902344-3.042969 5.953125-3.601563 8.625.230469 16.566406 1.761719 23.636719 4.558594 7.636719 3.023438 14.121093 7.058594 19.265625 11.980469 5.5 5.261719 10.484375 11.796875 14.816406 19.421875 4.542969 7.988281 8.207031 16.289062 10.886719 24.660156 2.800781 8.75 5.15625 18.398438 7 28.675782 1.867187 10.433593 3.132812 20.238281 3.75 29.144531v.007812c.636719 9.058594.957031 18.527344.960937 28.148438-.003906 18.449219-5.214844 32.378906-15.9375 42.582031zm0 0"></path>
                                                 </svg>
                                             </span>
-                                            <span className="item-title sm-hidden">{author ? author.user.name : "Tài khoản"}</span>
+                                            <span className="item-title sm-hidden">{author?.user?.name || "Tài khoản"}</span>
                                             <svg width="30" height="30" viewBox="0 0 8 17" fill="none" xmlns="http://www.w3.org/2000/svg">
                                                 <path d="M7.13382 7.1278L7.13379 7.12777L0.512271 0.509686L0.795057 0.226752L0.51227 0.509685C0.512123 0.509538 0.51201 0.509431 0.511927 0.509356L7.13382 7.1278ZM7.13382 7.1278C7.62239 7.61603 7.622 8.40641 7.13301 8.89414L7.13298 8.89417L0.502368 15.5089C0.50222 15.509 0.502106 15.5091 0.502022 15.5092C0.501841 15.5092 0.501547 15.5093 0.501149 15.5093C0.500827 15.5093 0.500574 15.5093 0.500392 15.5092L7.13055 8.89499C7.13056 8.89498 7.13057 8.89497 7.13058 8.89495C7.61976 8.407 7.62011 7.61541 7.13138 7.12699L7.13382 7.1278Z"></path>
                                             </svg>
@@ -481,238 +481,7 @@ export default function Header() {
                                                             </Link>
                                                             <i className="open_mnu down_icon"></i>
                                                         </li>
-                                                    ))}
-                                            {/* <li className="sudes-main-cate-has-child menu-item-count ">
-                                                <Link href="/yen-nuoc" title="Yến nước">
-                                                    <img className="lazyload loaded" src="http://bizweb.dktcdn.net/100/506/650/themes/944598/assets/index-cate-icon-3.png?1739018973665" data-src="//bizweb.dktcdn.net/100/506/650/themes/944598/assets/index-cate-icon-3.png?1739018973665" width={100}
-                                                        height={100} alt="img nước" data-was-processed="true" />
-                                                    Yến nước
-                                                </Link>
-                                                <i className="open_mnu down_icon"></i>
-                                                <ul className="menu-child sub-menu sudes-sub-mega-menu">
-
-
-                                                    <li>
-                                                        <Link href="/yen-nuoc-chung-duong-phen" title="Yến nước chưng đường phèn">Yến nước chưng đường phèn</Link>
-                                                    </li>
-
-
-
-                                                    <li>
-                                                        <Link href="/yen-nuoc-ky-tu" title="Yến nước kỳ tử">Yến nước kỳ tử</Link>
-                                                    </li>
-
-
-
-                                                    <li>
-                                                        <Link href="/yen-nuoc-duong-an-kieng" title="Yến nước đường ăn kiêng">Yến nước đường ăn kiêng</Link>
-                                                    </li>
-
-
-
-                                                    <li>
-                                                        <Link href="/yen-nuoc-nha-dam-hat-chia" title="Yến nước nha đam hạt chia">Yến nước nha đam hạt chia</Link>
-                                                    </li>
-
-
-                                                </ul>
-                                            </li>
-
-                                            <li className="sudes-main-cate-has-child menu-item-count ">
-                                                <Link href="/dong-trung-ha-thao" title="Đông trùng hạ thảo">
-                                                    <img className="lazyload loaded" src="http://bizweb.dktcdn.net/100/506/650/themes/944598/assets/index-cate-icon-4.png?1739018973665" data-src="//bizweb.dktcdn.net/100/506/650/themes/944598/assets/index-cate-icon-4.png?1739018973665" alt="Đông trùng img thảo" data-was-processed="true" />
-                                                    Đông trùng hạ thảo
-                                                </Link>
-                                                <i className="open_mnu down_icon"></i>
-                                                <ul className="menu-child sub-menu sudes-sub-mega-menu">
-
-
-                                                    <li>
-                                                        <Link href="/nam-dong-trung-ha-thao-tuoi" title="Nấm đông trùng hạ thảo tươi">Nấm đông trùng hạ thảo tươi</Link>
-                                                    </li>
-
-
-
-                                                    <li>
-                                                        <Link href="/nam-dong-trung-ha-thao-kho" title="Nấm đông trùng hạ thảo khô">Nấm đông trùng hạ thảo khô</Link>
-                                                    </li>
-
-
-
-                                                    <li>
-                                                        <Link href="/vien-dong-trung-ha-thao" title="Viên đông trùng hạ thảo">Viên đông trùng hạ thảo</Link>
-                                                    </li>
-
-
-                                                </ul>
-                                            </li>
-
-                                            <li className="sudes-main-cate-has-child menu-item-count ">
-                                                <Link href="/sam-han-quoc" title="Sâm Hàn Quốc">
-                                                    <img className="lazyload loaded" src="http://bizweb.dktcdn.net/100/506/650/themes/944598/assets/index-cate-icon-5.png?1739018973665" data-src="//bizweb.dktcdn.net/100/506/650/themes/944598/assets/index-cate-icon-5.png?1739018973665" alt="Sâm img Quốc" data-was-processed="true" />
-                                                    Sâm Hàn Quốc
-                                                </Link>
-                                                <i className="open_mnu down_icon"></i>
-                                                <ul className="menu-child sub-menu sudes-sub-mega-menu">
-
-
-                                                    <li className="sudes-main-cate-has-child clearfix">
-                                                        <Link href="/hong-sam" title="Hồng sâm">Hồng sâm</Link>
-                                                        <i className="open_mnu down_icon"></i>
-                                                        <ul className="menu-child menu-child-2 sub-menu clearfix">
-
-                                                            <li>
-                                                                <Link href="/keo-hong-sam" title="Kẹo hồng sâm">Kẹo hồng sâm</Link>
-                                                            </li>
-
-                                                            <li>
-                                                                <Link href="/tra-hong-sam" title="Trà hồng sâm">Trà hồng sâm</Link>
-                                                            </li>
-
-                                                            <li>
-                                                                <Link href="/cao-hong-sam" title="Cao hồng sâm">Cao hồng sâm</Link>
-                                                            </li>
-
-                                                        </ul>
-                                                    </li>
-
-
-
-                                                    <li className="sudes-main-cate-has-child clearfix">
-                                                        <Link href="/thien-sam" title="Thiên sâm">Thiên sâm</Link>
-                                                        <i className="open_mnu down_icon"></i>
-                                                        <ul className="menu-child menu-child-2 sub-menu clearfix">
-
-                                                            <li>
-                                                                <Link href="/thien-sam-premium" title="Thiên sâm premium">Thiên sâm premium</Link>
-                                                            </li>
-
-                                                            <li>
-                                                                <Link href="/thien-sam-dong-trung" title="Thiên sâm đông trùng">Thiên sâm đông trùng</Link>
-                                                            </li>
-
-                                                        </ul>
-                                                    </li>
-
-
-
-                                                    <li className="sudes-main-cate-has-child clearfix">
-                                                        <Link href="/hac-sam" title="Hắc sâm">Hắc sâm</Link>
-                                                        <i className="open_mnu down_icon"></i>
-                                                        <ul className="menu-child menu-child-2 sub-menu clearfix">
-
-                                                            <li>
-                                                                <Link href="/keo-hac-sam" title="Kẹo hắc sâm">Kẹo hắc sâm</Link>
-                                                            </li>
-
-                                                            <li>
-                                                                <Link href="/nuoc-hac-sam" title="Nước hắc sâm">Nước hắc sâm</Link>
-                                                            </li>
-
-                                                            <li>
-                                                                <Link href="/cao-hac-sam" title="Cao hắc sâm">Cao hắc sâm</Link>
-                                                            </li>
-
-                                                        </ul>
-                                                    </li>
-
-
-
-                                                    <li className="sudes-main-cate-has-child clearfix">
-                                                        <Link href="/sam-tuoi" title="Sâm tươi">Sâm tươi</Link>
-                                                        <i className="open_mnu down_icon"></i>
-                                                        <ul className="menu-child menu-child-2 sub-menu clearfix">
-
-                                                            <li>
-                                                                <Link href="/sam-cu-tuoi" title="Sâm củ tươi">Sâm củ tươi</Link>
-                                                            </li>
-
-                                                            <li>
-                                                                <Link href="/binh-sam-tuoi-ngam-san" title="Bình sâm tươi ngâm sẵn">Bình sâm tươi ngâm sẵn</Link>
-                                                            </li>
-
-                                                        </ul>
-                                                    </li>
-
-
-                                                </ul>
-                                            </li>
-
-                                            <li className="sudes-main-cate-has-child menu-item-count ">
-                                                <Link href="/saffron" title="Saffron">
-                                                    <img className="lazyload loaded" src="http://bizweb.dktcdn.net/100/506/650/themes/944598/assets/index-cate-icon-6.png?1739018973665" data-src="//bizweb.dktcdn.net/100/506/650/themes/944598/assets/index-cate-icon-6.png?1739018973665" alt="imgffron" data-was-processed="true" />
-                                                    Saffron
-                                                </Link>
-                                                <i className="open_mnu down_icon"></i>
-                                                <ul className="menu-child sub-menu sudes-sub-mega-menu">
-
-
-                                                    <li>
-                                                        <Link href="/saffron-tay-a" title="Saffron Tây Á">Saffron Tây Á</Link>
-                                                    </li>
-
-
-
-                                                    <li>
-                                                        <Link href="/set-qua-tang-saffron" title="Set quà tặng Saffron">Set quà tặng Saffron</Link>
-                                                    </li>
-
-
-
-                                                    <li>
-                                                        <Link href="/mat-ong-saffron" title="Mật ong Saffron">Mật ong Saffron</Link>
-                                                    </li>
-
-
-
-                                                    <li>
-                                                        <Link href="/my-pham-saffron" title="Mỹ phẩm Saffron">Mỹ phẩm Saffron</Link>
-                                                    </li>
-
-
-                                                </ul>
-                                            </li>
-
-                                            <li className="sudes-main-cate-has-child menu-item-count ">
-                                                <Link href="/soup" title="Soup">
-                                                    <img className="lazyload loaded" src="http://bizweb.dktcdn.net/100/506/650/themes/944598/assets/index-cate-icon-7.png?1739018973665" data-src="//bizweb.dktcdn.net/100/506/650/themes/944598/assets/index-cate-icon-7.png?1739018973665" alt="Soup" data-was-processed="true" />
-                                                    Soup
-                                                </Link>
-                                                <i className="open_mnu down_icon"></i>
-                                                <ul className="menu-child sub-menu sudes-sub-mega-menu">
-
-
-                                                    <li>
-                                                        <Link href="/soup-vi-ca-bao-ngu-to-yen" title="Soup Vi cá - bào ngư - tổ yến">Soup Vi cá - bào ngư - tổ yến</Link>
-                                                    </li>
-
-
-
-                                                    <li>
-                                                        <Link href="/soup-vi-ca-bao-ngu" title="Soup Vi cá - bào ngư">Soup Vi cá - bào ngư</Link>
-                                                    </li>
-
-
-
-                                                    <li>
-                                                        <Link href="/bat-tran-ngu-xi-ngu-thien" title="Bát Trân Ngư Xí Ngự Thiện">Bát Trân Ngư Xí Ngự Thiện</Link>
-                                                    </li>
-
-
-
-                                                    <li>
-                                                        <Link href="/bat-tran-uy-uy-ngu-thien" title="Bát Trân Uy Uy Ngự Thiện">Bát Trân Uy Uy Ngự Thiện</Link>
-                                                    </li>
-
-
-                                                </ul>
-                                            </li> */}
-                                            
-                                            {/* <li className="menu-item-count ">
-                                                <Link href="/qua-bieu-cao-cap" title="Quà biếu cao cấp"><img className="lazyload loaded" src="http://bizweb.dktcdn.net/100/506/650/themes/944598/assets/index-cate-icon-8.png?1739018973665" data-src="//bizweb.dktcdn.net/100/506/650/themes/944598/assets/index-cate-icon-8.png?1739018973665" alt="Quà biếu cao cấp" data-was-processed="true" /> Quà biếu cao cấp</Link>
-                                            </li> */}
-
-
+                                            ))}
                                         </ul>
 
                                     </div>
@@ -962,7 +731,7 @@ export default function Header() {
 
 
 
-                                            <li className="nav-item has-childs " data-section="header_nav">
+                                            {/* <li className="nav-item has-childs " data-section="header_nav">
                                                 <Link href="/chinh-sach-mua-hang" className="nav-link" title="Chính sách">Chính sách
                                                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="bi bi-chevron-right" viewBox="0 0 16 16">
                                                         <path fillRule="evenodd" d="M4.646 1.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1 0 .708l-6 6a.5.5 0 0 1-.708-.708L10.293 8 4.646 2.354a.5.5 0 0 1 0-.708"></path>
@@ -1010,12 +779,12 @@ export default function Header() {
 
                                                 </ul>
 
-                                            </li>
+                                            </li> */}
 
 
 
                                             <li className="nav-item ">
-                                                <Link className="nav-link" href="/lien-he" title="Liên hệ">Liên hệ</Link>
+                                                <Link className="nav-link" href="/contact" title="Liên hệ">Liên hệ</Link>
                                             </li>
 
 

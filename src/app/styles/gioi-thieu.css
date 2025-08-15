@@ -1,0 +1,51 @@
+* {
+    margin: 0px;
+    padding: 0px;
+}
+
+.container_about {
+    background-color: #F1E8D7;
+}
+
+.container_about>.h3 {
+    padding: 17px;
+    margin-left: 135px;
+    font-size: 15px;
+}
+
+.container_about>.h3>a {
+    color: #004E3E;
+    text-decoration: none;
+    font-weight: normal;
+}
+
+.container_book {
+    width: 84%;
+    height: 1050px;
+    background-color: white;
+    margin: auto;
+    padding: 30px;
+    position: relative;
+    margin-bottom: 30px;
+    border-radius: .5rem;
+}
+
+.container_book>.h1 {
+    font-size: 30px;
+}
+
+.container_book>.book_img-logo {
+    position: absolute;
+    right: 0px;
+    top: 20px;
+}
+
+.container_book>p {
+    font-size: 20px;
+}
+
+.container_book>.book_img {
+    position: absolute;
+    bottom: 50px;
+    right: 10px;
+}
