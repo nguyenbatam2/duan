@@ -89,4 +89,5 @@ export function removeFromCart(productId: number): void {
 
 export function clearCart() {
   localStorage.removeItem(cartKey);
+  window.dispatchEvent(new Event("cartUpdated")); // Dispatch event để cập nhật UI
 }

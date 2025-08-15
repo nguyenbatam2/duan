@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
 import { API_BASE_URL } from '../../lib/config';
+import { clearCart } from '../../lib/addCart';
 import '../../styles/payment.css';
 
 function PaymentReturnContent() {
@@ -31,6 +32,9 @@ function PaymentReturnContent() {
         
         if (result.success) {
           toast.success('Thanh toán thành công!');
+          // Xóa giỏ hàng sau khi thanh toán thành công
+          clearCart();
+          console.log('🛒 Đã xóa giỏ hàng sau khi thanh toán thành công');
           // Redirect đến trang order detail theo VNPAY_PAYMENT_FLOW.md
           setTimeout(() => {
             router.push(`/account/order?order_id=${result.data.order_id}`);

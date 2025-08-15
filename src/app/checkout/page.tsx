@@ -8,7 +8,7 @@ import Link from "next/link";
 import axios from "axios";
 import { useEffect, useState, Suspense } from "react";
 import toast from "react-hot-toast";
-import { getCart } from "../lib/addCart";
+import { getCart, clearCart } from "../lib/addCart";
 import { applyCoupon, placeOrder } from '../lib/orderApi';
 import { getUserAddresses } from '../lib/authorApi';
 import { OrderItem, Product } from '../types/product';
@@ -237,12 +237,19 @@ function CheckoutContent() {
 
       // Handle response based on payment method
       if (paymentMethod === 'online_payment') {
+        // Xóa giỏ hàng trước khi chuyển hướng đến VNPay
+        clearCart();
+        setCart([]);
+        console.log('🛒 Đã xóa giỏ hàng trước khi chuyển hướng đến VNPay');
         // Redirect handled in placeOrder function
         toast.success("Đang chuyển hướng đến trang thanh toán...");
       } else {
         // COD payment - success
         toast.success("Đặt hàng thành công!");
+        // Xóa giỏ hàng sau khi đặt hàng thành công
+        clearCart();
         setCart([]);
+        console.log('🛒 Đã xóa giỏ hàng sau khi đặt hàng COD thành công');
         router.push("/");
       }
     } catch (error: any) {
