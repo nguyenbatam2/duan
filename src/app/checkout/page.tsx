@@ -17,6 +17,8 @@ import { useRouter } from 'next/navigation';
 import { UserAddress } from '@/app/types/author'
 import Cookies from 'js-cookie';
 import { useSearchParams } from "next/navigation";
+import PaymentMethodSelector from "../Component/PaymentMethodSelector";
+
 
 function CheckoutContent() {
     const searchParams = useSearchParams();
@@ -36,7 +38,7 @@ function CheckoutContent() {
   const [paymentMethod, setPaymentMethod] = useState<string>('cod');
   const router = useRouter();
 
-  const subtotal = cart.reduce((acc, item) => acc + item.price * item.quantity, 0);
+  const subtotal = cart.reduce((acc, item) => acc + (Number(item.price) || 0) * item.quantity, 0);
   const shippingFee = 30000;
   const tax = 5000;
   const discount = appliedCoupon ? 50000 : 0; // hoặc từ API response nếu trả về giá trị discount
@@ -48,34 +50,6 @@ function CheckoutContent() {
     email: '',
   });
   const [note, setNote] = useState('');
-  const payMethods = [
-    {
-      id: 'cod',
-      label: 'Thanh toán khi nhận hàng',
-      icon: (
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <rect x="3" y="7" width="18" height="10" rx="2" fill="#c8e6c9" stroke="#388e3c" strokeWidth="1.5" />
-          <circle cx="12" cy="12" r="2.5" fill="#388e3c" />
-          <path d="M7 12h.01M17 12h.01" stroke="#388e3c" strokeWidth="1.5" strokeLinecap="round" />
-        </svg>
-      ),
-      value: 'cod'
-    },
-    {
-      id: 'bank',
-      label: 'Chuyển khoản ngân hàng',
-      icon: (
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M3 10L12 4L21 10" stroke="#1976d2" strokeWidth="2" strokeLinecap="round"
-            strokeLinejoin="round" />
-          <rect x="5" y="10" width="14" height="8" rx="2" fill="#e3f2fd" stroke="#1976d2" strokeWidth="1.5" />
-          <rect x="9" y="14" width="6" height="2" rx="1" fill="#1976d2" />
-        </svg>
-      ),
-      value: 'bankTransfer'
-    },
-    // Thêm phương thức khác nếu cần
-  ];
 
 
   // Load tỉnh/thành khi component mount
@@ -189,10 +163,12 @@ function CheckoutContent() {
 
   const handlePlaceOrder = async () => {
     try {
+      console.log('🚀 Starting place order process...');
       const { name, phone, email } = userInfo;
 
       // Kiểm tra thiếu thông tin
       if (!name || !phone || !specificAddress || !selectedProvince || !selectedDistrict || !email) {
+        console.error('❌ Missing required information:', { name, phone, specificAddress, selectedProvince, selectedDistrict, email });
         toast.error("Vui lòng điền đầy đủ thông tin giao hàng.");
         return;
       }
@@ -216,7 +192,23 @@ function CheckoutContent() {
         price: Number(item.price),
       }));
 
-      await placeOrder(
+      console.log('📦 Order details:', {
+        items,
+        name,
+        phone,
+        address,
+        email,
+        paymentMethod,
+        appliedCoupon,
+        note,
+        subtotal,
+        shippingFee,
+        tax,
+        discount,
+        total
+      });
+
+      const result = await placeOrder(
         items,
         name,
         phone,
@@ -232,11 +224,35 @@ function CheckoutContent() {
         total
       );
 
-      toast.success("Đặt hàng thành công!");
-      setCart([]);
-      router.push("/");
-    } catch (error) {
-      console.error(error);
+      console.log('📋 Place order result:', result);
+
+      // Xử lý response dựa trên payment method
+      if (paymentMethod === 'online_payment') {
+        // Đã được redirect trong placeOrder function
+        toast.success("Đang chuyển hướng đến trang thanh toán...");
+      } else {
+        // COD hoặc bank transfer
+        toast.success("Đặt hàng thành công!");
+        setCart([]);
+        router.push("/");
+      }
+    } catch (error: any) {
+      console.error('💥 Place order error:', error);
+      console.error('Error details:', {
+        message: error.message,
+        stack: error.stack,
+        name: error.name
+      });
+      
+      // Xử lý lỗi tồn kho
+      if (error.response?.status === 422) {
+        const errorData = error.response.data;
+        if (errorData?.message?.includes('không đủ số lượng') || errorData?.message?.includes('chỉ còn')) {
+          toast.error("Sản phẩm không đủ số lượng trong kho. Vui lòng kiểm tra lại giỏ hàng!");
+          return;
+        }
+      }
+      
       toast.error("Đặt hàng thất bại!");
     }
   };
@@ -335,35 +351,12 @@ function CheckoutContent() {
                             />
                           </div>
 
-                          <div className="col-lg-12 col-md-12 col-sm-12 col-12">
-                            <p>Phương thức thanh toán</p>
-                            <div className="d-flex flex-column">
-
-                              {payMethods.map((method) => (
-                                <div key={method.id}
-                                  className="col-lg-12 col-md-12 col-sm-12 col-12 mb-3 d-flex align-items-center">
-                                  <label className="form-check-label d-flex align-items-center ms-2 w-100"
-                                    htmlFor={method.id} style={{
-                                      cursor: "pointer",
-                                      justifyContent: "space-between"
-                                    }}>
-                                    <span className="d-flex align-items-center">
-                                      {method.icon}
-                                      {method.label}
-                                    </span>
-                                    <input className="form-check-input ms-2" type="radio" name="paymentMethod"
-                                      id={method.id} value={method.value}
-                                      checked={paymentMethod === method.value} onChange={() =>
-                                        setPaymentMethod(method.value)}
-                                      style={{ margin: "15px 20px" }}
-                                    />
-                                    </label>
-                                  </div>
-                                ))}
-
-
-                            </div>
-                          </div>
+                                                     <div className="col-lg-12 col-md-12 col-sm-12 col-12">
+                             <PaymentMethodSelector 
+                               selected={paymentMethod}
+                               onSelect={setPaymentMethod}
+                             />
+                           </div>
                           <div className="col-lg-12 col-md-12 col-sm-12 col-12">
                             <p>Ghi chú đơn hàng</p>
                             <textarea placeholder="Nhập ghi chú của bạn ở đây..." name="contact[body]"
@@ -457,11 +450,11 @@ function CheckoutContent() {
               </div>
             </div>
           </div>
-        </div>
-      </div>
-    </>
-  );
-}
+                 </div>
+       </div>
+             </>
+    );
+  }
 
 export default function CheckoutPage() {
   return (

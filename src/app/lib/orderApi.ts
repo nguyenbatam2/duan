@@ -171,6 +171,19 @@ export async function placeOrder(
     };
 
     console.log("📦 Payload gửi BE:", JSON.stringify(payload, null, 2));
+    console.log("🔗 API URL:", `${API_URL}/place-order`);
+    console.log("🔑 Token:", token ? 'Present' : 'Missing');
+    console.log("📋 Items validation:", {
+      itemsCount: formattedItems.length,
+      itemsWithPrice: formattedItems.filter(item => item.price > 0).length,
+      itemsWithQuantity: formattedItems.filter(item => item.quantity > 0).length,
+      totalPrice: formattedItems.reduce((sum, item) => sum + (item.price * item.quantity), 0),
+      items: formattedItems.map(item => ({
+        product_id: item.product_id,
+        quantity: item.quantity,
+        price: item.price
+      }))
+    });
 
     const res = await axios.post(
       `${API_URL}/place-order`,
@@ -185,9 +198,46 @@ export async function placeOrder(
     );
 
     console.log("✅ Đặt hàng thành công:", res.data);
+    console.log("📊 Response status:", res.status);
+    console.log("📋 Response headers:", res.headers);
+    
+    // Xử lý response cho thanh toán online
+    if (res.data.payment && res.data.payment.success && res.data.payment.data.payment_url) {
+      const paymentUrl = res.data.payment.data.payment_url;
+      console.log("🔗 Redirecting to payment URL:", paymentUrl);
+      console.log("🔍 Payment URL Analysis:", {
+        isVNPay: paymentUrl.includes('vnpayment.vn'),
+        isSandbox: paymentUrl.includes('sandbox'),
+        hasParams: paymentUrl.includes('?'),
+        urlLength: paymentUrl.length
+      });
+      
+      // Kiểm tra URL trước khi redirect
+      if (!paymentUrl.includes('vnpayment.vn')) {
+        console.error("❌ Invalid VNPay URL:", paymentUrl);
+        toast.error("URL thanh toán không hợp lệ!");
+        return res.data;
+      }
+      
+      // Redirect đến VNPay nếu là thanh toán online
+      window.location.href = paymentUrl;
+      return res.data;
+    }
+    
     return res.data;
-  } catch (err) {
+  } catch (err: any) {
     console.error("❌ Lỗi đặt hàng:", err);
+    console.error("🚨 Error details:", {
+      message: err.message,
+      status: err.response?.status,
+      statusText: err.response?.statusText,
+      data: JSON.stringify(err.response?.data, null, 2),
+      config: {
+        url: err.config?.url,
+        method: err.config?.method,
+        headers: err.config?.headers
+      }
+    });
     throw err;
   }
 }

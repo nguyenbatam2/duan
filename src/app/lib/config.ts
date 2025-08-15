@@ -34,3 +34,9 @@ export const USER_API = {
   ADDRESSES: `${API_BASE_URL}/user/addresses`,
   ADDRESS: `${API_BASE_URL}/user/address`,
 };
+
+// Payment Configuration
+export const PAYMENT_CONFIG = {
+  RETURN_URL: process.env.NEXT_PUBLIC_PAYMENT_RETURN_URL || 'http://localhost:3000/payment/return',
+  VNPAY_URL: process.env.NEXT_PUBLIC_VNPAY_URL || 'https://sandbox.vnpayment.vn/paymentv2/vpcpay.html',
+};
