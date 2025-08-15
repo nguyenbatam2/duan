@@ -210,13 +210,17 @@ export default function ProductDetail() {
                                                             aria-label={`${idx + 1} / ${product.images.length}`}
                                                             style={{ height: "111.5px", marginBottom: "10px" }}
                                                         >
-                                                            <img src={`/${img.image_path}`} alt={img.alt_text || product.name} />
-                                                        </div>
+                                                            <img
+                                                                src={img.image} // dùng trực tiếp link từ API
+                                                                alt={img.alt_text || product.name}
+                                                            />                                                        </div>
                                                     ))
                                                 ) : (
                                                     <div className="swiper-slide swiper-slide-visible swiper-slide-active swiper-slide-thumb-active" data-hash="0" role="group" aria-label="1 / 1" style={{ height: "111.5px", marginBottom: "10px" }}>
-                                                        <img src={`/${product.image}`} alt={product.name} />
-                                                    </div>
+                                                            <img
+                                                                src={product.image} // dùng trực tiếp link từ API
+                                                                alt={product.alt_text || product.name}
+                                                            />                                                    </div>
                                                 )}
                                             </div>
                                             {/* <!-- Navigation --> */}
@@ -530,44 +534,6 @@ export default function ProductDetail() {
                                 </div>
                             </div>
                         </div>
-                            {/* <div className="popup-coupon active">
-                                <div className="content">
-                                    <div className="title">
-                                        Thông tin voucher
-                                    </div>
-                                    <div className="close-popup-coupon" title="Đóng">
-                                        <svg xmlns="http://www.w3.org/2000/svg" xmlnsXlink="http://www.w3.org/1999/xlink" version="1.1" x="0px" y="0px" viewBox="0 0 512.001 512.001" xmlSpace="preserve">
-                                            <g>
-                                                <g>
-                                                    <path d="M284.286,256.002L506.143,34.144c7.811-7.811,7.811-20.475,0-28.285c-7.811-7.81-20.475-7.811-28.285,0L256,227.717    L34.143,5.859c-7.811-7.811-20.475-7.811-28.285,0c-7.81,7.811-7.811,20.475,0,28.285l221.857,221.857L5.858,477.859    c-7.811,7.811-7.811,20.475,0,28.285c3.905,3.905,9.024,5.857,14.143,5.857c5.119,0,10.237-1.952,14.143-5.857L256,284.287    l221.857,221.857c3.905,3.905,9.024,5.857,14.143,5.857s10.237-1.952,14.143-5.857c7.811-7.811,7.811-20.475,0-28.285    L284.286,256.002z">
-                                                    </path>
-                                                </g>
-                                            </g>
-                                        </svg>
-                                    </div>
-                                    <ul>
-                                        <li>
-                                            <span>Mã giảm giá:</span>
-                                        <span className="code">
-                                            {coupons.code}
-                                            </span>
-                                        </li>
-                                        <li>
-                                            <span>Ngày hết hạn:</span>
-                                            <span className="time">
-                                            {coupons.end_at}
-
-                                            </span>
-                                        </li>
-                                        <li>
-                                            <span>Điều kiện:</span>
-                                        <span className="dieukien">
-                                            {coupons.description || "Không có mô tả"}
-                                            </span>
-                                        </li>
-                                    </ul>
-                                </div>
-                            </div> */}
 
                         <div className="col-12 margin-bottom-20">
                             <div className="bg-shadow">
@@ -593,7 +559,7 @@ export default function ProductDetail() {
                                                                 <li>Mật ong hoa rừng 100ml:Mật ong nguyên chất đặc sánh giàu dưỡng chất kháng viêm, bồi bổ sức khỏe.</li>
                                                                 <li>Túi quà kèm nơ: Hộp và túi qua cao cấp kèm nơ tinh tế, trang trọng.</li>
                                                                 <li>Thiệp 20/10: Thiệp chúc 20/10 được thiết kế riêng.</li>
-                                                            </ul><p><img loading="lazy" className="img-responsive" src="https://via.placeholder.com/600x400" alt="Product Image" />
+                                                            </ul><p>
                                                             </p></div>
                                                     </div>
                                                 </div>
@@ -735,13 +701,13 @@ export default function ProductDetail() {
                                                     {history.map((product) => (
                                                         <div className="product-view" key={product.id}>
                                                             <Link className="image_thumb" href={`/product/${product.id}`} title="Tổ Yến Tinh Chế VIP Loại 1">
-                                                                <img width="370" height="480" className="lazyload loaded" src={`${API_BASE_URL.replace('/api/v1', '')}/storage/products/${product.image}`} alt={product.name} data-was-processed="true" />
+                                                                <img width="370" height="480" className="lazyload loaded" src={`${product.image}`} alt={product.name} data-was-processed="true" />
                                                             </Link>
                                                             <div className="product-info">
                                                                 <h3 className="product-name"><Link href={`/product/${product.id}`} title="Tổ Yến Tinh Chế VIP Loại 1" className="line-clamp line-clamp-3-new">{product.name}</Link></h3>
                                                                 <div className="price-box">
-                                                                    <span className="price">{Number(product.price).toLocaleString("vi-VN")}₫</span>
-                                                                    <span className="compare-price">{Number(product.discount_price).toLocaleString('vi-VN')}đ</span>
+                                                                    <span className="price">{Number(product.base_price).toLocaleString('vi-VN')}₫</span>
+                                                                    <span className="compare-price">{Number(product.display_price).toLocaleString('vi-VN')}đ</span>
                                                                 </div>
                                                                 <Link className="view-more" href={`/product/${product.id}`} title="Xem chi tiết">Xem chi tiết »</Link>
                                                             </div>

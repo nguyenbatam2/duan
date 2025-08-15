@@ -1,6 +1,5 @@
 "use client";
 import Link from "next/link";
-import Image from "next/image";
 import React, { useEffect, useState } from "react";
 import { Product } from "../types/product";
 import { getCartLength } from "../lib/addCart";
@@ -12,7 +11,7 @@ interface CartModalProps {
 
 const CartModal = ({ product, onClose }: CartModalProps) => {
     const [cartLength, setCartLength] = useState<number>(0);
-
+    console.log("Product:", product);
     useEffect(() => {
         const popupCartMobile = document.getElementById("popup-cart-mobile");
         if (popupCartMobile) {
@@ -61,9 +60,9 @@ const CartModal = ({ product, onClose }: CartModalProps) => {
                 </div>
                 <div className="media-content bodycart-mobile">
                     <div className="thumb-1x1">
-                        <Image
-                            src="https://bizweb.dktcdn.net/thumb/compact/100/506/650/products/set-qua-20-10-maneli-1.jpg"
-                            alt="Set quà 2010 – Maneli #1 bồi bổ sức khỏe, dưỡng nhan"
+                        <img
+                            src={product.image}
+                            alt={product.name}
                             width={100}
                             height={100}
                         />

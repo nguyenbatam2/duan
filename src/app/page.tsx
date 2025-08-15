@@ -231,50 +231,38 @@ export default function Page() {
                                     <div className="product-price-cart">
                                       <span className="compare-price">{product.original_price?.toLocaleString()}₫</span>
                                       <span className="price">{product.event_price?.toLocaleString()}₫</span>
-                                     <div className="productcount">
-                                       <div className="countitem visible">
-                                         <div className="fire">
-                                           <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" viewBox="0 0 16 16">
-                                             <defs>
-                                               <linearGradient id="prefix__a" x1="50%" x2="50%" y1="36.31%" y2="88.973%">
-                                                 <stop offset="0%" stopColor="#FDD835"></stop>
-                                                 <stop offset="100%" stopColor="#FFB500"></stop>
-                                               </linearGradient>
-                                             </defs>
-                                             <g fill="none" fillRule="evenodd">
-                                               <path d="M0 0H16V16H0z"></path>
-                                               <path fill="url(#prefix__a)" stroke="#FF424E" strokeWidth="1.1" d="M9.636 6.506S10.34 2.667 7.454 1c-.087 1.334-.786 2.571-1.923 3.401-1.234 1-3.555 3.249-3.53 5.646-.017 2.091 1.253 4.01 3.277 4.953.072-.935.549-1.804 1.324-2.41.656-.466 1.082-1.155 1.182-1.912 1.729.846 2.847 2.469 2.944 4.27v.012c1.909-.807 3.165-2.533 3.251-4.467.205-2.254-1.134-5.316-2.321-6.317-.448.923-1.144 1.725-2.022 2.33z" transform="rotate(4 8 8)"></path>
-                                             </g>
-                                           </svg>
-                                         </div>
-                                         <span className="a-center">Còn lại <b>{product.quantity_limit || '∞'}</b></span>
-                                         <div className="countdown" style={{ width: "56%" }}></div>
-                                       </div>
-                                     </div>
-                                   </div>
-                                 </div>
-                                                                  <div className="product-button">
-                                                                         <AddToCart 
-                                       product={{
-                                         id: product.product_id,
-                                         name: `Sản phẩm #${product.product_id}`,
-                                         price: product.event_price.toString(),
-                                         discount_price: "0.00",
-                                         image: "https://via.placeholder.com/300x300",
-                                         slug: `product-${product.product_id}`,
-                                         description: "",
-                                         status: 1,
-                                         product_type: "simple",
-                                         stock_quantity: product.quantity_limit || 0,
-                                         average_rating: null,
-                                         views_count: 0,
-                                         quantity: 1
-                                       } as Product} 
-                                       onAddToCart={(product) => setSelectedProduct(product)} 
-                                     />
-                                    <a href="javascript:void(0)" className="setWishlist btn-views btn-circle"  title="Thêm vào yêu thích">
-                                      <img width="25" height="25" src="//bizweb.dktcdn.net/100/506/650/themes/944598/assets/heart.png?1739018973665" alt="Thêm vào yêu thích" />
-                                    </a>
+                                    <div className="productcount">
+                                      <div className="countitem visible">
+                                        <div className="fire">
+                                          <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" viewBox="0 0 16 16">
+                                            <defs>
+                                              <linearGradient id="prefix__a" x1="50%" x2="50%" y1="36.31%" y2="88.973%">
+                                                <stop offset="0%" stopColor="#FDD835"></stop>
+                                                <stop offset="100%" stopColor="#FFB500"></stop>
+                                              </linearGradient>
+                                            </defs>
+                                            <g fill="none" fillRule="evenodd">
+                                              <path d="M0 0H16V16H0z"></path>
+                                              <path fill="url(#prefix__a)" stroke="#FF424E" strokeWidth="1.1" d="M9.636 6.506S10.34 2.667 7.454 1c-.087 1.334-.786 2.571-1.923 3.401-1.234 1-3.555 3.249-3.53 5.646-.017 2.091 1.253 4.01 3.277 4.953.072-.935.549-1.804 1.324-2.41.656-.466 1.082-1.155 1.182-1.912 1.729.846 2.847 2.469 2.944 4.27v.012c1.909-.807 3.165-2.533 3.251-4.467.205-2.254-1.134-5.316-2.321-6.317-.448.923-1.144 1.725-2.022 2.33z" transform="rotate(4 8 8)"></path>
+                                            </g>
+                                          </svg>
+                                        </div>
+                                        <span className="a-center">Còn lại <b>{product.quantity_limit || '∞'}</b></span>
+                                        <div className="countdown" style={{ width: "56%" }}></div>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+
+                                <div className="product-button">
+                                  <AddToCart
+                                    product={{
+                                      id: product.product_id, name: `Sản phẩm #${product.product_id}`, price: product.event_price.toString(), discount_price: "0.00", image: "https://via.placeholder.com/300x300", slug: `product-${product.product_id}`, description: "", status: 1, product_type: "simple", stock_quantity: product.quantity_limit || 0, average_rating: null, views_count: 0, quantity: 1
+                                    } as Product}
+                                    onAddToCart={(product) => setSelectedProduct(product)}
+                                  />
+
+                                  <AddToWishlist product={product} onToggle={handleToggleWishlist} />
                                   </div>
                                 </div>
                               </div>
@@ -696,7 +684,7 @@ export default function Page() {
                               {product.has_active_event 
                                 ? product.event_discount_percentage 
                                 : (product.base_discount > 0 
-                                    ? Math.round((product.base_discount / parseInt(product.base_price)) * 100)
+                                  ? Math.round((product.display_price / parseInt(product.base_price)) * 100)
                                     : 0)}%
                             </span>
                             <div className="product-thumbnail">
