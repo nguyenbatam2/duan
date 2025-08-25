@@ -1,15 +1,16 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
+import Head from "next/head";
 import Link from "next/link";
-import { getPostById } from "@/app/lib/posts";
+import { getPostById, getPublicPosts } from "@/app/lib/posts";
 import { Post } from "@/app/types/post";
 
 export default function PostDetailPage() {
   const params = useParams();
-  const router = useRouter();
   const [post, setPost] = useState<Post | null>(null);
+  const [relatedPosts, setRelatedPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -24,6 +25,11 @@ export default function PostDetailPage() {
         }
         const postData = await getPostById(postId);
         setPost(postData);
+
+        // Lấy bài viết liên quan
+        const response = await getPublicPosts(1, 4);
+        const filtered = response.data.filter(p => p.id !== postId);
+        setRelatedPosts(filtered);
       } catch (err) {
         setError("Không thể tải bài viết");
         console.error("Error fetching post:", err);
@@ -50,10 +56,14 @@ export default function PostDetailPage() {
 
   if (loading) {
     return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Đang tải bài viết...</p>
+      <div className="container mx-auto px-4 py-8 animate-pulse">
+        <div className="h-10 bg-gray-300 w-1/3 mb-4"></div>
+        <div className="h-6 bg-gray-300 w-1/4 mb-6"></div>
+        <div className="h-96 bg-gray-300 rounded mb-8"></div>
+        <div className="space-y-4">
+          {[...Array(5)].map((_, i) => (
+            <div key={i} className="h-4 bg-gray-300 rounded"></div>
+          ))}
         </div>
       </div>
     );
@@ -62,69 +72,81 @@ export default function PostDetailPage() {
   if (error || !post) {
     return (
       <div className="container mx-auto px-4 py-8">
-        <div className="text-center">
-          <p className="text-red-600 mb-4">{error || "Không tìm thấy bài viết"}</p>
-          <Link
-            href="/tin-tuc"
-            className="text-blue-600 hover:text-blue-800 font-medium"
-          >
-            ← Quay lại trang tin tức
-          </Link>
-        </div>
+        <p className="text-red-600 mb-4">{error || "Không tìm thấy bài viết"}</p>
+        <Link href="/tin-tuc" className="text-blue-600 hover:text-blue-800">
+          ← Quay lại trang tin tức
+        </Link>
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="mb-6">
-        <Link
-          href="/tin-tuc"
-          className="text-blue-600 hover:text-blue-800 font-medium flex items-center"
-        >
-          ← Quay lại trang tin tức
-        </Link>
-      </div>
+    <>
+      <Head>
+        <title>{post.title}</title>
+        <meta name="description" content={post.content.substring(0, 150)} />
+      </Head>
 
-      <article className="max-w-4xl mx-auto">
-        <header className="mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">{post.title}</h1>
-          <div className="flex items-center text-gray-600 text-sm">
-            <span>Đăng ngày: {formatDate(post.created_at)}</span>
-            {post.updated_at !== post.created_at && (
-              <span className="ml-4">Cập nhật: {formatDate(post.updated_at)}</span>
-            )}
+      <div className="container mx-auto px-4 py-8">
+        {/* Breadcrumb */}
+        <nav className="mb-4 text-sm">
+          <Link href="/" className="text-blue-600">Trang chủ</Link> /
+          <Link href="/tin-tuc" className="text-blue-600 ml-1">Tin tức</Link> /
+          <span className="ml-1 text-gray-700">{post.title}</span>
+        </nav>
+
+        <article className="max-w-4xl mx-auto">
+          <header className="mb-8">
+            <h1 className="text-4xl font-bold mb-4">{post.title}</h1>
+            <div className="text-gray-600 text-sm">
+              <span>Đăng ngày: {formatDate(post.created_at)}</span>
+              {post.updated_at !== post.created_at && (
+                <span className="ml-4">Cập nhật: {formatDate(post.updated_at)}</span>
+              )}
+            </div>
+          </header>
+
+          <div className="mb-8">
+            <img
+              src={post.image_url || "/img/default-news.jpg"}
+              alt={post.title}
+              className="w-full h-96 object-cover rounded-lg shadow-lg"
+              onError={(e) => {
+                const target = e.target as HTMLImageElement;
+                target.src = "/img/default-news.jpg";
+              }}
+            />
           </div>
-        </header>
 
-        <div className="mb-8">
-          <img
-            src={post.image_url}
-            alt={post.title}
-            className="w-full h-96 object-cover rounded-lg shadow-lg"
-            onError={(e) => {
-              const target = e.target as HTMLImageElement;
-              target.src = "/img/default-news.jpg";
-            }}
-          />
-        </div>
+          <div className="prose prose-lg max-w-none text-gray-700">
+            <div
+              dangerouslySetInnerHTML={{ __html: post.content }}
+            />
+          </div>
 
-        <div className="prose prose-lg max-w-none">
-          <div 
-            className="text-gray-700 leading-relaxed"
-            dangerouslySetInnerHTML={{ __html: post.content }}
-          />
-        </div>
-
-        <div className="mt-12 pt-8 border-t border-gray-200">
-          <Link
-            href="/tin-tuc"
-            className="inline-flex items-center text-blue-600 hover:text-blue-800 font-medium"
-          >
-            ← Xem tất cả tin tức
-          </Link>
-        </div>
-      </article>
-    </div>
+          {/* Bài viết liên quan */}
+          {relatedPosts.length > 0 && (
+            <div className="mt-12">
+              <h2 className="text-2xl font-semibold mb-4">Bài viết liên quan</h2>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {relatedPosts.map((rp) => (
+                  <Link key={rp.id} href={`/tin-tuc/${rp.id}`} className="block border rounded-lg overflow-hidden shadow hover:shadow-lg">
+                    <img
+                      src={rp.image_url || "/img/default-news.jpg"}
+                      alt={rp.title}
+                      className="w-full h-40 object-cover"
+                    />
+                    <div className="p-4">
+                      <h3 className="text-lg font-medium line-clamp-2">{rp.title}</h3>
+                      <p className="text-gray-600 text-sm mt-2 line-clamp-3">{rp.content}</p>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          )}
+        </article>
+      </div>
+    </>
   );
-} 
+}

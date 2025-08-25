@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { getPublicPosts } from "@/app/lib/posts";
 import { Post } from "@/app/types/post";
-import "@/app/styles/news.css";
+import "@/app/styles/blog.css";
 
 export default function TinTucPage() {
   const [posts, setPosts] = useState<Post[]>([]);
@@ -37,76 +37,90 @@ export default function TinTucPage() {
     });
   };
 
-  if (loading) {
-    return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Đang tải tin tức...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="text-center">
-          <p className="text-red-600">{error}</p>
-        </div>
-      </div>
-    );
-  }
+  if (loading) return <p>Loading...</p>;
+  if (error) return <p>{error}</p>;
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-4">Tin tức</h1>
-        <p className="text-gray-600">Cập nhật những tin tức mới nhất về sản phẩm và dịch vụ của chúng tôi</p>
-      </div>
+    <>
+      <section className="bread-crumb">
+        <div className="container">
+          <ul className="breadcrumb">
+            <li className="home">
+              <Link href="/" title="Trang chủ"><span>Trang chủ</span></Link>
+              <span className="mr_lr">&nbsp;<svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="chevron-right" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512" className="svg-inline--fa fa-chevron-right fa-w-10"><path fill="currentColor" d="M285.476 272.971L91.132 467.314c-9.373 9.373-24.569 9.373-33.941 0l-22.667-22.667c-9.357-9.357-9.375-24.522-.04-33.901L188.505 256 34.484 101.255c-9.335-9.379-9.317-24.544.04-33.901l22.667-22.667c9.373-9.373 24.569-9.373 33.941 0L285.475 239.03c9.373 9.372 9.373 24.568.001 33.941z" className=""></path></svg>&nbsp;</span>
+            </li>
+            <li><strong><span>Kiến thức</span></strong></li>
 
-      {posts.length === 0 ? (
-        <div className="text-center py-12">
-          <p className="text-gray-500 text-lg">Chưa có tin tức nào</p>
+          </ul>
         </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 news-grid">
-          {posts.map((post) => (
-            <article key={post.id} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300 news-card">
-              <div className="aspect-w-16 aspect-h-9 overflow-hidden">
-                <img
-                  src={post.image_url}
-                  alt={post.title}
-                  className="w-full h-48 object-cover news-image"
-                  onError={(e) => {
-                    const target = e.target as HTMLImageElement;
-                    target.src = "/img/default-news.jpg";
-                  }}
-                />
-              </div>
-              <div className="p-6">
-                <h2 className="text-xl font-semibold text-gray-900 mb-2 line-clamp-2">
-                  {post.title}
-                </h2>
-                <p className="text-gray-600 text-sm mb-4 line-clamp-3">
-                  {post.content}
-                </p>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-500">
-                    {formatDate(post.created_at)}
-                  </span>
-                  <Link
-                    href={`/tin-tuc/${post.id}`}
-                    className="text-blue-600 hover:text-blue-800 font-medium text-sm"
-                  >
-                    Đọc thêm →
-                  </Link>
+      </section>
+
+      <div className="blog_wrapper layout-blog" >
+        <div className="container">
+          <div className="row">
+            <div className="right-content col-lg-12 col-12">
+              <div className="title-page">
+                <h1>Kiến thức</h1>
+                <div className="title-separator">
+                  <div className="separator-center"></div>
                 </div>
               </div>
-            </article>
-          ))}
+              <div className="row list-news">
+                {posts.length === 0 ? (
+                  <div className="col-lg-3 col-md-4 col-sm-6 col-xs-12">
+                    <p>Không có tin tức nào.</p>
+                  </div>
+
+                ) : (
+                  posts.map((post) => (
+                    <div className="col-lg-3 col-md-4 col-sm-6 col-xs-12" key={post.id}>
+                      <div className="item-blog">
+                        <div className="wrapper">
+                          <Link className="block-thumb thumb" href={`/tin-tuc/${post.id}`} title={post.title}>
+
+                            <img width="400" height="240" className="lazyload duration-300 loaded" src={post.image_url} alt={post.title} data-was-processed="true" />
+
+                          </Link>
+                          <div className="block-content">
+                            <h3>
+                              <Link href={`/tin-tuc/${post.id}`} title={post.title} className="line-clamp-2-new">{post.title}</Link>
+                            </h3>
+                            <div className="article-content">
+
+                              <p className="justify line-clamp line-clamp-3">
+                                {post.content}
+                              </p>
+
+                              <div className="article-info">
+                                <p className="time-post">
+                                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="bi bi-clock" viewBox="0 0 16 16">
+                                    <path d="M8 3.5a.5.5 0 0 0-1 0V9a.5.5 0 0 0 .252.434l3.5 2a.5.5 0 0 0 .496-.868L8 8.71z"></path>
+                                    <path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16m7-8A7 7 0 1 1 1 8a7 7 0 0 1 14 0"></path>
+                                  </svg>
+                                  <span>
+                                    {formatDate(post.created_at)}
+                                  </span>
+                                </p>
+
+                                <Link href={`/tin-tuc/${post.id}`} title="Đọc thêm" className="read-more">Đọc thêm »</Link>
+
+                              </div>
+
+                            </div>
+
+                          </div>
+                        </div>
+
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+
+            </div>
+          </div>
         </div>
-      )}
-    </div>
+      </div>
+    </>
   );
 } 

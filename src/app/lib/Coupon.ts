@@ -5,8 +5,10 @@ import { Coupon } from "../types/coupon";
 import { API_BASE_URL, USER_API } from "./config";
 
 export async function getCoupons(): Promise<Coupon[]> {
-  const res = await axios.get(`${API_BASE_URL}/public/coupons/valid`);
-  return res.data.coupons as Coupon[];
+  const res = await axios.get<{ data: Coupon[] }>(
+    `${API_BASE_URL}/public/coupons/valid`
+  );
+  return res.data.data;
 }
 
 export async function saveCoupon(coupon_id: number) {

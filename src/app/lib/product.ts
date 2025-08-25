@@ -12,11 +12,6 @@ export async function getProducts() {
     throw error;
   }
 }
-// export async function Banner(): Promise<Product[]> {
-//   const res = await axios.get('http://192.168.100.108:8000/api/banners');
-//   console.log(res);
-//   return res.data as Product[];
-// }
 
 export async function getProductsPage(page: number = 1) {
   try {
@@ -156,7 +151,9 @@ export async function createProductReview(
 
 
 export async function searchProducts(query: string): Promise<Product[]> {
-  const res = await axios.get(
+  const res = await axios.get<{
+    data: Product[];
+  }>(
     `${PUBLIC_API.PRODUCTS}-search?query=${encodeURIComponent(
       query
     )}`

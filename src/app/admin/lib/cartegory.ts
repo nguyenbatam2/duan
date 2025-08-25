@@ -1,22 +1,11 @@
 import  Cookies  from 'js-cookie';
 import axios from "axios";
 import { Category } from "../types/cartegory";
-import { ADMIN_API } from '../../lib/config';
+import { ADMIN_API, PUBLIC_API } from '../../lib/config';
 
 export async function getCategories(): Promise<Category> {
-    const token = Cookies.get("token");
-    if (!token) throw new Error("Token không tồn tại");
-
-    const res = await axios.get(
-      `${ADMIN_API.CATEGORIES}?per_page=15`,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          Accept: "application/json",
-        },
-      }
-    );
-    return res.data as Category; // trả về { data: {...}
+  const res = await axios.get(`${PUBLIC_API.CATEGORIES}?per_page=15`);
+  return res.data as Category; // trả về { data: {...}
 }
 
 export async function postCategory(data: { name: string; slug: string }): Promise<Category> {

@@ -43,7 +43,7 @@ function SearchContent() {
 
 
                     <div className="margin-bottom-15 no-padding">
-                        <h1 className="title-head title_search">Có {query.length} kết quả tìm kiếm phù hợp</h1>
+                        <h1 className="title-head title_search">Có {result.length} kết quả tìm kiếm phù hợp</h1>
                     </div>
                     <div className="category-products">
                         <div className="d-none">
@@ -64,7 +64,7 @@ function SearchContent() {
 
                                                     <div className="product-thumbnail">
                                                         <Link className="image_thumb scale_hover" href="/hac-sam-lat-tam-mat-ong-kgs-han-quoc-hop-8-goi-x-20g" title="Hắc Sâm Lát Tẩm Mật Ong KGS Hàn Quốc Hộp 8 Gói x 20g">
-                                                            <img className="lazyload duration-300 loaded" src="//bizweb.dktcdn.net/thumb/large/100/506/650/products/hac-sam-lat-tam-mat-ong-kgs-2-34f0db34554247d3a590c7d92db6655a-grande.jpg?v=1708619688693" data-src="//bizweb.dktcdn.net/thumb/large/100/506/650/products/hac-sam-lat-tam-mat-ong-kgs-2-34f0db34554247d3a590c7d92db6655a-grande.jpg?v=1708619688693" alt="Hắc Sâm Lát Tẩm Mật Ong KGS Hàn Quốc Hộp 8 Gói x 20g" data-was-processed="true" />
+                                                            <img className="lazyload duration-300 loaded" src={product.image}  alt="Hắc Sâm Lát Tẩm Mật Ong KGS Hàn Quốc Hộp 8 Gói x 20g" data-was-processed="true" />
                                                         </Link>
                                                     </div>
                                                     <div className="product-info">
@@ -73,7 +73,7 @@ function SearchContent() {
                                                                 <Link href={`/product/${product.id}`} title={product.name}>{product.name}</Link>
                                                             </h3>
                                                             <div className="product-price-cart">
-                                                                <span className="price">{Number(product.price).toLocaleString('vi-VN')}đ</span>
+                                                                <span className="price">{Number(product.base_price).toLocaleString('vi-VN')}đ</span>
                                                             </div>
                                                         </div>
                                                         <div className="product-button">

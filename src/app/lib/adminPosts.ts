@@ -13,7 +13,7 @@ const getAuthToken = () => {
 // 2.1. Lấy danh sách tất cả bài viết (bao gồm draft)
 export async function getAllPosts(): Promise<Post[]> {
   const token = getAuthToken();
-  const res = await axios.get(ADMIN_API.POSTS, {
+  const res = await axios.get<{ data: Post[] }>(ADMIN_API.POSTS, {
     headers: {
       Authorization: `Bearer ${token}`,
       Accept: "application/json",
@@ -31,41 +31,34 @@ export async function createPost(postData: {
 }): Promise<Post> {
   const token = getAuthToken();
   const formData = new FormData();
-  
+
   formData.append("title", postData.title);
   formData.append("content", postData.content);
   formData.append("status", postData.status);
-  
+
   if (postData.image) {
     formData.append("image", postData.image);
   }
 
-  const res = await axios.post(
-    ADMIN_API.POSTS,
-    formData,
-    {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        Accept: "application/json",
-        "Content-Type": "multipart/form-data",
-      },
-    }
-  );
+  const res = await axios.post<{ data: Post }>(ADMIN_API.POSTS, formData, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+      Accept: "application/json",
+      "Content-Type": "multipart/form-data",
+    },
+  });
   return res.data.data as Post;
 }
 
 // 2.3. Xem chi tiết bài viết
 export async function getPostById(id: number): Promise<Post> {
   const token = getAuthToken();
-  const res = await axios.get(
-    `${ADMIN_API.POSTS}/${id}`,
-    {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        Accept: "application/json",
-      },
-    }
-  );
+  const res = await axios.get<{ data: Post }>(`${ADMIN_API.POSTS}/${id}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+      Accept: "application/json",
+    },
+  });
   return res.data.data as Post;
 }
 
@@ -81,13 +74,13 @@ export async function updatePost(
 ): Promise<Post> {
   const token = getAuthToken();
   const formData = new FormData();
-  
+
   if (postData.title) formData.append("title", postData.title);
   if (postData.content) formData.append("content", postData.content);
   if (postData.status) formData.append("status", postData.status);
   if (postData.image) formData.append("image", postData.image);
 
-  const res = await axios.put(
+  const res = await axios.put<{ data: Post }>(
     `${ADMIN_API.POSTS}/${id}`,
     formData,
     {
@@ -104,22 +97,19 @@ export async function updatePost(
 // 2.5. Xóa bài viết
 export async function deletePost(id: number): Promise<{ message: string }> {
   const token = getAuthToken();
-  const res = await axios.delete(
-    `${ADMIN_API.POSTS}/${id}`,
-    {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        Accept: "application/json",
-      },
-    }
-  );
+  const res = await axios.delete(`${ADMIN_API.POSTS}/${id}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+      Accept: "application/json",
+    },
+  });
   return res.data as { message: string };
 }
 
 // 2.6. Chuyển đổi trạng thái bài viết
 export async function togglePostStatus(id: number): Promise<Post> {
   const token = getAuthToken();
-  const res = await axios.patch(
+  const res = await axios.patch<{ data: Post }>(
     `${ADMIN_API.POSTS}/${id}/toggle-status`,
     {},
     {

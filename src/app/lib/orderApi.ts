@@ -7,13 +7,13 @@ import { USER_API } from "./config";
 const API_URL = USER_API.ORDERS;
 
 
-export async function getOrders(page = 1): Promise<any> {
+export async function getOrders(page = 1): Promise<OrderItem[]> {
   const cookieData = Cookies.get("author");
   if (!cookieData) throw new Error("Không có token");
   const parsed = JSON.parse(cookieData);
   const token = parsed.token;
 
-  const res = await axios.get(`${API_URL}?page=${page}`, {
+  const res = await axios.get<{ data: OrderItem[] }>(`${API_URL}?page=${page}`, {
     headers: {
       Authorization: `Bearer ${token}`,
       Accept: "application/json",
@@ -63,10 +63,10 @@ export async function cancelOrder(id: number) {
   return res.data;
 }
 
-export async function getOrdersTotal() {
-  const orders: { price: number; quantity: number }[] = await getOrders();
+export async function getOrdersTotal(): Promise<number> {
+  const orders: OrderItem[] = await getOrders();
   return orders.reduce(
-    (total: number, item: { price: number; quantity: number }) =>
+    (total: number, item: OrderItem) =>
       total + (Number(item.price) || 0) * (Number(item.quantity) || 1),
     0
   );

@@ -92,6 +92,7 @@ export default function Page() {
   if (error) return <p>Lỗi khi tải sản phẩm!</p>;
   if (isLoadingCoupons) return <p>Đang tải mã giảm giá...</p>;
   if (isError) return <p>Lỗi khi tải mã giảm giá!</p>;
+  if (isLoadingEvents) return <p>Đang tải sự kiện...</p>;
 
   const groupedByCategory: Record<string, any[]> = {};
   products.forEach((product: any) => {
@@ -295,92 +296,6 @@ export default function Page() {
 
               </div>
 
-              {/* <div className="swiper_sale swiper-container swiper-container-initialized swiper-container-horizontal swiper-container-pointer-events">
-              <div className="swiper-wrapper load-after" data-section="section_flash_sale" style={{transform: "translate3d(0px, 0px, 0px)"}}>
-
-                <div className="swiper-slide swiper-slide-active" style={{ width: "287.75px", marginRight: "20px"}}>
-                  <div className="item_product_main">
-
-                    <form action="/cart/add" method="post" className="variants product-action item-product-main product-flash-sale duration-300" data-cart-form="" data-id="product-actions-34620973" encType="multipart/form-data">
-                      <span className="flash-sale">-
-                        37%
-                      </span>
-
-
-                      <div className="product-thumbnail">
-                        <a className="image_thumb scale_hover" href="/set-qua-2010-maneli-1-boi-bo-suc-khoe-duong-nhan" title="Set quà 2010 – Maneli #1 bồi bổ sức khỏe, dưỡng nhan">
-                          <img className="lazyload duration-300 loaded" src="//bizweb.dktcdn.net/thumb/large/100/506/650/products/set-qua-20-10-maneli-1.jpg?v=1708655273420" data-src="//bizweb.dktcdn.net/thumb/large/100/506/650/products/set-qua-20-10-maneli-1.jpg?v=1708655273420" alt="Set quà 2010 – Maneli #1 bồi bổ sức khỏe, dưỡng nhan" data-was-processed="true" />
-                        </a>
-                      </div>
-                      <div className="product-info">
-                        <div className="name-price">
-                          <h3 className="product-name line-clamp-2-new">
-                            <a href="/set-qua-2010-maneli-1-boi-bo-suc-khoe-duong-nhan" title="Set quà 2010 – Maneli #1 bồi bổ sức khỏe, dưỡng nhan">Set quà 2010 – Maneli #1 bồi bổ sức khỏe, dưỡng nhan</a>
-                          </h3>
-                          <div className="product-price-cart">
-                            <span className="compare-price">799.000₫</span>
-
-                            <span className="price">500.000₫</span>
-                            <div className="productcount">
-
-
-
-                              <div className="countitem visible">
-                                <div className="fire">
-                                  <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" viewBox="0 0 16 16">
-                                    <defs>
-                                      <linearGradient id="prefix__a" x1="50%" x2="50%" y1="36.31%" y2="88.973%">
-                                        <stop offset="0%" stopColor="#FDD835"></stop>
-                                        <stop offset="100%" stopColor="#FFB500"></stop>
-                                      </linearGradient>
-                                    </defs>
-                                    <g fill="none" fillRule="evenodd">
-                                      <path d="M0 0H16V16H0z"></path>
-                                      <path fill="url(#prefix__a)" stroke="#FF424E" strokeWidth="1.1" d="M9.636 6.506S10.34 2.667 7.454 1c-.087 1.334-.786 2.571-1.923 3.401-1.234 1-3.555 3.249-3.53 5.646-.017 2.091 1.253 4.01 3.277 4.953.072-.935.549-1.804 1.324-2.41.656-.466 1.082-1.155 1.182-1.912 1.729.846 2.847 2.469 2.944 4.27v.012c1.909-.807 3.165-2.533 3.251-4.467.205-2.254-1.134-5.316-2.321-6.317-.448.923-1.144 1.725-2.022 2.33z" transform="rotate(4 8 8)"></path>
-                                    </g>
-                                  </svg>
-                                </div>
-                                <span className="a-center">Đã bán <b>139</b></span>
-                                <div className="countdown" style={{ width: "56%" }}></div>
-                              </div>
-
-
-
-                            </div>
-                          </div>
-                        </div>
-                        <div className="product-button">
-                            <button className="btn-cart btn-views add_to_cart btn btn-primary " title="Thêm vào giỏ hàng">
-                              <span>Thêm vào giỏ</span>
-                              <svg enableBackground="new 0 0 32 32" height="512" viewBox="0 0 32 32" width="512" xmlns="http://www.w3.org/2000/svg"><g><g><path d="m23.8 30h-15.6c-3.3 0-6-2.7-6-6v-.2l.6-16c.1-3.3 2.8-5.8 6-5.8h14.4c3.2 0 5.9 2.5 6 5.8l.6 16c.1 1.6-.5 3.1-1.6 4.3s-2.6 1.9-4.2 1.9c0 0-.1 0-.2 0zm-15-26c-2.2 0-3.9 1.7-4 3.8l-.6 16.2c0 2.2 1.8 4 4 4h15.8c1.1 0 2.1-.5 2.8-1.3s1.1-1.8 1.1-2.9l-.6-16c-.1-2.2-1.8-3.8-4-3.8z"></path></g><g><path d="m16 14c-3.9 0-7-3.1-7-7 0-.6.4-1 1-1s1 .4 1 1c0 2.8 2.2 5 5 5s5-2.2 5-5c0-.6.4-1 1-1s1 .4 1 1c0 3.9-3.1 7-7 7z"></path></g></g></svg>
-                            </button>
-                            <a href="javascript:void(0)" className="setWishlist btn-views btn-circle" data-wish="set-qua-2010-maneli-1-boi-bo-suc-khoe-duong-nhan" title="Thêm vào yêu thích">
-                              <img width="25" height="25" src="//bizweb.dktcdn.net/100/506/650/themes/944598/assets/heart.png?1739018973665" alt="Thêm vào yêu thích" />
-                            </a>
-                        </div>
-                      </div>
-                    </form>
-                  </div>
-                </div>
-                
-              </div>
-              <div className="swiper-button-prev swiper-button-disabled">
-                <svg width="58" height="58" viewBox="0 0 58 58" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <rect x="2.13003" y="29" width="38" height="38" transform="rotate(-45 2.13003 29)" stroke="black" fill="#fff" strokeWidth="2"></rect>
-                  <rect x="8" y="29.2133" width="30" height="30" transform="rotate(-45 8 29.2133)" fill="black"></rect>
-                  <path d="M18.5 29H39.5" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"></path>
-                  <path d="M29 18.5L39.5 29L29 39.5" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"></path>
-                </svg>
-              </div>
-              <div className="swiper-button-next swiper-button-disabled">
-                <svg width="58" height="58" viewBox="0 0 58 58" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <rect x="2.13003" y="29" width="38" height="38" transform="rotate(-45 2.13003 29)" stroke="black" fill="#fff" strokeWidth="2"></rect>
-                  <rect x="8" y="29.2133" width="30" height="30" transform="rotate(-45 8 29.2133)" fill="black"></rect>
-                  <path d="M18.5 29H39.5" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"></path>
-                  <path d="M29 18.5L39.5 29L29 39.5" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"></path>
-                </svg>
-              </div>
-            </div> */}
 
               <div className="view-more clearfix">
                 <Link href="/events" title="Xem tất cả" className="btn btn-primary frame">

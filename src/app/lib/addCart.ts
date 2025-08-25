@@ -75,7 +75,7 @@ export function decreaseQuantity(productId: number): void {
 
 export function getCartTotal(): number {
   return getCart().reduce(
-    (total, item) => total + (Number(item.price) || 0) * (Number(item.quantity) || 1),
+    (total, item) => total + (Number(item.base_price) || 0) * (Number(item.quantity) || 1),
     0
   );
 }

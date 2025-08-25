@@ -110,7 +110,7 @@ export default function Cart() {
 																		</div>
 																		<div className="grid">
 																			<div className="grid__item one-half text-right cart_prices">
-																				<span className="cart-price">{Number(item.price).toLocaleString("vi-VN")}₫</span>
+																				<span className="cart-price">{Number(item.base_price).toLocaleString("vi-VN")}₫</span>
 																			</div>
 																		</div>
 																		<div className="grid">
@@ -140,7 +140,7 @@ export default function Cart() {
 																		</div>
 																		<div className="grid justify-right">
 																			<div className="grid__item one-half text-right cart_prices">
-																				<span className="cart-price">{Number(Number(item.price) * (item.quantity || 1)).toLocaleString("vi-VN")}₫</span>
+																				<span className="cart-price">{Number(Number(item.base_price) * (item.quantity || 1)).toLocaleString("vi-VN")}₫</span>
 																			</div>
 																		</div>
 																	</div>

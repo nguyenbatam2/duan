@@ -40,7 +40,7 @@ export async function getPublicEvents(params?: {
 export async function getPublicEventById(id: number): Promise<Event> {
   try {
     console.log('🌐 Fetching public event by ID:', id);
-    const res = await axios.get(`${PUBLIC_API.EVENTS}/${id}`, { timeout: 30000 });
+    const res = await axios.get<{data: Event}>(`${PUBLIC_API.EVENTS}/${id}`, { timeout: 30000 });
     console.log('✅ Public event fetched successfully');
     return res.data.data as Event;
   } catch (error: any) {

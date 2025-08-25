@@ -242,12 +242,12 @@ export default function Header() {
 
                                                         <Link key={item.id} className="product-smart" href={`/product/${item.id}`} title={item.name}>
                                                             <div className="image_thumb">
-                                                                <img width="58" height="58" className="lazyload loaded" src="//bizweb.dktcdn.net/thumb/compact/100/506/650/products/to-yen-tho-vip-loai-1.jpg?v=1705573680173" alt="Tổ yến thô VIP Loại 1" data-was-processed="true" />
+                                                                <img width="58" height="58" className="lazyload loaded" src={item.image} alt="Tổ yến thô VIP Loại 1" data-was-processed="true" />
                                                             </div>
                                                             <div className="product-info">
                                                                 <h3 className="product-name"><span>{item.name}</span></h3>
                                                                 <div className="price-box">
-                                                                    <span className="price">{Number(item.price).toLocaleString('vi-VN')}đ</span><span className="compare-price">{item.price}</span>
+                                                                    <span className="price">{Number(item.base_price).toLocaleString('vi-VN')}đ</span><span className="compare-price">{item.base_price}</span>
                                                                 </div>
                                                             </div>
                                                         </Link>
@@ -404,7 +404,7 @@ export default function Header() {
                                                                                     </div>
                                                                                 </div>
                                                                                 <div className="grid__item one-half text-right cart_prices">
-                                                                                    <span className="cart-price">{Number(Number(item.price) * (item.quantity || 1)).toLocaleString("vi-VN")}₫</span>
+                                                                                    <span className="cart-price">{Number(Number(item.base_price) * (item.quantity || 1)).toLocaleString("vi-VN")}₫</span>
                                                                                 </div>
                                                                             </div>
                                                                         </div>

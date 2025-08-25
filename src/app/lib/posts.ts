@@ -8,14 +8,14 @@ export async function getPublicPosts(page: number = 1, perPage: number = 10): Pr
 }
 
 export async function getPublicPostsAll(): Promise<Post[]> {
-  const res = await axios.get(`${API_BASE_URL}/posts`);
+  const res = await axios.get<{data: Post[]}>(`${API_BASE_URL}/posts`);
   return res.data.data as Post[];
 }
 
 export async function getPostById(id: number): Promise<Post> {
   const res = await axios.get(`${API_BASE_URL}/posts/${id}`);
-  if (!res.data) {
+  if (!res.data || !res.data.data) {
     throw new Error("Post not found");
   }
-  return res.data as Post;
-} 
+  return res.data.data as Post;
+}

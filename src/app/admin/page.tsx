@@ -1,11 +1,14 @@
 'use client';
+import "../admin/style/admin.css";
+
 import { useRouter } from 'next/navigation';
 import Cookies from 'js-cookie';
 import { useEffect } from 'react';
 import React from 'react';
-import { Toaster, toast } from 'react-hot-toast';
+// import { Toaster, toast } from 'react-hot-toast';
+import Navbar from '../admin/component/navbar';
 
-export default function AdminDashboard() {
+export default function Home() {
     const router = useRouter();
 
 useEffect(() => {
@@ -15,66 +18,112 @@ if(!token){
     router.push('/admin/login');
 }
 },[router]);
-
-const notify = () => toast.success("This is a success toast!");
+// 
     return (
         <>
-        <button onClick={notify}>Show Toast</button>
-        <Toaster />
-        <div className="admin-container">
-            <div className="admin-header">
-                <h1 className="admin-card-title">Bảng điều khiển Admin</h1>
-                <p className="text-muted">Chào mừng bạn đến với hệ thống quản lý</p>
-            </div>
+            <section className="home">
+                <header className="home-header">
+                    <div className="text">Xin chào Admin</div>
+                    <div className="search">
+                        <input type="text" placeholder="Tìm kiếm khách hàng, công việc" />
+                    </div>
+                </header>
+                <main className="home-main">
+                    <div className="home__container one">
 
-            <div className="admin-card">
-                <div className="admin-card-header">
-                    <h2 className="admin-card-title">Tổng quan hệ thống</h2>
-                </div>
-                <div className="admin-card-body">
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: 'var(--spacing-lg)' }}>
-                        <div className="admin-card bg-primary">
-                            <h3 className="font-semibold text-primary">Quản lý Sản phẩm</h3>
-                            <p className="text-muted">Quản lý danh sách sản phẩm, thêm, sửa, xóa</p>
-                            <a href="/admin/product" className="admin-button">Xem chi tiết</a>
+                        <div className="home__content_top">
+
+                            <div className="home__content_top--item">
+                                <div className="box__content--title">
+                                    <h2 className="text">Tổng Sản Phẩm</h2>
+                                    {/* <i className="fas fa-ellipsis-h"></i> */}
+                                </div>
+                                <div className="box__content--item">
+                                    {/* <span className="number">{products.length}</span> */}
+                                </div>
+                            </div>
+
+                            <div className="home__content_top--item">
+                                <div className="box__content--title">
+                                    <h2 className="text">Tổng Đơn Hàng</h2>
+                                    {/* <i className="fas fa-ellipsis-h"></i> */}
+                                </div>
+                                <div className="box__content--item">
+                                    {/* <span className="number">{orders.length}</span> */}
+                                </div>
+                            </div>
+
+                            <div className="home__content_top--item">
+                                <div className="box__content--title">
+                                    <h2 className="text">Tổng Khách hàng</h2>
+                                    {/* <i className="fas fa-ellipsis-h"></i> */}
+                                </div>
+                                <div className="box__content--item">
+                                    {/* <span className="number">{user.length}</span> */}
+                                </div>
+                            </div>
+
+                            <div className="home__content_top--item">
+                                <div className="box__content--title">
+                                    <h2 className="text">Tổng Tiền Sản Phẩm</h2>
+                                    {/* <i className="fas fa-ellipsis-h"></i> */}
+                                </div>
+                                <div className="box__content--item">
+                                    {/* <span className="number">{orders.reduce((total, order) => total + order.totalAmount, 0).toLocaleString('vi-VN') + 'đ'}</span> */}
+                                </div>
+                            </div>
+
                         </div>
-                        
-                        <div className="admin-card bg-success">
-                            <h3 className="font-semibold text-success">Quản lý Đơn hàng</h3>
-                            <p className="text-muted">Theo dõi và xử lý đơn hàng</p>
-                            <a href="/admin/Oder" className="admin-button success">Xem chi tiết</a>
-                        </div>
-                        
-                        <div className="admin-card bg-warning">
-                            <h3 className="font-semibold text-warning">Quản lý Khách hàng</h3>
-                            <p className="text-muted">Quản lý thông tin khách hàng</p>
-                            <a href="/admin/user" className="admin-button warning">Xem chi tiết</a>
-                        </div>
-                        
-                        <div className="admin-card bg-danger">
-                            <h3 className="font-semibold text-danger">Thống kê</h3>
-                            <p className="text-muted">Xem báo cáo và thống kê</p>
-                            <a href="/admin/Statistic" className="admin-button danger">Xem chi tiết</a>
+
+
+
+                    </div>
+                    <div className="home__container two">
+                        {/* <div className="home__container--title">
+                            <a href="#">Quản Lý Đơn Hàng</a>
+                            <a href="#">Quản Lý Khách Hàng</a>
+                        </div> */}
+                        <div className="home__container--content">
+                            <div className="home__container--content_Left">
+                                {/* <select name="" id="" className="select">
+                                    <option value="">Quản lý hành trình khách hàng</option>
+                                </select>
+                                <div className="panel">
+                                    <div className="head__panel--tile">
+                                        <span>Kho dữ liệu khách hàng</span>
+                                        <i className="fas fa-chart-pie icon"></i>
+                                    </div>
+                                    <div className="body__panel">
+                                        <div className="body__panel--content">
+                                            <div className="number"> <i className="fas fa-users"></i> 9 </div>
+                                            <div className="text">Khách hàng</div>
+                                        </div>
+                                        <div className="actions">
+                                            <button>
+                                                <i className="fas fa-user-plus"></i>
+                                                <span>Thêm khách hàng</span>
+                                            </button>
+                                            <button>
+                                                <i className="fas fa-download"></i>
+                                                <span>Tải về</span>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div className="footer__panel">
+                                        <button className="upload-btn" type="submit">
+                                            <i className="fas fa-upload"></i>
+                                            <span>Upload khách hàng</span>
+                                        </button>
+                                    </div>
+                                </div> */}
+                            </div>
+                            <div className="home__container--content_right">
+                                {/* đổi hiển thị đồ thi ở đây  */}
+                            </div>
                         </div>
                     </div>
-                </div>
-            </div>
-
-            <div className="admin-card">
-                <div className="admin-card-header">
-                    <h2 className="admin-card-title">Truy cập nhanh</h2>
-                </div>
-                <div className="admin-card-body">
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 'var(--spacing-md)' }}>
-                        <a href="/admin/category" className="admin-button info">📁 Danh mục</a>
-                        <a href="/admin/Event" className="admin-button info">🎉 Sự kiện</a>
-                        <a href="/admin/CouponPage" className="admin-button info">🏷️ Mã giảm giá</a>
-                        <a href="/admin/reviews" className="admin-button info">💬 Bình luận</a>
-                        <a href="/admin/posts" className="admin-button info">📝 Bài viết</a>
-                    </div>
-                </div>
-            </div>
-        </div>
+                </main>
+            </section>
         </>
     );
 }

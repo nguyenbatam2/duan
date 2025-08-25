@@ -1,4 +1,4 @@
-.main_content_iner {
+/* .main_content_iner {
     background: linear-gradient(120deg, #f8fafc 0%, #e0e7ff 100%);
     min-height: 100vh;
   }
@@ -141,10 +141,10 @@
     font-size: 1.05rem;
     margin-top: 6px;
   }
-  /* Thêm CSS cho phân trang */
+
   .pagination {
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 8px;
-  }
+  } */
