@@ -3,11 +3,19 @@ import { Coupon } from "../types/coupon";
 import Cookies from "js-cookie";
 import { ADMIN_API } from "../../lib/config";
 
-export async function getAllCoupons(): Promise<Coupon[]> {
+export async function getAllCoupons(
+  page = 1,
+  query = ""
+): Promise<{ data: Coupon[]; meta?: any }> {
   const token = Cookies.get("token");
   if (!token) throw new Error("Token không tồn tại hoặc không hợp lệ");
 
-  const res = await fetch(ADMIN_API.COUPONS, {
+  // Thêm query và page vào URL nếu API hỗ trợ
+  const url = new URL(ADMIN_API.COUPONS, window.location.origin);
+  url.searchParams.set("page", String(page));
+  if (query) url.searchParams.set("search", query);
+
+  const res = await fetch(url.toString(), {
     headers: {
       Accept: "application/json",
       Authorization: `Bearer ${token}`,
@@ -19,10 +27,12 @@ export async function getAllCoupons(): Promise<Coupon[]> {
     throw new Error(err.message || `Lỗi lấy danh sách coupon: ${res.status}`);
   }
   const data = await res.json();
-  if (Array.isArray(data.coupons)) return data.coupons;
-  if (Array.isArray(data.data)) return data.data;
-  if (Array.isArray(data)) return data;
-  return [];
+  // Chuẩn hóa trả về
+  if (Array.isArray(data.coupons))
+    return { data: data.coupons, meta: data.meta };
+  if (Array.isArray(data.data)) return { data: data.data, meta: data.meta };
+  if (Array.isArray(data)) return { data, meta: data.meta };
+  return { data: [], meta: data.meta };
 }
 
 export interface AddCouponPayload {

@@ -1,0 +1,174 @@
+/* Layout chung */
+.admin-layout {
+    padding: 60px;
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    background: #f5f6fa;
+    min-height: 100vh;
+  }
+  
+  /* Header */
+  .admin-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+  
+  .admin-header-left h1 {
+    font-size: 1.6rem;
+    margin: 0;
+    color: #333;
+  }
+  
+  .admin-header-left p {
+    color: #888;
+    margin-top: 4px;
+  }
+  
+  .admin-header-right {
+    display: flex;
+    gap: 12px;
+  }
+  
+  .search-input {
+    padding: 6px 10px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    outline: none;
+  }
+  
+  .search-input:focus {
+    border-color: #007bff;
+    box-shadow: 0 0 4px rgba(0, 123, 255, 0.2);
+  }
+  
+  /* Card */
+  .card {
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    overflow: hidden;
+  }
+  
+  .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 20px;
+    border-bottom: 1px solid #eee;
+  }
+  
+  .card-header h2 {
+    font-size: 1.2rem;
+    margin: 0;
+  }
+  
+  /* Table */
+  .admin-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  
+  .admin-table th,
+  .admin-table td {
+    padding: 12px 10px;
+    border-bottom: 1px solid #eee;
+    text-align: center;
+    font-size: 0.95rem;
+  }
+  
+  .admin-table th {
+    background: #f8f9fa;
+    font-weight: 600;
+    color: #333;
+  }
+  
+  .admin-table tr:hover td {
+    background: #fafafa;
+  }
+  
+  .admin-img {
+    width: 50px;
+    height: 50px;
+    object-fit: cover;
+    border-radius: 6px;
+  }
+  
+  /* Status */
+  .status {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 14px;
+    font-size: 0.8rem;
+    font-weight: 600;
+  }
+  
+  .status-success {
+    background: #e6f9f0;
+    color: #1e9c65;
+  }
+  
+  .status-warning {
+    background: #fff3cd;
+    color: #856404;
+  }
+  
+  /* Actions */
+  .actions {
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  
+  .btn {
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    border: none;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.2s ease-in-out;
+  }
+  
+  .btn-sm {
+    font-size: 0.8rem;
+    padding: 5px 8px;
+  }
+  
+  /* Màu nút */
+  .btn-primary {
+    background: #007bff;
+    color: #fff;
+  }
+  
+  .btn-light {
+    background: #f1f1f1;
+    color: #333;
+  }
+  
+  .btn-warning {
+    background: #ffc107;
+    color: #333;
+  }
+  
+  .btn-info {
+    background: #17a2b8;
+    color: #fff;
+  }
+  
+  .btn-danger {
+    background: #dc3545;
+    color: #fff;
+  }
+  
+  .btn-success {
+    background: #28a745;
+    color: #fff;
+  }
+  
+  .btn:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+  }
+  

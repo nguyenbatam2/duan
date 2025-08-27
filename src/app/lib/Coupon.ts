@@ -4,12 +4,16 @@ import Cookies from "js-cookie";
 import { Coupon } from "../types/coupon";
 import { API_BASE_URL, USER_API } from "./config";
 
+
 export async function getCoupons(): Promise<Coupon[]> {
-  const res = await axios.get<{ data: Coupon[] }>(
+  const res = await axios.get<{
+    coupons: Coupon[]; data: Coupon[] 
+}>(
     `${API_BASE_URL}/public/coupons/valid`
   );
-  return res.data.data;
+  return res.data.coupons as Coupon[];
 }
+
 
 export async function saveCoupon(coupon_id: number) {
   const cookieData = Cookies.get("author");
@@ -22,6 +26,6 @@ export async function saveCoupon(coupon_id: number) {
       headers: { Authorization: `Bearer ${token}`, Accept: "application/json" },
     }
   );
-  return res.data; // { message: "...", ... }
+  return res.data; 
 }
 

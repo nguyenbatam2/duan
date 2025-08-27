@@ -5,6 +5,7 @@ import {
   createProductForm,
   updateProduct,
   deleteProduct,
+  searchProducts
 } from "../lib/product";
 import toast from "react-hot-toast";
 import { getCategories } from "../lib/cartegory";
@@ -14,11 +15,17 @@ import { Category } from "../types/cartegory";
 export default function ProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
+
   const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1); // ✅ tổng số trang
+  const [query, setQuery] = useState(""); // ✅ từ khóa tìm kiếm
+
 
   const [isAddformOpen, setIsAddformOpen] = useState(false);
   const [isEditformOpen, setIsEditformOpen] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [productType, setProductType] = useState<string>("");
+  const [sortType, setSortType] = useState<string>("name-asc");
 
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [newProduct, setNewProduct] = useState<any>({
@@ -38,17 +45,33 @@ export default function ProductsPage() {
   useEffect(() => {
     loadProducts();
     getCategories().then((res) => setCategories(res.data || []));
+  }, [page, query]);
 
-  }, [page]);
+  useEffect(() => {
+    const delayDebounce = setTimeout(() => {
+      loadProducts();
+    }, 400); // 400ms debounce
+
+    return () => clearTimeout(delayDebounce);
+  }, [page, query]);
 
   const loadProducts = async () => {
     try {
-      const res = await getProductsPage(page);
-      setProducts(res.data);
+      let res;
+      if (query.trim()) {
+        res = await searchProducts(query, page); // ✅ tìm kiếm có phân trang
+      } else {
+        res = await getProductsPage(page); // ✅ load mặc định
+      }
+
+      setProducts(res.data || []);
+      setTotalPages(res.meta?.last_page || 1);
     } catch (error) {
       console.error("Lỗi load sản phẩm:", error);
     }
   };
+
+
 
   // 📌 Xem chi tiết
   const handleViews = (id: number) => {
@@ -183,32 +206,78 @@ export default function ProductsPage() {
             type="text"
             placeholder="Tìm kiếm sản phẩm"
             style={{ padding: "5px" }}
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
           />
         </div>
       </header>
 
       <main className="home-main">
         <div
-          className="home__container two"
-          style={{ width: "100%", marginTop: "20px" }}
-        >
+          className="home__container two">
           <div
             className="home__container--title"
-            style={{ display: "flex", justifyContent: "space-between" }}
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignContent: "center", // marginBottom: "20px"
+            }}
           >
             <a href="#">Danh sách sản phẩm</a>
-            <button
-              onClick={() => setIsAddformOpen((prev) => !prev)}
+            <div
+              className="row"
               style={{
-                padding: "5px 10px",
-                backgroundColor: "#4CAF50",
-                color: "white",
-                border: "none",
-                borderRadius: "4px",
+                display: "flex",
+                alignItems: "center",
+                gap: "20px",
               }}
             >
-              {isAddformOpen ? "Đóng form" : "+ Thêm sản phẩm"}
-            </button>
+              <div className="col">
+                <select
+                  value={productType}
+                  onChange={(e) => setProductType(e.target.value)}
+                  style={{
+                    padding: "5px",
+                    borderRadius: "4px",
+                    marginRight: "10px",
+                    width: "350px"
+                  }}
+                >
+                  <option value="">Tất cả</option>
+                  <option value="simple">Sản phẩm đơn giản</option>
+                  <option value="configurable">Sản phẩm có thể cấu hình</option>
+                </select>
+              </div>
+              <div className="col" style={{ display: "flex", alignItems: "center", gap: "10px", width: "350px" }}>
+                <select
+                  value={sortType}
+                  onChange={(e) => setSortType(e.target.value)}
+                  style={{
+                    padding: "5px",
+                    borderRadius: "4px",
+                  }}
+                >
+                  <option value="name-asc">A-Z</option>
+                  <option value="name-desc">Z-A</option>
+                  <option value="price-asc">Giá tăng dần</option>
+                  <option value="price-desc">Giá giảm dần</option>
+                </select>
+              </div>
+              <button type="button" className="col"
+                onClick={() => setIsAddformOpen((prev) => !prev)}
+                style={{
+                  padding: "8px 8px",
+                  cursor: "pointer",
+                  margin: "10px 10px 0 0",
+                  backgroundColor: "#4CAF50",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "4px",
+                }}
+              >
+                {isAddformOpen ? "Đóng form" : "+ Thêm sản phẩm"}
+              </button>
+            </div>
           </div>
 
           <div className="home__container--content">
@@ -227,11 +296,26 @@ export default function ProductsPage() {
                 </tr>
               </thead>
               <tbody>
-                {products.slice()
-                  .sort((a, b) => b.id - a.id)
+                {products
+                  .filter(item => !productType || item.product_type === productType)
+                  .slice()
+                  .sort((a, b) => {
+                    switch (sortType) {
+                      case "name-asc":
+                        return a.name.localeCompare(b.name);
+                      case "name-desc":
+                        return b.name.localeCompare(a.name);
+                      case "price-asc":
+                        return Number(a.base_price) - Number(b.base_price);
+                      case "price-desc":
+                        return Number(b.base_price) - Number(a.base_price);
+                      default:
+                        return b.id - a.id;
+                    }
+                  })
                   .map((item, index) => (
                   <tr key={item.id}>
-                    <td>{index + 1}</td>
+                      <td>{(page - 1) * 10 + index + 1}</td>
                     <td>
                       <img
                         src={item.image || ""}
@@ -268,12 +352,33 @@ export default function ProductsPage() {
                       </button>
                     </td>
                   </tr>
-                ))}
+                  ))}
               </tbody>
             </table>
+
+            <div style={{ marginTop: "10px", textAlign: "center" }}>
+              <button
+                disabled={page === 1}
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+              >
+                Trang trước
+              </button>
+              <span style={{ margin: "0 10px" }}>
+                Trang {page} / {totalPages}
+              </span>
+              <button
+                disabled={page === totalPages}
+                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+              >
+                Trang sau
+              </button>
+            </div>
+
+
           </div>
         </div>
       </main>
+
 
       {/* Modal xem chi tiết */}
       {isModalOpen && selectedProduct && (
@@ -306,7 +411,9 @@ export default function ProductsPage() {
               <strong>Mô tả:</strong>{" "}
               {selectedProduct.description || "Không có mô tả"}
             </p>
-            <button onClick={() => setIsModalOpen(false)}>Đóng</button>
+            <div className="action-buttons">
+              <button className="delete" onClick={() => setIsModalOpen(false)}>Đóng</button>
+            </div>
           </div>
         </div>
       )}
@@ -359,7 +466,6 @@ export default function ProductsPage() {
           >
             <option value="">Chọn danh mục</option>
             {categories.map((cat) => (
-              console.log(cat),
               <option key={cat.id} value={cat.id}>
                 {cat.name}
               </option>
@@ -383,10 +489,12 @@ export default function ProductsPage() {
               })
             }
           />
-          <button type="submit">Lưu sản phẩm</button>
-          <button type="button" onClick={() => setIsAddformOpen(false)}>
-            Hủy
-          </button>
+          <div className="action-buttons">
+            <button type="submit" className="view">Lưu sản phẩm</button>
+            <button type="button" className="delete" onClick={() => setIsAddformOpen(false)}>
+              Hủy
+            </button>
+          </div>
         </form>
       )}
 
@@ -465,13 +573,16 @@ export default function ProductsPage() {
               })
             }
           />
-          <button type="submit">Lưu</button>
-          <button type="button" onClick={() => setIsEditformOpen(false)}>
-            Hủy
-          </button>
+          <div className="action-buttons">
+            <button type="submit" className="view">Lưu sản phẩm</button>
+            <button type="button" className="delete" onClick={() => setIsEditformOpen(false)}>
+              Hủy
+            </button>
+          </div>
         </form>
       )}
-      
+
     </section>
+
   );
-}
+};

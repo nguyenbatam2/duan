@@ -1,0 +1,556 @@
+.customModalOverlay {
+    position: fixed;
+    inset: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    padding: 20px;
+}
+
+.customModal {
+    background: white;
+    border-radius: 12px;
+    width: 100%;
+    max-width: 1200px;
+    max-height: 90vh;
+    overflow: hidden;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+    animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-20px) scale(0.95);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+.orderInfo {
+    display: flex;
+    gap: 10px;
+}
+.modalHeader {
+    padding: 20px 30px;
+    background-color: #f8fafc;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: relative;
+}
+
+.modalHeader h2 {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--textColor);
+    margin: 0;
+}
+
+.closeBtn {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: #666;
+    transition: color 0.2s;
+    padding: 0;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1;
+}
+
+.closeBtn:hover {
+    color: #000;
+}
+
+.modalBody {
+    overflow-y: auto;
+    max-height: calc(90vh - 80px);
+    padding: 20px 24px;
+}
+
+ .contentWrapper {
+     /* display: grid; */
+     /* grid-template-columns: 2fr 1fr; */
+     /* min-height: 500px; */
+ }
+
+.leftSection {
+    padding: 24px 30px;
+    background: white;
+}
+
+.rightSection {
+    background-color: #f9fafb;
+    padding: 24px 30px;
+    border-left: 1px solid var(--border);
+}
+
+.sectionTitle {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--textColor);
+    margin: 0 0 12px 0;
+}
+
+.orderInfo {
+    margin-bottom: 24px;
+}
+
+.orderDate {
+    font-size: 14px;
+    color: var(--subColor);
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.orderStatus {
+
+    border-radius: 3px;
+    padding: 0px 8px;
+    font-size: 14px;
+
+}
+
+.infoSection {
+    margin-bottom: 24px;
+}
+
+.infoCard {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 16px;
+    margin-top: 8px;
+}
+
+/* Form controls inside update modal */
+.modalBody .infoCard label {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-size: 14px;
+    color: var(--textColor);
+    font-weight: 600;
+}
+
+.modalBody .infoCard .input,
+.modalBody .infoCard .select,
+.modalBody .infoCard textarea.input,
+.modalBody .infoCard select.select {
+    background: #fff;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-size: 14px;
+    color: #111827;
+    outline: none;
+    transition: border-color .15s ease, box-shadow .15s ease;
+}
+
+.modalBody .infoCard .input:focus,
+.modalBody .infoCard .select:focus,
+.modalBody .infoCard textarea.input:focus,
+.modalBody .infoCard select.select:focus {
+    border-color: #6366f1;
+    box-shadow: 0 0 0 3px rgba(99,102,241,.15);
+}
+
+.modalBody .infoCard .select,
+.modalBody .infoCard select.select {
+    height: 44px;
+}
+
+.modalBody .infoCard textarea.input {
+    min-height: 96px;
+    resize: vertical;
+}
+
+/* Footer actions of modal */
+.modalBody .actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+/* Nút Hủy trong form cập nhật */
+.modalBody .btnBlock.cancel {
+    color: #fff;
+    background: linear-gradient(135deg, #f7931e);
+    justify-content: center;
+    align-items: center;
+    width: 9%;
+    margin-top: 1px;
+    padding: 14px;
+    font-size: 15px;
+    font-weight: 700;
+    display: flex;
+    box-shadow: 0 4px 12px #ff6b354d;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.modalBody .btnBlock.cancel:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px #ff6b354d;
+}
+
+/* Nút Lưu thay đổi trong form cập nhật */
+.modalBody .actions .btn:not(.cancel) {
+    color: #fff;
+    background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+    justify-content: center;
+    align-items: center;
+    padding: 14px 24px;
+    font-size: 15px;
+    font-weight: 700;
+    display: flex;
+    box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+    min-width: 140px;
+}
+
+.modalBody .actions .btn:not(.cancel):hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(76, 175, 80, 0.4);
+    background: linear-gradient(135deg, #45a049 0%, #4CAF50 100%);
+}
+
+.modalBody .actions .btn:not(.cancel):disabled {
+    background: linear-gradient(135deg, #cccccc 0%, #bbbbbb 100%);
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.infoRow {
+    margin-bottom: 8px;
+    font-size: 14px;
+}
+
+.infoRow:last-child {
+    margin-bottom: 0;
+}
+
+.infoLabel {
+    color: var(--textColor);
+    font-weight: 500;
+}
+
+.productsSection {
+    margin-top: 24px;
+}
+
+.orderItems {
+    background: white;
+}
+
+.orderItem {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+    background: #fff;
+    padding: 12px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    transition: box-shadow 0.2s;
+}
+
+.orderItem:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.orderItem img {
+    width: 50px;
+    height: 50px;
+    -o-object-fit: cover;
+       object-fit: cover;
+border-radius: 6px;
+    border: 1px solid #e2e8f0;
+}
+
+.orderItem>div:nth-child(2) {
+    flex: 1;
+}
+
+.orderItem strong {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--textColor);
+    display: block;
+    margin-bottom: 2px;
+}
+
+.orderItem p {
+    font-size: 13px;
+    color: var(--subColor);
+    margin: 0;
+}
+
+.orderItem>div:last-child {
+    font-weight: 700;
+    color: var(--price);
+    font-size: 14px;
+}
+
+.paymentTitle {
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 20px;
+    color: var(--textColor);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.paymentRow {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    padding: 8px 0;
+}
+
+/* .paymentRow:not(:last-of-type) {
+    border-bottom: 1px solid #e2e8f0;
+} */
+
+.paymentLabel {
+    font-size: 14px;
+    color: var(--textColor);
+    font-weight: 500;
+}
+
+.paymentValue {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--textColor);
+}
+
+.paymentRow:last-of-type {
+    border-top: 2px solid var(--border);
+    margin-top: 16px;
+    padding-top: 16px;
+}
+
+.paymentRow:last-of-type .paymentLabel {
+    font-size: 16px;
+    font-weight: 700;
+}
+
+.totalAmount {
+    font-size: 20px;
+    color: var(--price);
+    font-weight: 700;
+    text-align: right;
+}
+
+.btn {
+    padding: 12px 16px;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.2s;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.btnBlock {
+    width: 100%;
+    margin-top: 20px;
+    background: linear-gradient(135deg,  #f7931e);
+    color: #fff;
+    font-size: 15px;
+    padding: 14px;
+    font-weight: 700;
+    box-shadow: 0 4px 12px rgba(255, 107, 53, 0.3);
+}
+
+.btnBlock{ width:100%; display:flex; align-items:center; justify-content:center; }
+.btnBlock .close{ position: static; left: auto; top: auto; } /* Fix lệch chữ Đóng */
+
+
+/* Select trong title của trang quản lý đơn hàng */
+.home__container--title select.select {
+    border: 1px solid #ebebeb;
+    padding: 0 110px 0 15px;
+    width: 20%;
+    max-width: 100%;
+    display: block;
+    border-radius: 6px;
+    font-size: 14px;
+    background-color: #fff;
+    cursor: pointer;
+    transition: border-color 0.2s ease;
+}
+
+.home__container--title select.select:focus {
+    outline: none;
+    border-color: #6366f1;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+/* Nút trong bảng đơn hàng */
+.home__container--content table button {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    margin: 2px;
+    text-transform: none;
+    letter-spacing: 0.3px;
+}
+
+/* Nút Xem Chi tiết */
+.home__container--content table button:first-child {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+}
+
+.home__container--content table button:first-child:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+/* Nút Cập nhật */
+.home__container--content table button:last-child {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    color: white;
+    box-shadow: 0 2px 8px rgba(245, 87, 108, 0.3);
+}
+
+.home__container--content table button:last-child:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(245, 87, 108, 0.4);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .customModalOverlay {
+        padding: 10px;
+    }
+
+    .customModal {
+        max-height: 95vh;
+    }
+
+    .contentWrapper {
+        grid-template-columns: 1fr;
+    }
+
+    .leftSection,
+    .rightSection {
+        padding: 20px;
+    }
+
+    .rightSection {
+        border-left: none;
+        border-top: 1px solid var(--border);
+    }
+
+    .modalHeader {
+        padding: 15px 20px;
+    }
+
+    .modalHeader h2 {
+        font-size: 16px;
+    }
+}
+
+@media (max-width: 480px) {
+    .orderItem {
+        flex-direction: column;
+        align-items: flex-start;
+        text-align: left;
+    }
+
+    .orderItem>div:last-child {
+        align-self: flex-end;
+        margin-top: 8px;
+    }
+
+    .paymentRow {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+    }
+
+    .totalAmount {
+        text-align: left;
+        align-self: flex-end;
+    }
+}
+/* 🔹 Trạng thái đơn hàng (theo status) */
+.orderStatus {
+    border-radius: 16px;
+    padding: 4px 10px;
+    font-size: 13px;
+    font-weight: 600;
+    display: inline-block;
+    min-width: 100px;
+    text-align: center;
+  }
+  
+  /* Các trạng thái cụ thể */
+  .orderStatus.pending {
+    background: #fff8e1;
+    color: #ff9800;  /* cam */
+    border: 1px solid #ffe0b2;
+  }
+  
+  .orderStatus.confirmed {
+    background: #e3f2fd;
+    color: #2196f3; /* xanh dương */
+    border: 1px solid #90caf9;
+  }
+  
+  .orderStatus.processing {
+    background: #f3e5f5;
+    color: #9c27b0; /* tím */
+    border: 1px solid #ce93d8;
+  }
+  
+  .orderStatus.shipped {
+    background: #ede7f6;
+    color: #673ab7; /* tím đậm */
+    border: 1px solid #b39ddb;
+  }
+  
+  .orderStatus.delivered {
+    background: #e8f5e9;
+    color: #4caf50; /* xanh lá */
+    border: 1px solid #a5d6a7;
+  }
+  
+  .orderStatus.cancelled {
+    background: #ffebee;
+    color: #f44336; /* đỏ */
+    border: 1px solid #ef9a9a;
+  }
+  

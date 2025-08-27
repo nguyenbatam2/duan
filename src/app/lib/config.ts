@@ -7,6 +7,8 @@ export const PUBLIC_API = {
   CATEGORIES: `${API_BASE_URL}/public/public-categories`,
   EVENTS: `${API_BASE_URL}/public/events`,
   COUPONS: `${API_BASE_URL}/public/coupons`,
+  PRODUCTS_SEARCH: `${API_BASE_URL}/public/products-search`,
+  PRODUCTS_FILTER: `${API_BASE_URL}/public/products-filter`,
 };
 
 // Admin API endpoints

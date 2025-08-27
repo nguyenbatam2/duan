@@ -19,7 +19,7 @@ const getAuthHeader = () => {
  */
 export async function getProductsPage(page: number = 1): Promise<PaginatedProducts> {
   const res = await axios.get(
-    `${ADMIN_API.PRODUCTS}?per_page=16&page=${page}`,
+    `${ADMIN_API.PRODUCTS}?per_page=10&page=${page}`,
     { headers: getAuthHeader() }
   );
   return res.data as PaginatedProducts;
@@ -51,10 +51,7 @@ export async function createProduct(data: {
   return res.data.data as Product;
 }
 
-/**
- * 📌 Thêm sản phẩm (FormData - hỗ trợ upload file)
- * POST /api/v1/admin/products
- */
+
 export async function createProductForm(formData: FormData): Promise<Product> {
   const res = await axios.post(ADMIN_API.PRODUCTS, formData, {
     headers: {
@@ -67,10 +64,7 @@ export async function createProductForm(formData: FormData): Promise<Product> {
 }
 
 
-/**
- * 📌 Lấy chi tiết sản phẩm
- * GET /api/v1/admin/products/:id
- */
+
 export async function getProductDetail(id: number): Promise<Product> {
   const res = await axios.get(`${ADMIN_API.PRODUCTS}/${id}`, {
     headers: getAuthHeader(),
@@ -78,10 +72,7 @@ export async function getProductDetail(id: number): Promise<Product> {
   return res.data.data as Product;
 }
 
-/**
- * 📌 Cập nhật sản phẩm
- * PUT /api/v1/admin/products/:id
- */
+
 export async function updateProduct(id: number, data: object | FormData): Promise<Product> {
   const headers = getAuthHeader();
 
@@ -95,10 +86,7 @@ export async function updateProduct(id: number, data: object | FormData): Promis
   return res.data.data as Product;
 }
 
-/**
- * 📌 Xóa sản phẩm
- * DELETE /api/v1/admin/products/:id
- */
+
 export async function deleteProduct(id: number): Promise<void> {
   await axios.delete(`${ADMIN_API.PRODUCTS}/${id}`, {
     headers: getAuthHeader(),
@@ -109,10 +97,20 @@ export async function deleteProduct(id: number): Promise<void> {
    Public API (khách hàng)
 ============================== */
 
-/**
- * 📌 Lấy sản phẩm theo category
- * GET /api/v1/products?category_id=1&per_page=15
- */
+
+export async function searchProducts(query: string, page: number): Promise<Product[]> {
+  const res = await axios.get<{
+    data: Product[];
+  }>(
+    `${PUBLIC_API.PRODUCTS}-search?query=${encodeURIComponent(
+      query
+    )}`
+  );
+  return res.data.data as Product[];
+}
+
+
+
 export async function fetchProductsByCategory(categoryId: number, perPage: number = 15) {
   const res = await axios.get(PUBLIC_API.PRODUCTS, {
     params: { category_id: categoryId, per_page: perPage },
@@ -120,10 +118,7 @@ export async function fetchProductsByCategory(categoryId: number, perPage: numbe
   return res.data;
 }
 
-/**
- * 📌 Lấy sản phẩm theo category + phân trang
- * GET /api/v1/products-filter?category_id=1&page=1
- */
+
 export async function fetchProductsByCategoryWithPage(categoryId: number, page: number = 1) {
   const res = await axios.get(`${PUBLIC_API.PRODUCTS}-filter`, {
     params: { category_id: categoryId, page },

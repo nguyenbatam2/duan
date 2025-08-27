@@ -29,14 +29,19 @@ export default function CouponsPage() {
             try {
                 setLoading(true);
                 const list = await getCoupons();
-                setCoupons(list);
+
+                // Nếu API trả về object dạng { data: [...] }
+                // thì lấy list.data, nếu không fallback thành []
+                setCoupons(Array.isArray(list) ? list : list?.data ?? []);
             } catch (e: any) {
                 toast.error(e?.response?.data?.message || "Không tải được danh sách mã");
+                setCoupons([]); // fallback để tránh undefined
             } finally {
                 setLoading(false);
             }
         })();
     }, []);
+
 
     const filtered = useMemo(() => {
         return coupons.filter(c => {

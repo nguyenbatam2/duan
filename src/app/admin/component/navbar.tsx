@@ -67,20 +67,7 @@ export default function Navbar() {
 
       {/* Sidebar Right */}
       <nav className="sidebar-right close">
-        <header>
-          <div className="image-text">
-            <span className="image">
-              <img
-                src="https://th.bing.com/th/id/OIP.5h0o8coBazU9OElxctg3ogHaFj?rs=1&pid=ImgDetMain"
-                alt="avatar"
-              />
-            </span>
-
-            <div className="text logo-text">
-              <span className="name">F1GEn</span>
-            </div>
-          </div>
-        </header>
+       
 
         <div className="menu-bar">
           <div className="menu">
