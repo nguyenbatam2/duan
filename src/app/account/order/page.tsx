@@ -6,6 +6,7 @@ import { getOrders, cancelOrder, getOrdersById, } from '@/app/lib/orderApi';
 import { createProductReview } from '@/app/lib/product'; // Hoặc đúng đường dẫn của bạn
 import useSWR from 'swr';
 import { useState } from 'react';
+import toast from "react-hot-toast";
 
 const STATUS_MAP = {
     "Tất cả": null,
@@ -35,7 +36,7 @@ const CANNOT_CANCEL_STATUSES = ['delivered', 'completed', 'cancelled', 'refunded
 const Reviews_STATUSES = ["delivered"];
 
 const getOrderStatus = (status: string | number) => STATUS_DISPLAY[status] || { text: status || 'Không xác định', color: '#888' };
-const calculateOrderTotal = (items: any[]) => items.reduce((total, item) => total + item.price * item.quantity, 0);
+// const calculateOrderTotal = (items: any[]) => items.reduce((total, item) => total + item.price * item.quantity, 0);
 
 export default function Order() {
     const [showModal, setShowModal] = useState(false);
@@ -45,12 +46,17 @@ export default function Order() {
     const [page, setPage] = useState(1);
     const { data, error, isLoading, mutate } = useSWR(['orders', page], () => getOrders(page));
 
-    const [showReviewForm, setShowReviewForm] = useState<number | null>(null); // chứa ID đơn hàng đang được mở form
-    const [reviewData, setReviewData] = useState({
+    const [showReviewForm, setShowReviewForm] = useState<number | null>(null);
+    const [reviewData, setReviewData] = useState<{
+        rating: number;
+        comment: string;
+        images: File[];
+    }>({
         rating: 5,
         comment: "",
         images: [],
     });
+
 
     const orders = data?.orders || [];
     const pagination = data?.pagination;
@@ -82,18 +88,31 @@ export default function Order() {
         }
     };
 
-    const handleSubmitReview = async (productId: number) => {
-        try {
-            await createProductReview(productId, reviewData); 
-            alert("Gửi đánh giá thành công!");
-            setShowReviewForm(null);
-            setReviewData({ rating: 5, comment: "", images: [] });
-        } catch (err) {
-            console.error("Lỗi gửi đánh giá:", err);
-            alert("Gửi đánh giá thất bại.");
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const files = e.target.files ? Array.from(e.target.files) : [];
+        if (files.length > 3) {
+            toast.error("Chỉ được chọn tối đa 3 ảnh");
+            return;
         }
+        setReviewData((prev) => ({ ...prev, images: files }));
     };
 
+    const handleSubmitReview = async (productId: number) => {
+        if (!reviewData.comment.trim()) {
+            toast.error("Vui lòng nhập nội dung bình luận");
+            return;
+        }
+
+        try {
+            await createProductReview(productId, reviewData);
+            toast.success("Gửi đánh giá thành công!");
+            setShowReviewForm(null);
+            setReviewData({ rating: 5, comment: "", images: [] });
+        } catch (error: any) {
+            console.error(error);
+            toast.error(error.response?.data?.message || "Lỗi khi gửi đánh giá");
+        }
+    };
     if (isLoading) return <div>Đang tải đơn hàng...</div>;
     if (error) return <div>Đã xảy ra lỗi khi tải đơn hàng.</div>;
 
@@ -274,7 +293,7 @@ export default function Order() {
 
                                                     {showReviewForm === item.id && (
                                                         <div className="mt-3 p-3 border rounded bg-light shadow-sm">
-                                                            <h4 className="mb-3">Gửi đánh giá cho sản phẩm #{item.product_id}</h4>
+                                                            <h4 className="mb-3">Gửi đánh giá cho sản phẩm #{item.product.id}</h4>
                                                             <div className="mb-3">
                                                                 {[1, 2, 3, 4, 5].map((star) => (
                                                                     <i key={star} className={`fa-star me-1 ${reviewData.rating >= star ? 'fas text-warning' : 'far text-muted'}`}

@@ -113,27 +113,40 @@ export default function VoucherPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setFormError("");
-    // Validate cơ bản
-    if (!form.code || !form.type || !form.value) {
-      setFormError("Vui lòng nhập đầy đủ các trường bắt buộc.");
-      toast.error("Vui lòng nhập đầy đủ các trường bắt buộc.");
+    const err = validateForm();
+    if (err) {
+      setFormError(err);
+      toast.error(err);
       return;
     }
+
     setSubmitting(true);
     try {
       const payload = {
         code: form.code,
-        description: form.description,
+        description: form.description || "",
         type: form.type,
         value: Number(form.value),
-        min_order_amount: form.min_order_amount ? Number(form.min_order_amount) : undefined,
-        max_uses: form.max_uses ? Number(form.max_uses) : undefined,
-        valid_from: form.valid_from,
-        valid_to: form.valid_to,
+        max_discount: form.max_discount ? Number(form.max_discount) : undefined,
+        scope: form.scope,
+        target_ids: form.target_ids?.length ? form.target_ids.map(Number) : [],
         free_shipping: !!form.free_shipping,
         shipping_discount: form.shipping_discount ? Number(form.shipping_discount) : 0,
         shipping_discount_percent: form.shipping_discount_percent ? Number(form.shipping_discount_percent) : 0,
+        min_order_value: form.min_order_value ? Number(form.min_order_value) : undefined,
+        max_order_value: form.max_order_value ? Number(form.max_order_value) : undefined,
+        usage_limit: form.usage_limit ? Number(form.usage_limit) : undefined,
+        only_once_per_user: !!form.only_once_per_user,
+        first_time_only: !!form.first_time_only,
+        allowed_rank_ids: form.allowed_rank_ids?.length ? form.allowed_rank_ids.map(Number) : [],
+        start_at: form.start_at || undefined,
+        end_at: form.end_at || undefined,
+        time_rules: form.time_rules || [],
+        allowed_payment_methods: form.allowed_payment_methods || [],
+        allowed_regions: form.allowed_regions || [],
+        is_active: !!form.is_active,
       };
+
       await addCoupon(payload);
       toast.success("Thêm coupon thành công!");
       setShowModal(false);
@@ -141,27 +154,39 @@ export default function VoucherPage() {
       setForm({
         code: "",
         description: "",
-        type: "percentage",
+        type: "percent",
         value: 0,
-        min_order_amount: "",
-        max_uses: "",
-        valid_from: "",
-        valid_to: "",
+        max_discount: "",
+        scope: "order",
+        target_ids: [],
         free_shipping: false,
-        shipping_discount: 0,
-        shipping_discount_percent: 0,
+        shipping_discount: "",
+        shipping_discount_percent: "",
+        min_order_value: "",
+        max_order_value: "",
+        usage_limit: "",
+        only_once_per_user: false,
+        first_time_only: false,
+        allowed_rank_ids: [],
+        start_at: "",
+        end_at: "",
+        time_rules: [],
+        allowed_payment_methods: [],
+        allowed_regions: [],
+        is_active: true,
       });
       setLoading(true);
       const res = await getAllCoupons(page, query);
       setVouchers(Array.isArray(res.data) ? res.data : []);
       setLoading(false);
-    } catch (err) {
-      setFormError(err instanceof Error ? err.message : "Lỗi tạo coupon");
-      toast.error(err instanceof Error ? err.message : "Lỗi tạo coupon");
+    } catch (err: any) {
+      setFormError(err.message || "Lỗi tạo coupon");
+      toast.error(err.message || "Lỗi tạo coupon");
     } finally {
       setSubmitting(false);
     }
   };
+
 
   // Chuyển trạng thái coupon
   const handleToggleActive = async (id: number) => {
@@ -232,23 +257,24 @@ export default function VoucherPage() {
                 <table>
                   <thead>
                     <tr>
-                      <th style={{ width: "39px" }}>ID</th>
-                      <th>Code</th>
-                      <th style={{ width: "200px" }}>Mô tả</th>
-                      <th style={{ width: "100px" }}>Loại</th>
-                      <th style={{ width: "100px" }}>Giá trị</th>
-                      <th style={{ width: "100px" }}>Miễn phí ship</th>
-                      <th style={{ width: "100px" }}>Giảm ship (VNĐ)</th>
-                      <th style={{ width: "100px" }}>Giảm ship (%)</th>
-                      <th style={{ width: "100px" }}>Đơn tối thiểu</th>
-                      <th style={{ width: "100px" }}>Đơn tối đa</th>
-                      <th>Giới hạn lượt</th>
+                      <th style={{ minWidth: "39px", maxWidth: "80px" }}>ID</th>
+                      <th style={{ minWidth: "100px", maxWidth: "200px" }}>Code</th>
+                      <th style={{ minWidth: "200px", maxWidth: "300px" }}>Mô tả</th>
+                      <th style={{ minWidth: "100px", maxWidth: "150px" }}>Loại</th>
+                      <th style={{ minWidth: "100px", maxWidth: "150px" }}>Giá trị</th>
+                      <th style={{ minWidth: "100px", maxWidth: "150px" }}>Miễn phí ship</th>
+                      <th style={{ minWidth: "100px", maxWidth: "150px" }}>Giảm ship (VNĐ)</th>
+                      <th style={{ minWidth: "100px", maxWidth: "150px" }}>Giảm ship (%)</th>
+                      <th style={{ minWidth: "100px", maxWidth: "150px" }}>Đơn tối thiểu</th>
+                      <th style={{ minWidth: "100px", maxWidth: "150px" }}>Đơn tối đa</th>
+                      <th style={{ minWidth: "100px", maxWidth: "150px" }}> Giảm tối đa</th>
+                      <th style={{ minWidth: "100px", maxWidth: "150px" }}>Giới hạn lượt</th>
                       {/* <th>Đã dùng</th> */}
                       {/* <th>Chỉ 1 lần/user</th>
                       <th>Chỉ cho lần đầu</th> */}
                       {/* <th>Ngày bắt đầu</th>
                       <th>Ngày kết thúc</th> */}
-                      <th style={{ width: "177px" }}>Trạng thái</th>
+                      <th style={{ minWidth: "177px", maxWidth: "250px" }}>Trạng thái</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -265,6 +291,7 @@ export default function VoucherPage() {
                           <td>{Number(v.shipping_discount_percent) ? `${v.shipping_discount_percent}%` : ""}</td>
                           <td>{Number(v.min_order_value).toLocaleString() + "đ"}</td>
                           <td>{v.max_order_value ? Number(v.max_order_value).toLocaleString() + "đ" : ""}</td>
+                          <td>{v.max_discount ? Number(v.max_discount).toLocaleString() + "đ" : ""}</td>
                           <td>{v.usage_limit ? Number(v.usage_limit).toLocaleString() : ""}</td>
                           {/* <td>{v.used_count ?? ""}</td> */}
                           {/* <td>{v.only_once_per_user ? "X" : ""}</td>
@@ -387,15 +414,6 @@ export default function VoucherPage() {
                 </select>
               </div>
               <div className="form-group">
-                <label>Time rules </label>
-                <input
-                  type="text"
-                  name="time_rules"
-                  value={Array.isArray(form.time_rules) ? JSON.stringify(form.time_rules) : form.time_rules}
-                  onChange={e => setForm(f => ({ ...f, time_rules: e.target.value ? JSON.parse(e.target.value) : [] }))}
-                />
-              </div>
-              <div className="form-group">
                 <label>Giá trị <span style={{ color: "red" }}>*</span></label>
                 <input
                   type="number"
@@ -489,13 +507,14 @@ export default function VoucherPage() {
                   Miễn phí ship
                 </label>
               </div>
-              {/* <div className="form-group">
+              <div className="form-group">
                 <label>
                   <input
                     type="checkbox"
                     name="only_once_per_user"
                     checked={!!form.only_once_per_user}
                     onChange={handleChange}
+                    style={{ marginLeft: "200px", marginTop: "-10px", opacity: 1, "!important": true, width: "auto" }}
                   />
                   Chỉ 1 lần/user
                 </label>
@@ -507,14 +526,15 @@ export default function VoucherPage() {
                     name="first_time_only"
                     checked={!!form.first_time_only}
                     onChange={handleChange}
+                    style={{ marginLeft: "200px", marginTop: "-10px", opacity: 1, "!important": true, width: "auto" }}
                   />
                   Chỉ cho lần đầu
                 </label>
-              </div> */}
+              </div>
 
               <div className="action-buttons" style={{ display: "flex", justifyContent: "flex-end", gap: "12px", marginTop: "16px" }}>
                 <button type="button" className="delete" onClick={() => setShowModal(false)} disabled={submitting}>Đóng</button>
-                <button type="submit" className="view" disabled={submitting}>{submitting ? "Đang lưu..." : "Lưu"}</button>
+                <button type="submit" className="green" disabled={submitting}>{submitting ? "Đang lưu..." : "Lưu"}</button>
               </div>
             </form>
           </div>

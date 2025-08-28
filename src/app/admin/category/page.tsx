@@ -289,17 +289,9 @@ export default function CategoryPage() {
                   }
                   required
                 />
-                <input
-                  type="text"
-                  placeholder="Slug"
-                  value={formData.slug}
-                  onChange={(e) =>
-                    setFormData({ ...formData, slug: e.target.value })
-                  }
-                  required
-                />
+        
                 <div className="action-buttons">
-                  <button type="submit" className="view" onClick={handleSubmit} style={{ marginRight: 8 }}>Lưu</button>
+                  <button type="submit" className="green" onClick={handleSubmit} style={{ marginRight: 8 }}>Lưu danh mục</button>
                   <button type="button" className="delete" onClick={() => setShowEditModal(false)}>
                     Hủy
                   </button>

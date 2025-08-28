@@ -65,7 +65,7 @@ export async function createProductReviews(
   reviewData: {
     rating: number;
     comment: string;
-    images?: string[];
+    images?: File[]; // dùng File thay vì string[]
   }
 ) {
   const cookieData = Cookies.get("author");
@@ -73,18 +73,27 @@ export async function createProductReviews(
   const parsed = JSON.parse(cookieData);
   const token = parsed.token;
 
+  const formData = new FormData();
+  formData.append("rating", reviewData.rating.toString());
+  formData.append("comment", reviewData.comment);
+  if (reviewData.images) {
+    reviewData.images.forEach((img) => formData.append("images[]", img));
+  }
+
   const res = await axios.post(
     `${USER_API.PRODUCTS}/${productId}/reviews`,
-    reviewData,
+    formData,
     {
       headers: {
         Authorization: `Bearer ${token}`,
         Accept: "application/json",
+        "Content-Type": "multipart/form-data",
       },
     }
   );
   return res.data;
 }
+
 
 export async function reportProductReview(
   reviewId: number,
@@ -111,27 +120,20 @@ export async function reportProductReview(
 
 export async function createProductReview(
   productId: number,
-  reviewData: {
-    rating: number;
-    comment: string;
-    images?: File[];
-  }
+  reviewData: ReviewData
 ) {
   const cookieData = Cookies.get("author");
   if (!cookieData) throw new Error("Không có token");
+
   const parsed = JSON.parse(cookieData);
   const token = parsed.token;
 
   const formData = new FormData();
   formData.append("rating", reviewData.rating.toString());
   formData.append("comment", reviewData.comment);
-
   if (reviewData.images && reviewData.images.length > 0) {
-    reviewData.images.forEach((file, idx) => {
-      formData.append(`images[${idx}]`, file);
-    });
+    reviewData.images.forEach((file) => formData.append("images[]", file));
   }
-  console.log(token);
 
   const res = await axios.post(
     `${USER_API.PRODUCTS}/${productId}/reviews`,
@@ -147,7 +149,6 @@ export async function createProductReview(
 
   return res.data;
 }
-
 
 
 export async function searchProducts(query: string): Promise<Product[]> {

@@ -543,3 +543,146 @@
     opacity: 0.5;
     cursor: not-allowed;
 }
+
+
+
+/* Review card styles */
+.review-card {
+    border: 1px solid rgba(0, 0, 0, 0.06);
+    background: #fff;
+    padding: 16px;
+    border-radius: 10px;
+    box-shadow: 0 6px 18px rgba(13, 38, 59, 0.06);
+    margin-top: 12px;
+}
+
+.review-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+    gap: 12px;
+}
+
+.review-title {
+    font-weight: 600;
+    font-size: 16px;
+}
+
+.rating-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.star-btn {
+    border: none;
+    background: transparent;
+    font-size: 20px;
+    cursor: pointer;
+    transition: transform .12s;
+    color: #ddd;
+    padding: 2px 4px;
+}
+
+.star-btn:hover {
+    transform: scale(1.1);
+}
+
+.star-btn.active {
+    color: #ffb400;
+    text-shadow: 0 1px 0 rgba(0, 0, 0, 0.1);
+}
+
+.rating-value {
+    font-size: 13px;
+    color: #666;
+    margin-left: 6px;
+}
+
+.review-textarea {
+    width: 100%;
+    border: 1px solid #e7e7e7;
+    padding: 10px;
+    border-radius: 8px;
+    resize: vertical;
+    margin-bottom: 10px;
+    font-size: 14px;
+}
+
+.review-upload .upload-label {
+    display: block;
+    font-size: 13px;
+    margin-bottom: 6px;
+    color: #333;
+}
+
+.review-upload input[type="file"] {
+    font-size: 13px;
+}
+
+.preview-row {
+    display: flex;
+    gap: 8px;
+    margin-top: 8px;
+    flex-wrap: wrap;
+}
+
+.preview-item {
+    position: relative;
+    width: 84px;
+    height: 84px;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid #eee;
+}
+
+.preview-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.remove-preview {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    background: rgba(0, 0, 0, 0.5);
+    color: #fff;
+    font-size: 12px;
+    border: none;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    cursor: pointer;
+}
+
+.review-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    margin-top: 12px;
+}
+
+.btn {
+    padding: 8px 12px;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+}
+
+.btn-success {
+    background: #28a745;
+    color: #fff;
+}
+
+.btn-secondary {
+    background: #6c757d;
+    color: #fff;
+}
+
+.btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}

@@ -30,6 +30,7 @@ export const fetchOrders = async (query: string): Promise<PaginatedOrders> => {
   return res.data as PaginatedOrders;
 };
 
+
 export const updateOrderStatus = async (
   id: number,
   data: { status: string; tracking_number?: string; note?: string }
@@ -37,9 +38,9 @@ export const updateOrderStatus = async (
   const res = await adminAxios.put(`${API_BASE}/${id}/status`, data);
   return res.data;
 };
+
 export const fetchOrderById = async (id: number) => {
   const res = await adminAxios.get(`${API_BASE}/${id}`);
   const data = res.data;
-  // Chuẩn hoá các kiểu response phổ biến: {order}, {data}, hoặc trả thẳng object
   return (data && (data.order ?? data.data)) || data;
 };

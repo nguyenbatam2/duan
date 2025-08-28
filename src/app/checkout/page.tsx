@@ -1,7 +1,6 @@
+"use client";
 
-'use client';
-
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 import "../styles/checkout.css";
 import "../styles/payment.css";
 import Link from "next/link";
@@ -9,12 +8,12 @@ import axios from "axios";
 import { useEffect, useState, Suspense } from "react";
 import toast from "react-hot-toast";
 import { getCart, clearCart } from "../lib/addCart";
-import { applyCoupon, placeOrder } from '../lib/orderApi';
-import { getUserAddresses } from '../lib/authorApi';
-import { OrderItem, Product } from '../types/product';
-import { useRouter } from 'next/navigation';
-import { UserAddress } from '@/app/types/author'
-import Cookies from 'js-cookie';
+import { applyCoupon, placeOrder } from "../lib/orderApi";
+import { getUserAddresses } from "../lib/authorApi";
+import { OrderItem, Product } from "../types/product";
+import { useRouter } from "next/navigation";
+import { UserAddress } from "@/app/types/author";
+import Cookies from "js-cookie";
 import { useSearchParams } from "next/navigation";
 import PaymentMethodSelector from "../Component/PaymentMethodSelector";
 
@@ -24,7 +23,7 @@ function CheckoutContent() {
 
   // State management
   const [cart, setCart] = useState<Product[]>([]);
-  const [couponCode, setCouponCode] = useState('');
+  const [couponCode, setCouponCode] = useState("");
   const [addresses, setAddresses] = useState<UserAddress[]>([]);
   const [provinces, setProvinces] = useState<any[]>([]);
   const [districts, setDistricts] = useState<any[]>([]);
@@ -32,32 +31,36 @@ function CheckoutContent() {
   const [selectedDistrict, setSelectedDistrict] = useState("");
   const [specificAddress, setSpecificAddress] = useState("");
   const [appliedCoupon, setAppliedCoupon] = useState<string | null>(null);
-  const [error, setError] = useState<string>('');
-  const [paymentMethod, setPaymentMethod] = useState<string>('cod');
+  const [couponResp, setCouponResp] = useState<any | null>(null); // response from applyCoupon
+  const [error, setError] = useState<string>("");
+  const [paymentMethod, setPaymentMethod] = useState<string>("cod");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // User info state
   const [userInfo, setUserInfo] = useState({
-    name: '',
-    phone: '',
-    address: '',
-    email: '',
+    name: "",
+    phone: "",
+    address: "",
+    email: "",
   });
-  const [note, setNote] = useState('');
+  const [note, setNote] = useState("");
 
-  // Calculate order totals
+  // Calculate order totals (use couponResp when available)
   const subtotal = cart.reduce((acc, item) => acc + (Number(item.price) || 0) * item.quantity, 0);
   const shippingFee = 30000;
   const tax = 5000;
-  const discount = appliedCoupon ? 50000 : 0; // hoặc từ API response nếu trả về giá trị discount
-  const total = subtotal + shippingFee + tax - discount;
+  // couponResp returned values (from backend) use server-calculated discounts when available
+  const discount = couponResp ? Number(couponResp.total_discount ?? 0) : 0;
+  const total = couponResp
+    ? Number(couponResp.total ?? subtotal + shippingFee + tax - discount)
+    : subtotal + shippingFee + tax - discount;
 
   // Load provinces on mount
   useEffect(() => {
     fetch("https://vapi.vnappmob.com/api/v2/province/")
-      .then(res => res.json())
-      .then(data => setProvinces(data.results))
-      .catch(err => console.error(err));
+      .then((res) => res.json())
+      .then((data) => setProvinces(data.results))
+      .catch((err) => console.error("Load provinces error:", err));
   }, []);
 
   // Load districts when province changes
@@ -77,19 +80,26 @@ function CheckoutContent() {
 
   // Load user data and addresses
   useEffect(() => {
-    getUserAddresses().then(setAddresses);
-    const cookieData = Cookies.get('author');
+    getUserAddresses()
+      .then((data) => {
+        if (Array.isArray(data)) setAddresses(data);
+      })
+      .catch((err) => {
+        // not critical
+        console.error("getUserAddresses error:", err);
+      });
+
+    const cookieData = Cookies.get("author");
     if (cookieData) {
       try {
         const parsed = JSON.parse(cookieData);
         const user = parsed.user;
-
         if (user) {
           setUserInfo({
-            name: user.name || '',
-            phone: user.phone || '',
-            address: user.address || '',
-            email: user.email || '',
+            name: user.name || "",
+            phone: user.phone || "",
+            address: user.address || "",
+            email: user.email || "",
           });
         }
       } catch (err) {
@@ -123,147 +133,149 @@ function CheckoutContent() {
       setError("Vui lòng nhập mã giảm giá");
       return;
     }
+    if (cart.length === 0) {
+      setError("Giỏ hàng trống!");
+      return;
+    }
+
     try {
+      setError("");
       const items = cart.map((item) => ({
         product_id: item.id,
         price: item.price,
         quantity: item.quantity,
       }));
 
-      const response = await applyCoupon(
-        couponCode,
-        items,
-        subtotal,
-        shippingFee,
-        tax,
-        paymentMethod
-      );
+      // call applyCoupon API (server returns discount + total calculation)
+      const response = await applyCoupon(couponCode, items, subtotal, shippingFee, tax, paymentMethod);
 
-      if (response && response.total) {
+      // response expected: product_discount, shipping_discount, total_discount, final_shipping_fee, total, coupon_id, ...
+      if (response && (response.total !== undefined || response.total_discount !== undefined)) {
+        setCouponResp(response);
         setAppliedCoupon(couponCode);
         setCouponCode("");
         setError("");
+        toast.success("Áp mã thành công");
       } else {
-        setError("Mã không hợp lệ hoặc đã hết hạn.");
+        setCouponResp(null);
         setAppliedCoupon(null);
+        setError("Mã không hợp lệ hoặc đã hết hạn.");
       }
-    } catch (err) {
-      console.error("Lỗi:", err);
-      setError("Đã xảy ra lỗi khi áp dụng mã.");
+    } catch (err: any) {
+      console.error("Lỗi applyCoupon:", err?.response?.data ?? err?.message ?? err);
+      setCouponResp(null);
       setAppliedCoupon(null);
+      setError("Đã xảy ra lỗi khi áp dụng mã.");
     }
   };
 
   const handleRemoveCoupon = () => {
     setAppliedCoupon(null);
-    setError('');
+    setCouponResp(null);
+    setError("");
   };
 
-  // Place order function - theo VNPAY_PAYMENT_FLOW.md
+  // Place order function
   const handlePlaceOrder = async () => {
     try {
       setIsSubmitting(true);
-      console.log('🚀 Starting place order process...');
-      
-      const { name, phone, email } = userInfo;
 
-      // Validation theo VNPAY_PAYMENT_FLOW.md
+      // basic client-side validation
+      const { name, phone, email } = userInfo;
       if (!name || !phone || !specificAddress || !selectedProvince || !selectedDistrict || !email) {
-        console.error('❌ Missing required information:', { name, phone, specificAddress, selectedProvince, selectedDistrict, email });
         toast.error("Vui lòng điền đầy đủ thông tin giao hàng.");
         return;
       }
 
-      // Validate cart
       if (cart.length === 0) {
         toast.error("Giỏ hàng trống!");
         return;
       }
 
-      // Find province and district info
-      const province = provinces.find(p => String(p.province_id) === String(selectedProvince));
-      const district = districts.find(d => String(d.district_id) === String(selectedDistrict));
+      const province = provinces.find((p) => String(p.province_id) === String(selectedProvince));
+      const district = districts.find((d) => String(d.district_id) === String(selectedDistrict));
 
       if (!province || !district) {
         toast.error("Không tìm thấy thông tin tỉnh hoặc quận.");
         return;
       }
 
-      // Build full address
       const address = `${specificAddress}, ${district.district_name}, ${province.province_name}`;
 
-      // Map cart items to OrderItem format
       const items: OrderItem[] = cart.map((item) => ({
         product_id: item.id,
         quantity: item.quantity,
         price: Number(item.price),
-        product_name: item.name, // Thêm product_name để fix SQL error
+        product_name: item.name, // keep product_name to avoid SQL errors if backend expects it
       }));
 
-      console.log('📦 Order details:', {
-        items,
-        name,
-        phone,
-        address,
-        email,
-        paymentMethod,
-        appliedCoupon,
-        note,
-        subtotal,
-        shippingFee,
-        tax,
-        discount,
-        total
-      });
+      // Use server-calculated discount/total when available; otherwise calculate locally
+      const discountToSend = couponResp ? Number(couponResp.total_discount ?? 0) : 0;
+      const totalToSend = couponResp
+        ? Number(couponResp.total ?? subtotal + shippingFee + tax - discountToSend)
+        : subtotal + shippingFee + tax - discountToSend;
 
-      // Call placeOrder API theo VNPAY_PAYMENT_FLOW.md
+      // Add coupon info to notes instead of sending coupon_code (workaround for backend schema mismatch)
+      const noteWithCoupon = note + (appliedCoupon ? `\n[AppliedCoupon:${appliedCoupon}]` : "");
+
+      // Do not send coupon_code to placeOrder to avoid backend error caused by coupon lookup
       const result = await placeOrder(
         items,
-        name,
-        phone,
+        userInfo.name,
+        userInfo.phone,
         address,
-        email,
+        userInfo.email,
         paymentMethod,
-        appliedCoupon,
-        note,
+        null, // intentionally not sending coupon_code (backend has schema mismatch that causes 500)
+        noteWithCoupon,
         subtotal,
         shippingFee,
         tax,
-        discount,
-        total
+        discountToSend,
+        totalToSend
       );
 
-      console.log('📋 Place order result:', result);
-
-      // Handle response based on payment method
-      if (paymentMethod === 'online_payment') {
-        // Xóa giỏ hàng trước khi chuyển hướng đến VNPay
+      // handle response
+      if (paymentMethod === "online_payment") {
         clearCart();
         setCart([]);
-        console.log('🛒 Đã xóa giỏ hàng trước khi chuyển hướng đến VNPay');
-        // Redirect handled in placeOrder function
         toast.success("Đang chuyển hướng đến trang thanh toán...");
+        // placeOrder might return a redirect url in result.data.checkout_url — handled by placeOrder or you can handle here
       } else {
-        // COD payment - success
         toast.success("Đặt hàng thành công!");
-        // Xóa giỏ hàng sau khi đặt hàng thành công
         clearCart();
         setCart([]);
-        console.log('🛒 Đã xóa giỏ hàng sau khi đặt hàng COD thành công');
         router.push("/");
       }
+
+      console.log("Place order result:", result?.data ?? result);
     } catch (error: any) {
-      console.error('💥 Place order error:', error);
-      
-      // Handle specific errors
-      if (error.response?.status === 422) {
-        const errorData = error.response.data;
-        if (errorData?.message?.includes('không đủ số lượng') || errorData?.message?.includes('chỉ còn')) {
-          toast.error("Sản phẩm không đủ số lượng trong kho. Vui lòng kiểm tra lại giỏ hàng!");
+      const resp = error?.response?.data;
+      console.error("Place order error:", resp ?? error?.message ?? error);
+
+      if (error?.response?.status === 422) {
+        if (resp?.errors && typeof resp.errors === "object") {
+          const fieldErrors = Object.entries(resp.errors).map(([field, msgs]) => {
+            const msgText = Array.isArray(msgs) ? msgs.join(", ") : String(msgs);
+            return `${field}: ${msgText}`;
+          });
+          console.warn("Validation errors from backend:", fieldErrors);
+          toast.error(fieldErrors.join(". "));
+          return;
+        }
+
+        if (typeof resp?.message === "string") {
+          const msg = resp.message;
+          if (msg.includes("không đủ số lượng") || msg.includes("chỉ còn")) {
+            toast.error("Sản phẩm không đủ số lượng trong kho. Vui lòng kiểm tra lại giỏ hàng!");
+            return;
+          }
+          toast.error(msg);
           return;
         }
       }
-      
+
+      // Fallback
       toast.error("Đặt hàng thất bại!");
     } finally {
       setIsSubmitting(false);
@@ -276,16 +288,35 @@ function CheckoutContent() {
         <div className="container">
           <ul className="breadcrumb">
             <li className="home">
-              <Link href="/cart" title="Trang chủ"><span>Giỏ hàng</span></Link>
-              <span className="mr_lr">&nbsp;<svg aria-hidden="true" focusable="false" data-prefix="fas"
-                data-icon="chevron-right" role="img" xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 320 512" className="svg-inline--fa fa-chevron-right fa-w-10">
-                <path fill="currentColor"
-                  d="M285.476 272.971L91.132 467.314c-9.373 9.373-24.569 9.373-33.941 0l-22.667-22.667c-9.357-9.357-9.375-24.522-.04-33.901L188.505 256 34.484 101.255c-9.335-9.379-9.317-24.544.04-33.901l22.667-22.667c9.373-9.373 24.569-9.373 33.941 0L285.475 239.03c9.373 9.372 9.373 24.568.001 33.941z"
-                  className=""></path>
-              </svg>&nbsp;</span>
+              <Link href="/cart" title="Trang chủ">
+                <span>Giỏ hàng</span>
+              </Link>
+              <span className="mr_lr">
+                &nbsp;
+                <svg
+                  aria-hidden="true"
+                  focusable="false"
+                  data-prefix="fas"
+                  data-icon="chevron-right"
+                  role="img"
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 320 512"
+                  className="svg-inline--fa fa-chevron-right fa-w-10"
+                >
+                  <path
+                    fill="currentColor"
+                    d="M285.476 272.971L91.132 467.314c-9.373 9.373-24.569 9.373-33.941 0l-22.667-22.667c-9.357-9.357-9.375-24.522-.04-33.901L188.505 256 34.484 101.255c-9.335-9.379-9.317-24.544.04-33.901l22.667-22.667c9.373-9.373 24.569-9.373 33.941 0L285.475 239.03c9.373 9.372 9.373 24.568.001 33.941z"
+                    className=""
+                  ></path>
+                </svg>
+                &nbsp;
+              </span>
             </li>
-            <li><strong><span>Thanh toán</span></strong></li>
+            <li>
+              <strong>
+                <span>Thanh toán</span>
+              </strong>
+            </li>
           </ul>
         </div>
       </section>
@@ -302,41 +333,41 @@ function CheckoutContent() {
                       <div className="group_contact">
                         <div className="row">
                           <div className="col-lg-6 col-md-6 col-sm-12 col-12">
-                            <input 
-                              placeholder="Họ và tên" 
+                            <input
+                              placeholder="Họ và tên"
                               type="text"
-                              className="form-control form-control-lg" 
+                              className="form-control form-control-lg"
                               value={userInfo.name}
-                              onChange={(e) => setUserInfo({...userInfo, name: e.target.value})}
+                              onChange={(e) => setUserInfo({ ...userInfo, name: e.target.value })}
                               required
                             />
                           </div>
 
                           <div className="col-lg-6 col-md-6 col-sm-12 col-12">
-                            <input 
-                              placeholder="Email" 
-                              type="email" 
+                            <input
+                              placeholder="Email"
+                              type="email"
                               className="form-control form-control-lg"
-                              value={userInfo.email} 
-                              onChange={(e) => setUserInfo({...userInfo, email: e.target.value})}
+                              value={userInfo.email}
+                              onChange={(e) => setUserInfo({ ...userInfo, email: e.target.value })}
                               required
                             />
                           </div>
 
                           <div className="col-lg-12 col-md-12 col-sm-12 col-12">
-                            <input 
-                              type="text" 
-                              placeholder="Điện thoại" 
-                              className="form-control form-control-lg" 
+                            <input
+                              type="text"
+                              placeholder="Điện thoại"
+                              className="form-control form-control-lg"
                               value={userInfo.phone}
-                              onChange={(e) => setUserInfo({...userInfo, phone: e.target.value})}
+                              onChange={(e) => setUserInfo({ ...userInfo, phone: e.target.value })}
                               required
                             />
                           </div>
 
                           <div className="col-lg-6 col-md-6 col-sm-12 col-12 mb-5">
-                            <select 
-                              className="form-control form-control-lg" 
+                            <select
+                              className="form-control form-control-lg"
                               value={selectedProvince}
                               onChange={(e) => setSelectedProvince(e.target.value)}
                               required
@@ -351,8 +382,8 @@ function CheckoutContent() {
                           </div>
 
                           <div className="col-lg-6 col-md-6 col-sm-12 col-12">
-                            <select 
-                              className="form-control form-control-lg" 
+                            <select
+                              className="form-control form-control-lg"
                               value={selectedDistrict}
                               onChange={(e) => setSelectedDistrict(e.target.value)}
                               required
@@ -367,10 +398,10 @@ function CheckoutContent() {
                           </div>
 
                           <div className="col-lg-12 col-md-6 col-sm-12 col-12">
-                            <input 
-                              placeholder="Số địa chỉ nhà" 
+                            <input
+                              placeholder="Số địa chỉ nhà"
                               type="text"
-                              className="form-control form-control-lg" 
+                              className="form-control form-control-lg"
                               value={specificAddress}
                               onChange={(e) => setSpecificAddress(e.target.value)}
                               required
@@ -378,28 +409,25 @@ function CheckoutContent() {
                           </div>
 
                           <div className="col-lg-12 col-md-12 col-sm-12 col-12">
-                            <PaymentMethodSelector 
-                              selected={paymentMethod}
-                              onSelect={setPaymentMethod}
-                            />
+                            <PaymentMethodSelector selected={paymentMethod} onSelect={setPaymentMethod} />
                           </div>
 
                           <div className="col-lg-12 col-md-12 col-sm-12 col-12">
                             <p>Ghi chú đơn hàng</p>
-                            <textarea 
-                              placeholder="Nhập ghi chú của bạn ở đây..." 
-                              className="form-control content-area form-control-lg" 
+                            <textarea
+                              placeholder="Nhập ghi chú của bạn ở đây..."
+                              className="form-control content-area form-control-lg"
                               rows={5}
-                              value={note} 
+                              value={note}
                               onChange={(e) => setNote(e.target.value)}
                             />
-                            <button 
-                              type="submit" 
-                              className="btn btn-primary" 
+                            <button
+                              type="button"
+                              className="btn btn-primary"
                               onClick={handlePlaceOrder}
                               disabled={isSubmitting}
                             >
-                              {isSubmitting ? 'Đang xử lý...' : 'Đặt Hàng'}
+                              {isSubmitting ? "Đang xử lý..." : "Đặt Hàng"}
                             </button>
                           </div>
                         </div>
@@ -412,10 +440,8 @@ function CheckoutContent() {
               <div className="col-lg-5 col-12">
                 <div className="coorder12 col-12">
                   <div className="order-summary">
-                    <h4 style={{ marginBottom: "1rem" }}>
-                      Tổng đơn hàng ({cart.length} sản phẩm)
-                    </h4>
-                    
+                    <h4 style={{ marginBottom: "1rem" }}>Tổng đơn hàng ({cart.length} sản phẩm)</h4>
+
                     <ul className="order-list" role="list">
                       {cart.map((item) => (
                         <li className="order-item" role="listitem" key={item.id}>
@@ -423,38 +449,42 @@ function CheckoutContent() {
                           <div className="order-item-info">
                             <span className="product__description__name">{item.name}</span>
                             <p className="order-item-details">
-                              {Number(item.base_price).toLocaleString()}đ <span style={{ color: 'red' }}>
-                                x{item.quantity}</span></p>
+                              {Number(item.base_price).toLocaleString()}đ{" "}
+                              <span style={{ color: "red" }}>x{item.quantity}</span>
+                            </p>
                           </div>
-                          <div className="order-item-price">{Number(item.base_price *
-                            item.quantity).toLocaleString()}đ</div>
+                          <div className="order-item-price">
+                            {Number(item.base_price * item.quantity).toLocaleString()}đ
+                          </div>
                         </li>
                       ))}
                     </ul>
 
-                    <form onSubmit={handleApplyCoupon} style={{ marginTop: "2rem", display: "flex" }}>
-                      <input 
-                        id="discountCode" 
-                        type="text" 
+                    <form onSubmit={handleApplyCoupon} style={{ marginTop: "2rem", display: "flex", gap: 8 }}>
+                      <input
+                        id="discountCode"
+                        type="text"
                         placeholder="Nhập mã giảm giá..."
-                        value={couponCode} 
-                        onChange={(e) => setCouponCode(e.target.value)} 
+                        value={couponCode}
+                        onChange={(e) => setCouponCode(e.target.value)}
                       />
                       <button type="submit" className="btn-cart btn-views add_to_cart btn btn-primary">
                         Áp dụng
                       </button>
                     </form>
-                    
+
                     {error && <p style={{ color: "red" }}>{error}</p>}
-                    
+
                     {appliedCoupon && (
-                      <div className="row">
+                      <div className="row" style={{ marginTop: 12 }}>
                         <div className="field">
                           <div className="discount-code">
                             <div className="ui-tag">
                               <span className="ui-tag__label">
                                 <span className="discount-tag">
-                                  <span className="discount-icon"><i className="fa fa-tag"></i></span>
+                                  <span className="discount-icon">
+                                    <i className="fa fa-tag"></i>
+                                  </span>
                                   <span className="discount-tag__name">{appliedCoupon}</span>
                                 </span>
                               </span>

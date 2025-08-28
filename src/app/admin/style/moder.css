@@ -82,10 +82,16 @@
 }
 
  .contentWrapper {
-     /* display: grid; */
-     /* grid-template-columns: 2fr 1fr; */
-     /* min-height: 500px; */
- }
+    display: grid;
+        grid-template-columns: 2fr 1fr;
+        min-height: 500px;
+    }
+    
+    .contentWrappers {
+        display: grid;
+        grid-template-columns: 1fr;
+        min-height: 500px;
+    }
 
 .leftSection {
     padding: 24px 30px;
@@ -111,19 +117,22 @@
 
 .orderDate {
     font-size: 14px;
-    color: var(--subColor);
+    /* color: var(--subColor); */
     margin-bottom: 8px;
     display: flex;
     align-items: center;
-    gap: 5px;
+    gap: 10px;
 }
 
 .orderStatus {
-
+    display: inline-block;
+        padding: 2px 8px;
+        font-size: 13px;
+        text-transform: uppercase;
+        font-weight: 600;
     border-radius: 3px;
-    padding: 0px 8px;
-    font-size: 14px;
-
+    background: #fff;
+        border: 1px solid #d1d5db;
 }
 
 .infoSection {

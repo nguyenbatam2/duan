@@ -1,5 +1,5 @@
 import Link from "next/link";
-
+import { logout } from "../lib/auth";
 const menu = [
   { label: "Thống kê", href: "/admin/Statistic", icon: "fas fa-chart-line" },
   { label: "Quản lý Sản phẩm", href: "/admin/product", icon: "fas fa-list" },
@@ -50,9 +50,11 @@ export default function Navbar() {
           </div>
 
           <div className="bottom-content">
-            <li>
+            <li onClick={logout} style={{ cursor: "pointer", marginLeft: "10px"}}>
               <Link href="#">
-                <span className="icon">VI</span>
+              <span className="icon">
+                <i className="fas fa-sign-out-alt"> </i>
+                </span>
               </Link>
             </li>
             <hr />

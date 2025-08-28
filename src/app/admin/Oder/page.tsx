@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import useSWR from 'swr';
 import { fetchOrders, updateOrderStatus, fetchOrderById } from '../lib/oder'; // ✅ thêm fetchOrderById
 import "../style/moder.css"
- 
+
 
 // Types for orders used in this view
 type OrderItem = {
@@ -67,11 +67,19 @@ const OrderManagement = () => {
   const handleUpdate = async () => {
     setLoading(true);
     try {
-      await updateOrderStatus(updateForm.id, {
+      // Tạo payload cập nhật
+      const payload: any = {
         status: updateForm.status,
         tracking_number: updateForm.tracking_number,
         note: updateForm.note,
-      });
+      };
+
+      // Nếu chuyển trạng thái thành "delivered" thì tự động mark là đã thanh toán
+      if (updateForm.status === 'delivered') {
+        payload.payment_status = 'paid';
+      }
+
+      await updateOrderStatus(updateForm.id, payload);
 
       alert('Cập nhật thành công');
       mutate();
@@ -110,7 +118,7 @@ const OrderManagement = () => {
       setLoading(false);
     }
   };
-  
+
 
   const getStatusText = (status: string) => {
     const statusTextMap: { [key: string]: string } = {
@@ -212,117 +220,117 @@ const OrderManagement = () => {
 
       {/* ✅ Modal xem chi tiết */}
       {showViewModal && selectedOrder && (
-  <div className="customModalOverlay"> {/* ✅ đổi từ inline modal wrapper sang class */}
-    <div className="customModal">
-      
-      {/* Header */}
-      <div className="modalHeader">
-        <h2>Đơn hàng #{selectedOrder.order_number}</h2>
-        <button className="closeBtn" onClick={() => setShowViewModal(false)}>
-          &times;
-        </button>
-      </div>
+        <div className="customModalOverlay"> {/* ✅ đổi từ inline modal wrapper sang class */}
+          <div className="customModal">
 
-      {/* Body */}
-      <div className="modalBody">
-        <div className="contentWrapper">
-
-          {/* Left section */}
-          <div className="leftSection">
-            <div className="orderInfo">
-              <div className="orderDate">
-                <span><strong>Ngày đặt:</strong> {formatDate(selectedOrder.created_at)}</span>
-              </div>
-              <div className="orderStatusWrapper">
-                <span className={`orderStatus ${selectedOrder.status}`}>
-                  {getStatusText(selectedOrder.status)}
-                </span>
-              </div>
-
+            {/* Header */}
+            <div className="modalHeader">
+              <h2>Đơn hàng #{selectedOrder.order_number}</h2>
+              <button className="closeBtn" onClick={() => setShowViewModal(false)}>
+                &times;
+              </button>
             </div>
 
-            {/* Thông tin khách hàng */}
-            <div className="infoSection">
-              <h4 className="sectionTitle">Thông tin khách hàng</h4>
-              <div className="infoCard">
-                <div className="infoRow"><span className="infoLabel">Tên:</span> {selectedOrder.name}</div>
-                <div className="infoRow"><span className="infoLabel">Email:</span> {selectedOrder.email}</div>
-                <div className="infoRow"><span className="infoLabel">Số điện thoại:</span> {selectedOrder.phone}</div>
-                <div className="infoRow"><span className="infoLabel">Địa chỉ:</span> {selectedOrder.address}</div>
-              </div>
-            </div>
+            {/* Body */}
+            <div className="modalBody">
+              <div className="contentWrapper" >
 
-            {/* Ghi chú */}
-            <div className="infoSection">
-              <h4 className="sectionTitle">Ghi chú khách hàng</h4>
-              <div className="infoCard">
-                {selectedOrder.notes || "Không có"}
-              </div>
-            </div>
-
-            {/* Sản phẩm */}
-            <div className="productsSection">
-              <h4 className="sectionTitle">Sản phẩm</h4>
-              <div className="orderItems">
-                {selectedOrder.items?.map((item: OrderItem, idx: number) => 
-               (console.log(item),
-                  <div className="orderItem" key={idx}> 
-                    <img src={item.product_image} alt={item.product_name} />
-                    <div>
-                     
-                      
-                      <strong>{item.product_name}</strong>
-                      <p>Số lượng: {item.quantity} x {formatCurrency(item.price)}</p>
+                {/* Left section */}
+                <div className="leftSection">
+                  <div className="orderInfo">
+                    <div className="orderDate">
+                      <span><strong>Ngày đặt:</strong> {formatDate(selectedOrder.created_at)}</span>
                     </div>
-                    <div>{formatCurrency(item.total)}</div>
+                    <div className="orderStatusWrapper">
+                      <span className={`orderStatus ${selectedOrder.status}`}>
+                        {getStatusText(selectedOrder.status)}
+                      </span>
+                    </div>
+
                   </div>
-                ))}
+
+                  {/* Thông tin khách hàng */}
+                  <div className="infoSection">
+                    <h4 className="sectionTitle">Thông tin khách hàng</h4>
+                    <div className="infoCard">
+                      <div className="infoRow"><span className="infoLabel">Tên:</span> {selectedOrder.name}</div>
+                      <div className="infoRow"><span className="infoLabel">Email:</span> {selectedOrder.email}</div>
+                      <div className="infoRow"><span className="infoLabel">Số điện thoại:</span> {selectedOrder.phone}</div>
+                      <div className="infoRow"><span className="infoLabel">Địa chỉ:</span> {selectedOrder.address}</div>
+                    </div>
+                  </div>
+
+                  {/* Ghi chú */}
+                  <div className="infoSection">
+                    <h4 className="sectionTitle">Ghi chú khách hàng</h4>
+                    <div className="infoCard">
+                      {selectedOrder.notes || "Không có"}
+                    </div>
+                  </div>
+
+                  {/* Sản phẩm */}
+                  <div className="productsSection">
+                    <h4 className="sectionTitle">Sản phẩm</h4>
+                    <div className="orderItems">
+                      {selectedOrder.items?.map((item: OrderItem, idx: number) =>
+                      (console.log(item),
+                        <div className="orderItem" key={idx}>
+                          <img src={item.product_image} alt={item.product_name} />
+                          <div>
+
+
+                            <strong>{item.product_name}</strong>
+                            <p>Số lượng: {item.quantity} x {formatCurrency(item.price)}</p>
+                          </div>
+                          <div>{formatCurrency(item.total)}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Right section */}
+                <div className="rightSection">
+                  <h4 className="paymentTitle">Tổng kết đơn hàng</h4>
+
+                  <div className="paymentRow">
+                    <span className="paymentLabel">Tạm tính</span>
+                    <span className="paymentValue">{formatCurrency(selectedOrder.subtotal)}</span>
+                  </div>
+
+                  <div className="paymentRow">
+                    <span className="paymentLabel">Phí vận chuyển</span>
+                    <span className="paymentValue">{formatCurrency(selectedOrder.shipping_fee)}</span>
+                  </div>
+
+                  <div className="paymentRow">
+                    <span className="paymentLabel">Thuế</span>
+                    <span className="paymentValue">{formatCurrency(selectedOrder.tax)}</span>
+                  </div>
+
+                  {selectedOrder.discount > 0 && (
+                    <div className="paymentRow">
+                      <span className="paymentLabel">
+                        Giảm giá {selectedOrder.coupon && `(Mã: ${selectedOrder.coupon.code})`}
+                      </span>
+                      <span className="paymentValue">-{formatCurrency(selectedOrder.discount)}</span>
+                    </div>
+                  )}
+
+                  <div className="paymentRow">
+                    <span className="paymentLabel">Tổng tiền</span>
+                    <span className="totalAmount">{formatCurrency(selectedOrder.total)}</span>
+                  </div>
+
+                  <button className="btn btnBlock" onClick={() => setShowViewModal(false)}>
+                    <span className='close'> Đóng</span>
+                  </button>
+                </div>
               </div>
             </div>
-          </div>
-
-          {/* Right section */}
-          <div className="rightSection">
-            <h4 className="paymentTitle">Tổng kết đơn hàng</h4>
-
-            <div className="paymentRow">
-              <span className="paymentLabel">Tạm tính</span>
-              <span className="paymentValue">{formatCurrency(selectedOrder.subtotal)}</span>
-            </div>
-
-            <div className="paymentRow">
-              <span className="paymentLabel">Phí vận chuyển</span>
-              <span className="paymentValue">{formatCurrency(selectedOrder.shipping_fee)}</span>
-            </div>
-
-            <div className="paymentRow">
-              <span className="paymentLabel">Thuế</span>
-              <span className="paymentValue">{formatCurrency(selectedOrder.tax)}</span>
-            </div>
-
-            {selectedOrder.discount > 0 && (
-              <div className="paymentRow">
-                <span className="paymentLabel">
-                  Giảm giá {selectedOrder.coupon && `(Mã: ${selectedOrder.coupon.code})`}
-                </span>
-                <span className="paymentValue">-{formatCurrency(selectedOrder.discount)}</span>
-              </div>
-            )}
-
-            <div className="paymentRow">
-              <span className="paymentLabel">Tổng tiền</span>
-              <span className="totalAmount">{formatCurrency(selectedOrder.total)}</span>
-            </div>
-
-            <button className="btn btnBlock" onClick={() => setShowViewModal(false)}>
-             <span className='close'> Đóng</span>
-            </button>
           </div>
         </div>
-      </div>
-    </div>
-  </div>
-)}
+      )}
 
       {/* ✅ Modal cập nhật trạng thái đơn hàng */}
       {showUpdateModal && (
@@ -335,7 +343,7 @@ const OrderManagement = () => {
               </button>
             </div>
             <div className="modalBody">
-              <div className="contentWrapper">
+              <div className="contentWrappers">
                 <div className="leftSection" style={{ width: "100%" }}>
                   <div className="infoSection">
                     <h4 className="sectionTitle">Chỉnh sửa trạng thái</h4>

@@ -865,6 +865,16 @@ th {
     font-size: 1.2rem;
     font-weight: 500;
 }
+input[type="file"] {
+    
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 12px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 1.2rem;
+    font-weight: 500;
+}
 
 .add-product-form textarea {
     resize: vertical;

@@ -362,6 +362,7 @@ export default function AdminPostsPage() {
                 type="file"
                 accept="image/*"
                 onChange={handleImageChange}
+                style={{ marginTop: 16 }}
               />
               {imagePreview && (
                 <img
@@ -370,10 +371,12 @@ export default function AdminPostsPage() {
                   style={{ width: 120, marginTop: 8 }}
                 />
               )}
-              <button type="submit">Lưu</button>
-              <button type="button" onClick={() => setShowEditModal(false)}>
+              <div className="action-buttons">
+                <button className="green" type="submit" style={{ marginRight: 8 }}>Lưu</button>
+                <button className="delete" type="button" onClick={() => setShowEditModal(false)}>
                 Hủy
-              </button>
+                </button>
+              </div>
             </form>
           </div>
         </div>
@@ -421,6 +424,7 @@ export default function AdminPostsPage() {
                 type="file"
                 accept="image/*"
                 onChange={handleImageChange}
+                style={{ marginTop: 16 }}
               />
               {imagePreview && (
                 <img
@@ -429,10 +433,12 @@ export default function AdminPostsPage() {
                   style={{ width: 120, marginTop: 8 }}
                 />
               )}
-              <button type="submit">Thêm</button>
-              <button type="button" onClick={() => setShowAddModal(false)}>
+              <div className="action-buttons">
+              <button className="green" type="submit" style={{ marginRight: 8 }}>Thêm</button>
+              <button className="delete" type="button" onClick={() => setShowAddModal(false)}>
                 Hủy
-              </button>
+                </button>
+              </div>
             </form>
           </div>
         </div>
