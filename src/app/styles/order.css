@@ -665,13 +665,6 @@
     margin-top: 12px;
 }
 
-.btn {
-    padding: 8px 12px;
-    border-radius: 6px;
-    border: none;
-    cursor: pointer;
-}
-
 .btn-success {
     background: #28a745;
     color: #fff;
