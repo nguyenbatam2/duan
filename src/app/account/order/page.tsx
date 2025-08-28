@@ -88,29 +88,59 @@ export default function Order() {
         }
     };
 
-    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const files = e.target.files ? Array.from(e.target.files) : [];
-        if (files.length > 3) {
-            toast.error("Chỉ được chọn tối đa 3 ảnh");
-            return;
+    const logReviewDebug = (productId: number) => {
+        try {
+            const imagesMeta = reviewData.images?.map((f: File) => ({ name: f.name, size: f.size, type: f.type })) || [];
+            console.log("[Review] Preparing to submit:", {
+                productId,
+                rating: reviewData.rating,
+                comment: reviewData.comment,
+                images: imagesMeta,
+            });
+
+            // Simulate how FormData would look like (keys only) for debugging purposes
+            const fd = new FormData();
+            fd.append("rating", String(reviewData.rating));
+            fd.append("comment", reviewData.comment ?? "");
+            (reviewData.images || []).forEach((file, idx) => fd.append(`images[${idx}]`, file));
+            const formDataPreview: Array<{ key: string; value: string }> = [];
+            // @ts-expect-error - TS doesn't know entries() on FormData in some DOM lib versions
+            for (const [key, value] of fd.entries()) {
+                formDataPreview.push({ key, value: value instanceof File ? `File(${value.name}, ${value.type}, ${value.size} bytes)` : String(value) });
+            }
+            console.log("[Review] FormData preview:", formDataPreview);
+        } catch (e) {
+            console.log("[Review] Failed to build debug preview:", e);
         }
-        setReviewData((prev) => ({ ...prev, images: files }));
     };
 
-    const handleSubmitReview = async (productId: number) => {
+    const handleSubmitReview = async (productId: number | undefined) => {
+        if (!productId) {
+            console.warn("[Review] Missing productId when submitting review.");
+            toast.error("Không xác định được sản phẩm để đánh giá");
+            return;
+        }
         if (!reviewData.comment.trim()) {
             toast.error("Vui lòng nhập nội dung bình luận");
             return;
         }
 
         try {
-            await createProductReview(productId, reviewData);
+            logReviewDebug(productId);
+            console.log("[Review] Sending request to API...");
+            const response = await createProductReview(productId, reviewData);
+            console.log("[Review] API response:", response);
             toast.success("Gửi đánh giá thành công!");
             setShowReviewForm(null);
             setReviewData({ rating: 5, comment: "", images: [] });
-        } catch (error: any) {
-            console.error(error);
-            toast.error(error.response?.data?.message || "Lỗi khi gửi đánh giá");
+        } catch (error) {
+            // Attempt to extract more details
+            // @ts-expect-error - runtime defensive logging
+            const errData = (error && (error.response?.data || error.data)) ?? undefined;
+            console.error("[Review] API error:", error);
+            if (errData) console.error("[Review] API error data:", errData);
+            // @ts-expect-error - safe optional chaining for UX message
+            toast.error(error?.response?.data?.message || "Lỗi khi gửi đánh giá");
         }
     };
     if (isLoading) return <div>Đang tải đơn hàng...</div>;
@@ -284,7 +314,7 @@ export default function Order() {
                                                         {Reviews_STATUSES.includes(selectedOrder.status) && (
                                                             <button
                                                                 className="btn-reviews"
-                                                                onClick={() => setShowReviewForm(item.id)}
+                                                                onClick={() => { console.log("[Review] Open form for item:", { itemId: item.id, productId: item.product?.id, productName: item.product_name }); setShowReviewForm(item.id); }}
                                                             >
                                                                 Bình luận
                                                             </button>
@@ -293,7 +323,7 @@ export default function Order() {
 
                                                     {showReviewForm === item.id && (
                                                         <div className="mt-3 p-3 border rounded bg-light shadow-sm">
-                                                            <h4 className="mb-3">Gửi đánh giá cho sản phẩm #{item.product.id}</h4>
+                                                            <h4 className="mb-3">Gửi đánh giá cho sản phẩm #{item.product?.id}</h4>
                                                             <div className="mb-3">
                                                                 {[1, 2, 3, 4, 5].map((star) => (
                                                                     <i key={star} className={`fa-star me-1 ${reviewData.rating >= star ? 'fas text-warning' : 'far text-muted'}`}
@@ -319,12 +349,14 @@ export default function Order() {
                                                                     className="form-control"
                                                                     accept="image/*"
                                                                     multiple
-                                                                    onChange={(e) =>
+                                                                    onChange={(e) => {
+                                                                        const files = Array.from(e.target.files || []).slice(0, 3);
+                                                                        console.log("[Review] File input changed:", files.map(f => ({ name: f.name, size: f.size, type: f.type })));
                                                                         setReviewData((prev) => ({
                                                                             ...prev,
-                                                                            images: Array.from(e.target.files || []).slice(0, 3),
-                                                                        }))
-                                                                    }
+                                                                            images: files,
+                                                                        }));
+                                                                    }}
                                                                 />
                                                                 <div className="mt-2 d-flex gap-2 flex-wrap">
                                                                     {reviewData.images?.map((file: File, idx: number) => (
@@ -343,7 +375,7 @@ export default function Order() {
                                                             <div className="d-flex gap-2">
                                                                 <button
                                                                     className="btn btn-success btn-sm"
-                                                                    onClick={() => handleSubmitReview(item.product_id)}
+                                                                    onClick={() => handleSubmitReview(item.product?.id)}
                                                                 >
                                                                     Gửi đánh giá
                                                                 </button>
