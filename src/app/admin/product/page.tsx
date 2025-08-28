@@ -257,6 +257,7 @@ export default function ProductsPage() {
                     borderRadius: "4px",
                   }}
                 >
+                  <option value="id">Mặc định (ID giảm dần)</option>
                   <option value="name-asc">A-Z</option>
                   <option value="name-desc">Z-A</option>
                   <option value="price-asc">Giá tăng dần</option>

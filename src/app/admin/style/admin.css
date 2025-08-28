@@ -768,6 +768,11 @@ th {
     border: none;
     cursor: pointer;
 }
+.action-buttons .green {
+    background-color: #28a745;
+    color: #fff;
+    border-radius: .2rem;
+}
 
 .action-buttons .view {
     background-color: #0a6fd5;

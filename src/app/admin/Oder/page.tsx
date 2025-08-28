@@ -196,9 +196,9 @@ const OrderManagement = () => {
                       <td>{getPaymentText(order.payment_status)}</td>
                       <td>{formatCurrency(order.total)}</td>
                       <td>{formatDate(order.created_at)}</td>
-                      <td>
-                        <button onClick={() => openViewModal(order)}>Xem Chi tiết</button>
-                        <button onClick={() => openUpdateModal(order)}>Cập nhật</button>
+                      <td className="action-buttons">
+                        <button className="view" style={{ marginRight: "10px" }} onClick={() => openViewModal(order)}>Xem Chi tiết</button>
+                        <button className="green" onClick={() => openUpdateModal(order)}>Cập nhật</button>
                       </td>
                     </tr>
                   );

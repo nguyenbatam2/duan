@@ -412,43 +412,7 @@ border-radius: 6px;
     box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
 }
 
-/* Nút trong bảng đơn hàng */
-.home__container--content table button {
-    padding: 8px 16px;
-    border: none;
-    border-radius: 6px;
-    font-size: 13px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    margin: 2px;
-    text-transform: none;
-    letter-spacing: 0.3px;
-}
 
-/* Nút Xem Chi tiết */
-.home__container--content table button:first-child {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
-}
-
-.home__container--content table button:first-child:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
-}
-
-/* Nút Cập nhật */
-.home__container--content table button:last-child {
-    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-    color: white;
-    box-shadow: 0 2px 8px rgba(245, 87, 108, 0.3);
-}
-
-.home__container--content table button:last-child:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(245, 87, 108, 0.4);
-}
 
 /* Responsive Design */
 @media (max-width: 768px) {

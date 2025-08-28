@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { getUsers, getRanks, toggleUserStatus } from "../lib/use";
 import { User, CustomerRank } from "../types/user";
 import "../style/user.css"
+
 export default function UserManagement() {
   const [users, setUsers] = useState<User[]>([]);
   const [ranks, setRanks] = useState<CustomerRank[]>([]);
@@ -13,7 +14,6 @@ export default function UserManagement() {
   const [sortType, setSortType] = useState<"id" | "name">("id");
   const [search, setSearch] = useState("");
 
-  // Load users khi chọn rank
   useEffect(() => {
     (async () => {
       try {
@@ -30,7 +30,6 @@ export default function UserManagement() {
     })();
   }, [selectedRankId]);
 
-  // Load ranks
   useEffect(() => {
     (async () => {
       setLoadingRanks(true);
@@ -45,7 +44,6 @@ export default function UserManagement() {
     })();
   }, []);
 
-  // Filter + sort
   const filteredUsers = users.filter(
     (u) =>
       u.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -63,68 +61,54 @@ export default function UserManagement() {
     <section className="home">
       <header className="home-header">
         <div className="text">Xin chào Admin</div>
+        <div className="search">
+          <input
+            type="text"
+            placeholder="Tìm kiếm sản phẩm"
+            style={{ padding: "5px" }}
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
       </header>
+
       <main className="home-main">
-        <div
-          className="home__container two"
-          style={{ width: "100%", marginTop: "20px" }}
-        >
-          <div
-            className="home__container--title"
-            style={{ display: "flex", justifyContent: "space-between" }}
-          >
-            <h2>Quản lý người dùng</h2>
-          </div>
+        <div className="home__container two">
+          <div className="home__container--title" style={{ display: "flex", justifyContent: "space-between", alignContent: "center" }}>
+            <a href="#">Danh sách sản phẩm</a>
+            <div className="row" style={{ display: "flex", alignItems: "center", gap: "20px" }}>
+              <div className="user-modern-control-group">
+                <label>Hạng khách hàng</label>
+                <select
+                  className="user-modern-select"
+                  value={selectedRankId}
+                  onChange={(e) => setSelectedRankId(e.target.value)}
+                  disabled={loadingRanks}
+                >
+                  <option value="">Tất cả hạng</option>
+                  {ranks.map((rank) => (
+                    <option key={rank.id} value={rank.id}>
+                      {rank.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
 
-          {/* Controls */}
-          <div className="user-modern-controls">
-            <div className="user-modern-control-group">
-              <label>Tìm kiếm</label>
-              <input
-                className="user-modern-search"
-                type="text"
-                placeholder="Nhập tên hoặc email..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
-            </div>
-
-            <div className="user-modern-control-group">
-              <label>Hạng khách hàng</label>
-              <select
-                className="user-modern-select"
-                value={selectedRankId}
-                onChange={(e) => setSelectedRankId(e.target.value)}
-                disabled={loadingRanks}
-              >
-                <option value="">
-                  {loadingRanks ? "Đang tải..." : "Tất cả hạng"}
-                </option>
-                {ranks.map((rank) => (
-                  <option key={rank.id} value={rank.id}>
-                    {rank.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="user-modern-control-group">
-              <label>Sắp xếp</label>
-              <select
-                className="user-modern-select"
-                value={sortType}
-                onChange={(e) =>
-                  setSortType(e.target.value as "id" | "name")
-                }
-              >
-                <option value="id">ID tăng dần</option>
-                <option value="name">Tên A-Z</option>
-              </select>
+              <div className="user-modern-control-group">
+                <label>Sắp xếp</label>
+                <select
+                  className="user-modern-select"
+                  value={sortType}
+                  onChange={(e) => setSortType(e.target.value as "id" | "name")}
+                >
+                  <option value="id">ID tăng dần</option>
+                  <option value="name">Tên A-Z</option>
+                </select>
+              </div>
             </div>
           </div>
 
-          {/* Table */}
-          <div className="user-modern-table">
+          <div className="home__container--content">
             <table>
               <thead>
                 <tr>
@@ -133,28 +117,27 @@ export default function UserManagement() {
                   <th>Email</th>
                   <th>SĐT</th>
                   <th>Hạng</th>
-                 
                   <th>Trạng thái</th>
                   <th>Hành động</th>
                 </tr>
               </thead>
               <tbody>
                 {sortedUsers.map((user) => (
+                  console.log(user),
                   <tr key={user.id}>
-                    <td>#{user.id}</td>
+                    <td>{user.id}</td>
                     <td>{user.name}</td>
                     <td>{user.email}</td>
                     <td>{user.phone || "N/A"}</td>
                     <td>
                       <span
-                        className={`rank-badge rank-${(
+                        className={`rank-badge   rank-${(
                           user.customer_rank?.name || "default"
                         ).toLowerCase()}`}
                       >
                         {user.customer_rank?.name || "Chưa phân hạng"}
                       </span>
                     </td>
-                  
                     <td>
                       <span
                         className={`status-badge ${
@@ -164,7 +147,7 @@ export default function UserManagement() {
                         {user.is_locked ? "Đã khóa" : "Hoạt động"}
                       </span>
                     </td>
-                    <td>
+                    <td className="action-buttons">
                       <button
                         className={`action-button ${
                           user.is_locked ? "unlock" : ""
@@ -207,3 +190,4 @@ export default function UserManagement() {
     </section>
   );
 }
+

@@ -14,7 +14,7 @@ export const PUBLIC_API = {
 // Admin API endpoints
 export const ADMIN_API = {
   EVENTS: `${API_BASE_URL}/admin/events`,
-  CATEGORIES: `${API_BASE_URL}/admin/categories`,
+  CATEGORIES: `${API_BASE_URL}/admin/admin-categories`,
   PRODUCTS: `${API_BASE_URL}/admin/products`,
   USERS: `${API_BASE_URL}/admin/users`,
   ORDERS: `${API_BASE_URL}/admin/orders`,

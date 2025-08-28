@@ -140,6 +140,7 @@ export default function CategoryPage() {
                 alignContent: "center",
               }}
             >
+              
               <a href="#">Danh mục sản phẩm</a>
               <button
                 type="button"
@@ -176,6 +177,7 @@ export default function CategoryPage() {
                           <td>{index + 1}</td>
                           <td>{category.name}</td>
                           <td>{category.slug}</td>
+                          
                           <td className="action-buttons">
                             <button
                               className="view"

@@ -2,25 +2,8 @@
 import { useEffect, useState } from "react";
 import { Review } from "../types/reviews";
 import { getReviews, updateReviewStatus } from "../lib/reviews";
-import "../style/rew.css"
 
-interface User {
-  _id: string;
-  username: string;
-  email: string;
-  role: "superadmin" | "admin" | "user";
-  isBlocked: boolean;
-}
-
-export default function AdminDashboard() {
-  const [activeTab, setActiveTab] = useState<"users" | "reviews">("reviews");
-
-  // --- State Users ---
-  const [users, setUsers] = useState<User[]>([]);
-  const [roleFilter, setRoleFilter] = useState<"" | "superadmin" | "admin" | "user">("");
-  const [error, setError] = useState<string>("");
-
-  // --- State Reviews ---
+export default function AdminReviewsPage() {
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loadingReviews, setLoadingReviews] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -28,8 +11,9 @@ export default function AdminDashboard() {
   const [actionType, setActionType] = useState<"approve" | "reject" | null>(null);
   const [adminNote, setAdminNote] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string>("");
+  const [search, setSearch] = useState(""); // Thêm state search
 
-  // Fetch reviews
   useEffect(() => {
     async function fetchReviews() {
       try {
@@ -68,105 +52,68 @@ export default function AdminDashboard() {
       setReviews(res.data.data);
       closeModal();
     } catch {
-      alert("Cập nhật thất bại");
+      setError("Cập nhật thất bại");
     } finally {
       setSubmitting(false);
     }
   };
 
-  // --- Dummy User Logic (bạn có thể thay bằng API riêng) ---
-  const handleToggleRole = (id: string) => {
-    setUsers((prev) =>
-      prev.map((u) =>
-        u._id === id ? { ...u, role: u.role === "admin" ? "user" : "admin" } : u
-      )
+  // Lọc reviews theo từ khóa search
+  const filteredReviews = reviews.filter((review) => {
+    const keyword = search.toLowerCase();
+    return (
+      review.product?.name?.toLowerCase().includes(keyword) ||
+      review.user?.name?.toLowerCase().includes(keyword) ||
+      review.comment?.toLowerCase().includes(keyword)
     );
-  };
-  const handleToggleBlock = (id: string) => {
-    setUsers((prev) =>
-      prev.map((u) => (u._id === id ? { ...u, isBlocked: !u.isBlocked } : u))
-    );
-  };
+  });
 
   return (
-    <div className="admin-dashboard">
-      {/* Header */}
-    
-
-      <div className="admin-layout">
-        {/* Sidebar */}
-
-        {/* Main Content */}
-        <main className="admin-content">
-          {false && (
-            <section className="users-section">
-              
-
+    <section className="home">
+      <header className="home-header">
+        <div className="text">Quản lý đánh giá sản phẩm</div>
+        <div className="search">
+          <input
+            type="text"
+            placeholder="Tìm kiếm đánh giá, sản phẩm, người dùng..."
+            style={{ padding: "5px" }}
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
+      </header>
+      <main className="home-main">
+        <div className="home__container two">
+          <div
+            className="home__container--title"
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignContent: "center",
+            }}
+          >
+            <a href="#">Danh sách đánh giá sản phẩm</a>
+          </div>
+          <div className="home__container--content">
+            {loadingReviews ? (
+              <p>Đang tải...</p>
+            ) : (
               <table>
                 <thead>
                   <tr>
-                    <th>STT</th>
-                    <th>Tên</th>
-                    <th>Email</th>
-                    <th>Quyền</th>
-                    <th>Trạng Thái</th>
+                    <th>ID</th>
+                    <th>Sản phẩm</th>
+                    <th>Người dùng</th>
+                    <th>Đánh giá</th>
+                    <th>Bình luận</th>
+                    <th>Trạng thái</th>
+                    <th>Ngày tạo</th>
                     <th>Hành động</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {users
-                    .filter((u) => !roleFilter || u.role === roleFilter)
-                    .map((item, index) => (
-                      <tr key={item._id}>
-                        <td>{index + 1}</td>
-                        <td>{item.username}</td>
-                        <td>{item.email}</td>
-                        <td>
-                          {item.role === "superadmin"
-                            ? "Super Admin"
-                            : item.role === "admin"
-                            ? "Admin"
-                            : "User"}
-                        </td>
-                        <td>{item.isBlocked ? "Bị khóa" : "Hoạt động"}</td>
-                        <td>
-                          <button onClick={() => handleToggleRole(item._id)}>
-                            {item.role === "admin" ? "Gỡ Admin" : "Cấp Admin"}
-                          </button>
-                          <button onClick={() => handleToggleBlock(item._id)}>
-                            {item.isBlocked ? "Mở" : "Khóa"}
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                </tbody>
-              </table>
-              {error && <p className="text-red">{error}</p>}
-            </section>
-          )}
-
-          {activeTab === "reviews" && (
-            <section className="reviews-section">
-              <h2>Quản lý đánh giá sản phẩm</h2>
-              {loadingReviews ? (
-                <p>Đang tải...</p>
-              ) : (
-                <table>
-                  <thead>
-                    <tr>
-                      <th>ID</th>
-                      <th>Sản phẩm</th>
-                      <th>Người dùng</th>
-                      <th>Đánh giá</th>
-                      <th>Bình luận</th>
-                      <th>Trạng thái</th>
-                      <th>Ngày tạo</th>
-                      <th>Hành động</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {reviews.length > 0 ? (
-                      reviews.map((review) => (
+                    {filteredReviews.length > 0 ? (
+                      filteredReviews.map((review) => (
                         <tr key={review.id}>
                           <td>{review.id}</td>
                           <td>{review.product?.name || "-"}</td>
@@ -174,39 +121,58 @@ export default function AdminDashboard() {
                           <td>{review.rating} ⭐</td>
                           <td style={{ maxWidth: 200 }}>{review.comment}</td>
                           <td>
-                            <span className={`badge ${review.status}`}>
-                              {review.status}
+                            <span
+                              className={
+                                review.status === "approved"
+                                  ? "status-badge status-active"
+                                  : review.status === "pending"
+                                    ? "status-badge status-unverified"
+                                    : review.status === "rejected"
+                                      ? "status-badge status-locked"
+                                      : "status-badge"
+                              }
+                            >
+                              {review.status === "pending"
+                                ? "Chờ duyệt"
+                                : review.status === "approved"
+                                  ? "Đã duyệt"
+                                  : review.status === "rejected"
+                                    ? "Đã từ chối"
+                                    : review.status}
                             </span>
                           </td>
                           <td>{new Date(review.created_at).toLocaleString()}</td>
                           <td>
                             {review.status === "pending" && (
                               <>
-                                <button className="reviews-modern-btn approve" onClick={() => openModal(review, "approve")}>Duyệt</button>
-                                <button className="reviews-modern-btn reject" onClick={() => openModal(review, "reject")}>Từ chối</button>
+                                <div className="action-buttons">
+                                  <button className="green" style={{ marginRight: "10px" }} onClick={() => openModal(review, "approve")}>Duyệt</button>
+                                  <button className="delete" onClick={() => openModal(review, "reject")}>Từ chối</button>
+                                </div>
                               </>
                             )}
                           </td>
                         </tr>
                       ))
-                    ) : (
-                      <tr>
-                        <td colSpan={8}>Không có review nào.</td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-              )}
-            </section>
-          )}
-        </main>
-      </div>
-
+                  ) : (
+                    <tr>
+                      <td colSpan={8}>Không có review nào.</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            )}
+            {error && <p className="text-red">{error}</p>}
+          </div>
+        </div>
+      </main>
       {/* Modal */}
       {showModal && (
-        <div className="modal-backdrop">
-          <div className="modal">
-            <h3>{actionType === "approve" ? "Duyệt" : "Từ chối"} đánh giá #{selectedReview?.id}</h3>
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <h3>
+              {actionType === "approve" ? "Duyệt" : "Từ chối"} đánh giá #{selectedReview?.id}
+            </h3>
             <form onSubmit={handleReviewSubmit}>
               <textarea
                 value={adminNote}
@@ -223,6 +189,6 @@ export default function AdminDashboard() {
           </div>
         </div>
       )}
-    </div>
+    </section>
   );
 }

@@ -17,7 +17,6 @@ export async function getReviews(): Promise<Review> {
       },
     }
   );
-  console.log("Danh sách reviews:", res.data);
   return res.data as Review;
 }
 
@@ -88,7 +87,6 @@ export async function getReviewReports(): Promise<ReviewReportsResponse> {
       },
     }
   );
-  console.log("Danh sách review reports:", res.data);
   return res.data as ReviewReportsResponse;
 }
 

@@ -61,38 +61,59 @@ export async function getPostById(id: number): Promise<Post> {
   });
   return res.data.data as Post;
 }
-
-// 2.4. Cập nhật bài viết
 export async function updatePost(
   id: number,
   postData: {
-    title?: string;
-    content?: string;
+    title: string;
+    content: string;
     image?: File;
-    status?: "public" | "draft";
+    status: "draft" | "public";
   }
 ): Promise<Post> {
   const token = getAuthToken();
-  const formData = new FormData();
 
-  if (postData.title) formData.append("title", postData.title);
-  if (postData.content) formData.append("content", postData.content);
-  if (postData.status) formData.append("status", postData.status);
-  if (postData.image) formData.append("image", postData.image);
+  if (postData.image) {
+    // Gửi FormData
+    const formData = new FormData();
+    formData.append("title", postData.title || "");
+    formData.append("content", postData.content || "");
+    formData.append("status", postData.status || "draft");
+    formData.append("image", postData.image);
 
-  const res = await axios.put<{ data: Post }>(
-    `${ADMIN_API.POSTS}/${id}`,
-    formData,
-    {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        Accept: "application/json",
-        "Content-Type": "multipart/form-data",
+    // Laravel thường không nhận PUT + multipart → phải dùng POST + _method=PUT
+    const res = await axios.post<{ data: Post }>(
+      `${ADMIN_API.POSTS}/${id}?_method=PUT`,
+      formData,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: "application/json",
+        },
+      }
+    );
+    return res.data.data;
+  } else {
+    // Gửi JSON
+    const res = await axios.put<{ data: Post }>(
+      `${ADMIN_API.POSTS}/${id}`,
+      {
+        title: postData.title || "",
+        content: postData.content || "",
+        status: postData.status || "draft",
       },
-    }
-  );
-  return res.data.data as Post;
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    return res.data.data;
+  }
 }
+
+
 
 // 2.5. Xóa bài viết
 export async function deletePost(id: number): Promise<{ message: string }> {
